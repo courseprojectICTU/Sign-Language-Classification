@@ -1,0 +1,55 @@
+# Sign-Language-Classification-v1.0 -- dependencies
+#
+# Verified combination: Windows x64 + Python 3.12.7
+# Install:  python -m pip install -r requirements.txt
+#
+# NOTE: this file is deliberately pure ASCII. pip reads requirements files
+# using the system default encoding (cp1252 on Windows), NOT UTF-8, so any
+# non-ASCII character here crashes pip with UnicodeDecodeError.
+# Keep it ASCII. Vietnamese notes live in HUONG-DAN-CHAY.md.
+#
+# IMPORTANT -- read before changing any pinned version:
+#
+#  * mediapipe MUST stay on 0.10.x. MediaPipe 1.0.0 REMOVED the `mp.solutions`
+#    module, which all three notebooks use (mp.solutions.hands,
+#    mp.solutions.face_mesh, mp.solutions.drawing_utils). Installing
+#    mediapipe>=1.0 breaks the notebooks at their very first cell.
+#
+#  * Python MUST be 3.9-3.12. Python 3.13/3.14 has NO TensorFlow wheel, so
+#    `pip install tensorflow` fails with "No matching distribution found".
+#
+#  * mediapipe 0.10.x pins numpy<2 and protobuf<5. Do not force numpy 2.x.
+
+tensorflow==2.19.1
+keras==3.15.1
+mediapipe==0.10.21
+
+numpy==1.26.4
+pandas==3.0.6
+scikit-learn==1.9.1
+h5py==3.16.0
+protobuf==4.25.9
+
+opencv-python==4.11.0.86
+opencv-contrib-python==4.11.0.86
+pillow==12.3.0
+matplotlib==3.11.2
+
+# To run the .ipynb notebooks
+notebook==7.6.3
+ipykernel==7.4.0
+
+# ---------------------------------------------------------------------------
+# TROUBLESHOOTING: `pip install -r requirements.txt` can sit at ~100% CPU for
+# a very long time without downloading anything. That is pip's dependency
+# resolver backtracking against a slow index, not a network hang.
+#
+# Symptom: pip's cache folder does not grow, site-packages stays empty, and
+# the python process burns a full CPU core.
+#
+# Workarounds:
+#  * Already-installed environment: this repo's .venv is prepared and verified,
+#    no install needed.
+#  * Faster resolution:  pip install --only-binary=:all: -r requirements.txt
+#  * Faster index:       pip install -i https://pypi.org/simple -r requirements.txt
+# ---------------------------------------------------------------------------

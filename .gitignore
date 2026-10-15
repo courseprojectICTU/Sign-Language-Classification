@@ -1,0 +1,44 @@
+# Virtual environments (~2.5 GB, never commit)
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Jupyter config/data/runtime (redirected into workspace on Windows)
+.jupyter-config/
+.jupyter-data/
+.jupyter-runtime/
+
+# pip temporary directories
+pip-build-tracker-*
+pip-ephem-wheel-cache-*
+pip-install-*
+pip-wheel-metadata/
+
+# Temporary files & logs
+.tmp/
+*.tmp
+*.log
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+desktop.ini
+.DS_Store
