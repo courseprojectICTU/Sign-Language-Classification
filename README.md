@@ -1,4 +1,4 @@
-**Sign-Language-Classification-v1.0**
+**Sign-Language-Classification**
 
 Sign-Language-Classification-v1.0 là một dự án phân loại ngôn ngữ ký hiệu sử dụng các kỹ thuật học sâu và xử lý ảnh. Dự án tập trung vào việc nhận diện các ký tự trong bảng chữ cái tiếng Việt (23 ký tự không dấu) từ cử chỉ tay và một số điểm mốc trên khuôn mặt. Dự án bao gồm các công đoạn từ thu thập dữ liệu, huấn luyện mô hình CNN (dựa trên ResNet50), đến ứng dụng thời gian thực qua webcam.
 
