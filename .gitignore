@@ -45,3 +45,6 @@ pip-wheel-metadata/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Office lock files (Excel/Word open)
+~\$*
