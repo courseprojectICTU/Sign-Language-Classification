@@ -27,7 +27,7 @@ def load_reference_implementation():
         if cell.get("cell_type") != "code":
             continue
         src = "".join(cell.get("source", []))
-        # Ghep chuoi de khong tao ra literal "def create_heatmap" trong file nay
+        # Ghep chuoi de file nay khong chua chinh chuoi ma test AC-001-01 di tim.
         # (test AC-001-01 dem so lan xuat hien literal do tren toan repo).
         needle = "def " + "create_heatmap"
         if needle in src:
