@@ -1,0 +1,4 @@
+# Dev-only dependencies (khong can cho runtime/production).
+# File nay THUAN ASCII: pip doc requirements bang cp1252 tren Windows.
+
+pytest==9.1.1
