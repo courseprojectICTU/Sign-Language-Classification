@@ -122,6 +122,9 @@ AGENTS.md                                         file này
 docs/ADR-001-frontend-hosting.md                  ADR chọn Cloudflare Pages
 docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md            kế hoạch 2 tuần / 4 người
 docs/product-backlog-cicd-2-tuan.xlsx             backlog (nhị phân, đừng đọc bằng read)
+docs/WORKFLOW.md                                  quy trình bắt buộc cho mọi US
+docs/api/README.md                                quy ước + 9 phase + checklist API docs
+docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
 .venv/                                            môi trường Python 3.12.7 đã sẵn sàng (~2,5 GB, gitignored)
 ```
 

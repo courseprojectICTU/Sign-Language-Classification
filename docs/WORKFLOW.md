@@ -1,9 +1,9 @@
-# QUY TRÌNH LÀM VIỆC — US → AC → Task → Nghiệm thu
+# QUY TRÌNH LÀM VIỆC — US → API Docs → AC → Task → Nghiệm thu
 
 File này là **quy trình bắt buộc** cho mọi User Story trong dự án. Đọc lại file này
 trước khi bắt đầu bất kỳ US nào. Nguồn dữ liệu gốc: `docs/product-backlog-cicd-2-tuan.xlsx`.
 
-Cập nhật lần cuối: 2026-10-19.
+Cập nhật lần cuối: 2026-10-19 (bổ sung bước API Documentation + bộ khung `docs/api/`).
 
 ---
 
@@ -11,14 +11,17 @@ Cập nhật lần cuối: 2026-10-19.
 
 1. **Không code trước test.** Acceptance Criteria được chuyển thành test **trước** khi
    viết code tính năng (trừ khi AC không thể test tự động — phải nêu rõ lý do).
-2. **Không gộp task.** Mỗi task = một thay đổi nhỏ, một commit riêng. Không làm 5 task
+2. **API-first.** Nếu US tạo ra tính năng hoặc API, **phải** có `docs/api/US-0XX.md`
+   theo `docs/api/_TEMPLATE.md`, ở trạng thái `ANALYSIS_READY` và **đã được duyệt**,
+   **trước khi** viết test hay code. Không có file đó = không được bắt đầu.
+3. **Không gộp task.** Mỗi task = một thay đổi nhỏ, một commit riêng. Không làm 5 task
    trong 1 lần sửa.
-3. **Commit thường xuyên, KHÔNG push.** Push là quyết định của chủ dự án, không tự push.
-4. **Bám Business Rules.** Mỗi thay đổi phải chỉ ra BR nào đang được thoả (BR-001…BR-026).
-5. **Không mở rộng phạm vi.** Chỉ sửa những gì US yêu cầu.
-6. **Nghiệm thu cần chữ ký.** Test xanh **chưa phải** là xong — phải có xác nhận PASS
+4. **Commit thường xuyên, KHÔNG push.** Push là quyết định của chủ dự án, không tự push.
+5. **Bám Business Rules.** Mỗi thay đổi phải chỉ ra BR nào đang được thoả (BR-001…BR-026).
+6. **Không mở rộng phạm vi.** Chỉ sửa những gì US yêu cầu.
+7. **Nghiệm thu cần chữ ký.** Test xanh **chưa phải** là xong — phải có xác nhận PASS
    của chủ dự án.
-7. **Ghi lại bằng chứng.** Mọi báo cáo PASS/FAIL phải kèm output thật, không nói suông.
+8. **Ghi lại bằng chứng.** Mọi báo cáo PASS/FAIL phải kèm output thật, không nói suông.
 
 ---
 
@@ -116,31 +119,75 @@ Với **từng AC**, ghi rõ:
 
 ---
 
-## 5. Bước 4 — Viết test TRƯỚC khi code  (CỔNG B)
+## 5. Bước 4 — API Documentation  (CỔNG B — bắt buộc nếu US tạo tính năng hoặc API)
 
-1. Tạo test cho **toàn bộ** AC.
-2. Chạy test → phải **ĐỎ** (vì code chưa có). Nếu xanh ngay, nghĩa là test vô nghĩa
-   hoặc tính năng đã tồn tại — phải báo lại.
-3. Chỉ ra "lưới an toàn": với US tách code, baseline là **23/23 ký tự đúng** trên
-   `data/anphabet/<chữ>/1.csv` (đã kiểm chứng 2026-10-19).
-4. Commit riêng: `test(us-00X): ...`
+### 5.1. Điều kiện áp dụng
 
-Chỉ sau khi chủ dự án đồng ý danh sách test mới sang bước 5.
+| US tạo ra gì | Bắt buộc `docs/api/US-0XX.md`? |
+|---|---|
+| Endpoint HTTP (`/health`, `/predict`, `/version`…) | ✅ Có |
+| Hợp đồng request/response (JSON, mã lỗi) | ✅ Có |
+| Hàm/module công khai dùng chung (VD `create_heatmap`) | ✅ Có |
+| CLI, tham số dòng lệnh, định dạng file trao đổi | ✅ Có |
+| Refactor thuần nội bộ, **không** đổi hợp đồng tiêu thụ | ❌ N/A + lý do, chờ chủ dự án xác nhận |
+
+Nếu là `N/A`: báo rõ lý do trong báo cáo US, **không tự bỏ qua im lặng**.
+
+### 5.2. Việc phải làm
+
+1. Copy bộ khung: `docs/api/_TEMPLATE.md` → `docs/api/US-0XX.md`
+2. Đi **đủ 17 mục** của template (mục không áp dụng ghi `N/A` + lý do, không xoá mục).
+3. Làm đủ **9 phase** theo `docs/api/README.md` mục 4: Repository Discovery → Story
+   Analysis → Domain → Existing API & Security → BR/AC → Gap Analysis → Design →
+   Tạo file → Self-review.
+4. Tự review theo checklist `docs/api/README.md` mục 5.
+5. Đặt trạng thái cuối: `ANALYSIS_READY`, `NEEDS_CLARIFICATION` hoặc `BLOCKED`.
+
+### 5.3. Điều cấm trong bước này
+
+- **Không** sửa source code, không tạo endpoint, không viết test.
+- **Không** bịa API/business rule; thiếu bằng chứng → ghi `UNKNOWN` / `CẦN XÁC NHẬN`.
+- **Không** tạo endpoint trùng cái đã có (phải chứng minh bằng mục 4 Gap Analysis).
+
+### 5.4. Điều kiện qua cổng
+
+- `docs/api/US-0XX.md` **tồn tại**, đủ 17 mục, không rỗng.
+- Trạng thái `ANALYSIS_READY` (hoặc chủ dự án chấp nhận `NEEDS_CLARIFICATION` đã trả lời).
+- **Chủ dự án đã duyệt nội dung API.** Chưa duyệt = chưa được viết test.
+- Commit riêng: `docs(api): them hop dong API cho US-0XX`
+
+> US-001 (tách `create_heatmap`) có tạo hàm công khai dùng chung → **áp dụng bước này**:
+> phải mô tả hợp đồng `create_heatmap(landmarks, img_size, sigma)` trước khi viết test.
 
 ---
 
-## 6. Bước 5 — Làm từng task, commit từng task
+## 6. Bước 5 — Viết test TRƯỚC khi code  (CỔNG C)
+
+1. Đã có `docs/api/US-0XX.md` được duyệt (bước 4) — nếu chưa, **quay lại**.
+2. Tạo test cho **toàn bộ** AC, đối chiếu cả Test Scenarios ở mục 14 của API docs.
+3. Chạy test → phải **ĐỎ** (vì code chưa có). Nếu xanh ngay, nghĩa là test vô nghĩa
+   hoặc tính năng đã tồn tại — phải báo lại.
+4. Chỉ ra "lưới an toàn": với US tách code, baseline là **23/23 ký tự đúng** trên
+   `data/anphabet/<chữ>/1.csv` (đã kiểm chứng 2026-10-19).
+5. Commit riêng: `test(us-00X): ...`
+
+Chỉ sau khi chủ dự án đồng ý danh sách test mới sang bước 6.
+
+---
+
+## 7. Bước 6 — Làm từng task, commit từng task
 
 Lặp cho **mỗi** task trong sheet `Task(Công việc)`:
 
 1. Nêu task ID + expected result (lấy nguyên văn từ backlog).
 2. Chỉ ra BR liên quan và cách code thoả BR đó.
-3. Sửa **tối thiểu** để task đó xong.
+3. Sửa **tối thiểu** để task đó xong, bám đúng hợp đồng trong `docs/api/US-0XX.md`.
+   Nếu code buộc phải lệch hợp đồng → **dừng lại**, cập nhật API docs trước.
 4. Chạy test liên quan + test cũ (không được làm đỏ test cũ).
 5. **Commit riêng**.
 6. Báo chủ dự án: đã đổi file nào, vì sao, test nào xanh.
 
-### 6.1. Quy ước commit
+### 7.1. Quy ước commit
 
 ```
 <type>(<scope>): <mô tả ngắn ở thể mệnh lệnh>
@@ -156,17 +203,18 @@ Ví dụ: `feat(us-001): them module src/vsl/heatmap.py`
 
 ---
 
-## 7. Bước 6 — Nghiệm thu  (CỔNG C)
+## 8. Bước 7 — Nghiệm thu  (CỔNG D)
 
 1. Chạy **toàn bộ** test, không chỉ test của US.
 2. Kiểm tra "build": import module, chạy pipeline thật, so baseline 23/23.
-3. Báo cáo dạng bảng: AC ID → PASS/FAIL → bằng chứng (tên test + output).
-4. **Chờ chủ dự án xác nhận PASS.** Chỉ khi có xác nhận mới coi là hoàn thành.
-5. Nếu FAIL: sửa, commit tiếp, lặp lại bước 7.
+3. Đối chiếu lại `docs/api/US-0XX.md`: code có khớp hợp đồng đã duyệt không.
+4. Báo cáo dạng bảng: AC ID → PASS/FAIL → bằng chứng (tên test + output).
+5. **Chờ chủ dự án xác nhận PASS.** Chỉ khi có xác nhận mới coi là hoàn thành.
+6. Nếu FAIL: sửa, commit tiếp, lặp lại bước này.
 
 ---
 
-## 8. Lệnh chạy test chuẩn
+## 9. Lệnh chạy test chuẩn
 
 `.venv\Scripts\python.exe` bị lỗi DLL (mục 9.1 AGENTS.md), nên dùng Python gốc:
 
@@ -179,7 +227,7 @@ $env:PYTHONPATH = "$PWD\.venv\Lib\site-packages"
 
 ---
 
-## 9. Bẫy môi trường đã gặp (đừng mất thời gian lại)
+## 10. Bẫy môi trường đã gặp (đừng mất thời gian lại)
 
 | Triệu chứng | Nguyên nhân | Cách xử lý |
 |---|---|---|
@@ -193,17 +241,18 @@ $env:PYTHONPATH = "$PWD\.venv\Lib\site-packages"
 
 ---
 
-## 10. Trạng thái dự án tại thời điểm tạo file này
+## 11. Trạng thái dự án tại thời điểm tạo file này
 
 - Nhánh: `main` = `develop` = `3d64e9d`; `feature/US-001` có commit tài liệu (đã push).
 - Backlog: 10 epic, 39 US (Ready for Dev), 63 AC, 75 task (To Do), 26 BR.
 - Chưa có: `src/`, `tests/`, `Dockerfile`, `.github/`, backend, `pytest`.
+- Đã có bộ khung API: `docs/api/_TEMPLATE.md`, quy ước `docs/api/README.md`.
 - Model + dữ liệu: đã kiểm chứng 23/23 đúng, 1609 CSV hợp lệ 93 cột.
 
 ---
 
-## 11. Nhật ký thực hiện (điền dần)
+## 12. Nhật ký thực hiện (điền dần)
 
-| Ngày | US | Nhánh | Task xong | AC PASS | Xác nhận của chủ dự án |
-|---|---|---|---|---|---|
-| | | | | | |
+| Ngày | US | Nhánh | API docs | Task xong | AC PASS | Xác nhận của chủ dự án |
+|---|---|---|---|---|---|---|
+| | | | | | | |
