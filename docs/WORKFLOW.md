@@ -216,14 +216,44 @@ Ví dụ: `feat(us-001): them module src/vsl/heatmap.py`
 
 ## 9. Lệnh chạy test chuẩn
 
-`.venv\Scripts\python.exe` bị lỗi DLL (mục 9.1 AGENTS.md), nên dùng Python gốc:
+Chạy từ **thư mục gốc project** (kiểm chứng 2026-10-19: 10 passed, ~24 s).
+
+### 9.1. Lệnh chính
 
 ```powershell
-$env:PYTHONPATH = "$PWD\.venv\Lib\site-packages"
-& "D:\program\python\python.exe" -m pytest tests -v
+.\.venv\Scripts\python.exe -m pytest tests -v
 ```
 
-Điều kiện tiên quyết: `pytest` **chưa có** trong `.venv` — phải cài trước US đầu tiên.
+Python gốc cũng chạy được và tương đương (thấy `.venv\Lib\site-packages` nhờ
+`vsl_project.pth`, **không cần** đặt `PYTHONPATH`):
+
+```powershell
+& "D:\program\python\python.exe" -m pytest tests -v
+py -3.12 -m pytest tests -v
+```
+
+> Nếu `.venv\Scripts\python.exe` tái phát lỗi DLL `0xc06d007e`, dùng Python gốc ở trên.
+
+### 9.2. Các biến thể hay dùng
+
+| Mục đích | Lệnh |
+|---|---|
+| Chỉ test nhanh, bỏ test nạp model (~3 s) | `-m pytest tests -q -k "not 23_23"` |
+| Chạy 1 file | `-m pytest tests/test_heatmap.py -v` |
+| Chạy 1 test | `-m pytest "tests/test_heatmap.py::test_ac_001_01_chi_con_mot_dinh_nghia_tren_toan_repo" -v` |
+| Dừng ngay ở lỗi đầu | `-m pytest tests -x` |
+| Xem test nào thu thập được (không chạy) | `-m pytest tests --collect-only -q` |
+| Chỉ hiện test hỏng + tóm tắt | `-m pytest tests -q` |
+
+### 9.3. Điều kiện tiên quyết
+
+`pytest` đã cài (9.1.1) và ghi trong `requirements-dev.txt`. Máy mới cần:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+`.pytest_cache/` đã nằm trong `.gitignore`.
 
 ---
 

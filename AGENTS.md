@@ -125,6 +125,14 @@ docs/product-backlog-cicd-2-tuan.xlsx             backlog (nhị phân, đừng 
 docs/WORKFLOW.md                                  quy trình bắt buộc cho mọi US
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
+docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap)
+requirements-dev.txt                              pytest (dev-only, không cần cho runtime)
+src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
+src/vsl/__init__.py                               re-export create_heatmap
+tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên)
+tests/test_pipeline_baseline.py                   hồi quy 23/23 ký tự
+tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
+tests/_generate_golden.py                         script sinh lại golden (không phải test)
 .venv/                                            môi trường Python 3.12.7 đã sẵn sàng (~2,5 GB, gitignored)
 ```
 
@@ -177,11 +185,12 @@ riêng `đ` có **69** (thiếu `65.csv`). Tổng = **1609 mẫu**.
    (`run_realtime.ipynb` dòng ~176, `run_realtime.py:109`). Thiếu tay (chỉ còn 30 cột
    mặt) hoặc thừa tay → **im lặng không dự đoán**. `run_realtime.py` có cải thiện nhỏ:
    hiển thị `Tay [OK/X] | Mat [OK/X]`; notebook thì không.
-5. **`create_heatmap` bị định nghĩa 3 lần** (train notebook, run_realtime notebook,
-   `run_realtime.py`) — cả 3 hiện giống nhau: `img_size=(224,224)`, `sigma=5`,
-   kernel `range(-sigma*3, sigma*3+1)` = `-15..15`, cộng dồn, chia max, nhân 255,
-   `np.stack([heatmap]*3, axis=2)`, **bỏ qua z**. Sửa công thức phải sửa **cả ba**.
-   Bản trong notebook train có kiểm tra `len(landmarks) % 3 != 0`; hai bản kia không.
+5. **`create_heatmap` nay chỉ còn MỘT bản** tại `src/vsl/heatmap.py` (US-001, commit
+   `f83d787`). Trước đó có 3 bản: train notebook, run_realtime notebook, `run_realtime.py`.
+   Công thức: `img_size=(224,224)`, `sigma=5`, kernel `range(-sigma*3, sigma*3+1)` = `-15..15`,
+   cộng dồn, chia max, nhân 255, `np.stack([heatmap]*3, axis=2)`, **bỏ qua z**.
+   Có guard `len(landmarks) % 3 != 0` → in cảnh báo + trả mảng 0 (giữ hành vi cũ).
+   Sửa công thức chỉ cần sửa **một chỗ**; `tests/test_heatmap.py` chặn hồi quy bằng golden.
 6. **`preprocess_input` của ResNet50** được áp sau khi heatmap đã ở dạng `uint8 0..255`.
    Đây là chuẩn hoá kiểu Caffe (trừ mean BGR), không phải `/255`. Đừng "sửa" thành
    `/255` — model đã học theo mean subtraction.
@@ -268,8 +277,10 @@ Máy này: `conda` **không tồn tại**. Python khả dụng: `3.14.5` (mặc 
 `.venv` được tạo bằng cách **copy `site-packages`** từ một venv 3.12.7 đã cài đủ,
 **không** qua `pip install`, vì lý do ở mục 9.2.
 
-**`.venv\Scripts\python.exe` bị lỗi DLL** (`0xc06d007e`, `_ctypes`/`cv2` load failed).
-Cách chữa đang dùng — **giữ nguyên, đừng xoá**:
+**`.venv\Scripts\python.exe` từng bị lỗi DLL** (`0xc06d007e`, `_ctypes`/`cv2` load failed).
+Kiểm chứng lại **2026-10-19**: đã chạy được `numpy`, `cv2`, `pytest` và **toàn bộ 10 test**
+(10 passed). Nếu lỗi tái xuất hiện, dùng Python gốc + `.pth` như dưới đây.
+Cách chữa đang giữ — **đừng xoá**:
 1. `.pth` tại `D:\program\python\Lib\site-packages\vsl_project.pth` trỏ vào
    `.venv\Lib\site-packages` (đã tồn tại, nội dung đúng 1 dòng đường dẫn).
 2. Kernel toàn cục `vsl_env` ("Python 3.12 (VSL)") đăng ký ở
@@ -453,10 +464,13 @@ phân công, tiêu chí nghiệm thu.
 
 - ❌ Backend/API (không `app.py`, không FastAPI/Flask, không route `/predict`)
 - ❌ `Dockerfile`, `.dockerignore`
-- ❌ Test (không pytest/unittest, không `tests/`)
 - ❌ CI/CD (không `.github/workflows/`, không pipeline config)
-- ❌ `gcloud`, `docker`, `terraform`, `gh` CLI trên máy
-- ❌ Hàm dùng chung giữa các notebook (logic bị lặp ở 4 nơi)
-- ❌ `scripts/`, `src/`, package Python nào
+- ❌ `gcloud`, `terraform`, `gh` CLI; `docker` CLI có nhưng **daemon chưa chạy**
+- ❌ `scripts/`; `src/` mới có `vsl/heatmap.py` + `__init__.py`, chưa có package API
+- ⚠️ Hàm dùng chung: `create_heatmap` đã tách (US-001); `VIETNAMESE_ALPHABET`
+  **vẫn lặp 4 nơi** (US-002 sẽ xử lý)
+
+**Đã có (đừng tìm nữa):** `tests/` + pytest 9.1.1 (10 test cho US-001),
+`docs/api/` (khung + hợp đồng US-001), `requirements-dev.txt`.
 
 Nếu task yêu cầu một trong những thứ trên, đó là **việc xây mới**, không phải "sửa".
