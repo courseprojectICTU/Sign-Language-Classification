@@ -5,6 +5,10 @@ Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
+**Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
+trước → làm từng task → nghiệm thu): xem [docs/WORKFLOW.md](docs/WORKFLOW.md).
+Áp dụng cho **mọi** User Story, không có ngoại lệ.
+
 ---
 
 ## 1. Dự án là gì
