@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nhận diện ngôn ngữ ký hiệu tiếng Việt</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app">
+    <header><span class="brand">VSL · AI</span><h1>Nhận diện ngôn ngữ ký hiệu</h1>
+      <p>Chọn ảnh hoặc chụp bằng camera. Cần nhìn rõ một bàn tay và khuôn mặt.</p>
+    </header>
+    <section class="panel">
+      <div class="actions">
+        <label class="button" for="file">Tải ảnh lên</label>
+        <input id="file" type="file" accept="image/png,image/jpeg" hidden>
+        <button id="camera" type="button">Bật camera</button>
+        <button id="snap" type="button" disabled>Chụp ảnh</button>
+        <button id="stop" type="button" disabled>Dừng camera</button>
+      </div>
+      <div class="preview"><img id="image" alt="Ảnh đã chọn" hidden><video id="video" playsinline autoplay muted hidden></video><div id="placeholder">Ảnh hoặc camera hiển thị tại đây</div></div>
+      <button id="predict" type="button" disabled>Nhận diện ký hiệu</button>
+      <div id="message" role="status" aria-live="polite">Chọn ảnh để bắt đầu.</div>
+    </section>
+    <section class="panel" id="result" hidden aria-live="polite">
+      <h2>Kết quả dự đoán</h2>
+      <p class="prediction"><span id="letter"></span><strong id="confidence"></strong></p>
+      <div id="topk"></div>
+      <p class="muted" id="version"></p>
+    </section>
+  </main>
+  <script src="./config.js"></script>\n  <script src="./app.js" defer></script>
+</body>
+</html>
