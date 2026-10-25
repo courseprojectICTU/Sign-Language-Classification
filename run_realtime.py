@@ -12,8 +12,8 @@ if _project_root not in sys.path:
 import cv2
 import numpy as np
 import mediapipe as mp
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.resnet50 import preprocess_input
+from keras.models import load_model
+from keras.applications.resnet50 import preprocess_input
 from PIL import Image, ImageDraw, ImageFont
 
 from src.vsl.heatmap import create_heatmap  # BR-002: ban duy nhat

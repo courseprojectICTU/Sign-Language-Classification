@@ -17,14 +17,14 @@ from src.vsl.labels import VIETNAMESE_ALPHABET as ALPHABET
 
 @pytest.fixture(scope="module")
 def model():
-    from tensorflow.keras.models import load_model
+    from keras.models import load_model
 
     assert MODEL_PATH.exists(), f"thieu model: {MODEL_PATH}"
     return load_model(str(MODEL_PATH))
 
 
 def test_toan_pipeline_dung_23_23_ky_tu(model):
-    from tensorflow.keras.applications.resnet50 import preprocess_input
+    from keras.applications.resnet50 import preprocess_input
 
     from src.vsl.heatmap import create_heatmap
 
