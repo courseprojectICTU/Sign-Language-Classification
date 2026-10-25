@@ -286,3 +286,4 @@ py -3.12 -m pytest tests -v
 | Ngày | US | Nhánh | API docs | Task xong | AC PASS | Xác nhận của chủ dự án |
 |---|---|---|---|---|---|---|
 | 2026-10-19 | **US-001** | `feature/US-001` | `docs/api/US-001.md` (`ANALYSIS_READY`, đã duyệt) | TSK-001, TSK-002 | AC-001-01, AC-001-02 — **10/10 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-19) |
+| 2026-10-25 | **US-002** | `feature/US-002` | `docs/api/US-002.md` (`ANALYSIS_READY`, đã duyệt) | TSK-003, TSK-004 | AC-002-01, AC-002-02 — **14/14 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-25) |
