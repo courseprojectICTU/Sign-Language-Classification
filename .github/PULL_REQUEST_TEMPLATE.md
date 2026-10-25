@@ -1,115 +1,115 @@
-# Pull Request: [Ticket/US-ID] - Mo ta ngan guc
+# Pull Request: [Ticket/US-ID] - Mô tả ngắn gọn
 
-## Muc dich
-Mo ta ngan guc: PR nay giai quyet van de gi? Liet ke Issue/Story ID lien quan (VD: US-002, BUG-123).
-
----
-
-## Loai thay doi
-- [ ] Feature (tinh nang moi)
-- [ ] Bugfix (sua loi)
-- [ ] Refactor (tinh nang khong doi, chi sua cau truc code)
-- [ ] Docs (cap nhat tai lieu)
-- [ ] Chore (config, CI, script, dependency...)
-- [ ] Hotfix (sua loi gap tren production)
+## Mục đích
+Mô tả ngắn gọn: PR này giải quyết vấn đề gì? Liệt kê Issue/Story ID liên quan (ví dụ: US-002, BUG-123).
 
 ---
 
-## Thay doi chinh (Summary of Changes)
+## Loại thay đổi
+- [ ] Feature (tính năng mới)
+- [ ] Bugfix (sửa lỗi)
+- [ ] Refactor (tái cấu trúc mã nguồn, không đổi hành vi)
+- [ ] Docs (cập nhật tài liệu)
+- [ ] Chore (cấu hình, CI/CD, script, dependency...)
+- [ ] Hotfix (sửa lỗi khẩn cấp trên production)
 
-| Loai | File/Module | Mo ta thay doi |
+---
+
+## Thay đổi chính (Summary of Changes)
+
+| Loại | File / Module | Mô tả thay đổi |
 |---|---|---|
-| Feat/Refactor/... | `path/to/file` | Mo ta ngan guc thay doi |
+| Feat/Refactor/... | `đường_dẫn_file` | Mô tả ngắn gọn thay đổi |
 | ... | ... | ... |
 
 ---
 
-## Kiem tra Chat luong (Quality Gates)
+## Kiểm tra Chất lượng (Quality Gates)
 
-| Tieu chi | Trang thai | Ghi chu |
+| Tiêu chí | Trạng thái | Ghi chú |
 |---|---|---|
-| **Unit Test** | [ ] Pass / [ ] Khong co | Chay: `pytest tests -v` |
-| **Regression Test** | [ ] Pass / [ ] Khong co | Chay: `pytest tests/test_pipeline_baseline.py -v` |
-| **Build / Syntax** | [ ] Pass / [ ] Khong co | Python syntax OK, Notebook JSON valid |
-| **Lint / Format** | [ ] Pass / [ ] Khong co | (Neu co linter) |
-| **Backward Compatibility** | [ ] Dam bao / [ ] Co breaking change | Neu co breaking change -> Ghi chu trong PR description |
+| **Unit Test** | [ ] Pass / [ ] Không có | Lệnh chạy: `pytest tests -v` |
+| **Regression Test** | [ ] Pass / [ ] Không có | Lệnh chạy: `pytest tests/test_pipeline_baseline.py -v` |
+| **Build / Cú pháp** | [ ] Pass / [ ] Không có | Cú pháp Python hợp lệ, Notebook JSON nguyên vẹn |
+| **Lint / Format** | [ ] Pass / [ ] Không có | Không có cảnh báo linter / type checker |
+| **Tương thích ngược** | [ ] Đảm bảo / [ ] Có breaking change | Nếu có breaking change $\to$ Ghi chú rõ trong phần Mô tả thêm |
 
 ---
 
-## Kiem thu (Test Evidence)
+## Bằng chứng Kiểm thử (Test Evidence)
 
-| Test Suite | Lenh chay | Ket qua (Pass/Fail) | Screen/Log |
+| Bộ kiểm thử (Test Suite) | Lệnh chạy | Kết quả (Pass/Fail) | Ảnh chụp màn hình / Log |
 |---|---|---|---|
-| Unit Test | `pytest tests -v` | [ ] Pass / [ ] Fail | [DROP_SCREENSHOT] |
-| Regression | `pytest tests/test_pipeline_baseline.py -v` | [ ] Pass / [ ] Fail | [DROP_SCREENSHOT] |
-| Khac (neu co) | ... | [ ] Pass / [ ] Fail | [DROP_SCREENSHOT] |
+| Unit Test | `pytest tests -v` | [ ] Pass / [ ] Fail | [DÁN_ẢNH_HOẶC_LOG_TẠI_ĐÂY] |
+| Regression Baseline | `pytest tests/test_pipeline_baseline.py -v` | [ ] Pass / [ ] Fail | [DÁN_ẢNH_HOẶC_LOG_TẠI_ĐÂY] |
+| Khác (nếu có) | ... | [ ] Pass / [ ] Fail | [DÁN_ẢNH_HOẶC_LOG_TẠI_ĐÂY] |
 
-> **Luu y:** Test phai chay tren `.venv\Scripts\python.exe` (hoac `D:\program\python\python.exe`).
+> **Lưu ý:** Test phải chạy trên môi trường Python của dự án: `& "D:\program\python\python.exe" -m pytest tests -v` (hoặc `.\.venv\Scripts\python.exe`).
 
 ---
 
-## Anh minh chung (Screenshot/Artifacts)
+## Ảnh minh chứng (Screenshot / Artifacts)
 
-> Reviewer kiem tra truc tiep tren GitHub/GitLab. Keo tha anh vao cac placeholder duoi.
+> Người duyệt (Reviewer) kiểm tra trực tiếp trên GitHub/GitLab. Kéo thả ảnh vào các vị trí bên dưới.
 
-| Loai | Anh minh chung |
+| Loại | Ảnh minh chứng |
 |---|---|
-| Test Suite (pytest) | ![Pytest Result](DROP_SCREENSHOT_PYTEST_HERE) |
-| Regression Pipeline | ![Pipeline](DROP_SCREENSHOT_PIPELINE_HERE) |
-| Khac (neu co) | ![Other](DROP_SCREENSHOT_OTHER_HERE) |
+| Kết quả kiểm thử (pytest) | ![Pytest Result](DÁN_ẢNH_PYTEST_TẠI_ĐÂY) |
+| Pipeline hồi quy (Baseline) | ![Pipeline](DÁN_ẢNH_PIPELINE_TẠI_ĐÂY) |
+| Khác (nếu có) | ![Other](DÁN_ẢNH_KHÁC_TẠI_ĐÂY) |
 
 ---
 
-## Checklist Reviewer (Tick khi review)
+## Checklist Người duyệt (Reviewer Checklist)
 
-- [ ] Code tuan thu coding convention / coding standard du an.
-- [ ] Khong co dead code, commented code, `print` debug con sot lai.
-- [ ] Bien/ham dat ten ro rang, tuan thu naming convention.
-- [ ] Khong co hard-code gia tri magic number/string (truc tiep trong code).
-- [ ] Docstring/Comment cho cac ham/public class moi.
-- [ ] Khong co hard-code duong dan tuyet doi (duong dan Windows `D:\...`).
-- [ ] Khong commit file rac (`__pycache__`, `.pytest_cache`, `.venv`, file lock `~$*`).
-- [ ] Test moi (neu co) da duoc them vao `tests/` va pass.
-- [ ] Cap nhat tai lieu (`docs/`, `README.md`, `CHANGELOG.md` neu co) neu co thay doi API/Behavior.
-- [ ] Khong co breaking change khong duoc ghi chu / thong bao.
+- [ ] Mã nguồn tuân thủ quy ước lập trình (coding convention) của dự án.
+- [ ] Không còn mã nguồn thừa (dead code), code bị comment, hoặc lệnh `print` debug sót lại.
+- [ ] Tên biến, hàm, lớp rõ ràng, tuân thủ đúng quy ước đặt tên.
+- [ ] Không hard-code các giá trị magic number / magic string trực tiếp trong code.
+- [ ] Đầy đủ docstring / comment cho các hàm, module, lớp công khai mới.
+- [ ] Không hard-code đường dẫn tuyệt đối (đường dẫn Windows `D:\...`).
+- [ ] Không commit các file rác (`__pycache__`, `.pytest_cache`, `.venv`, file tạm `~$*`).
+- [ ] Test mới (nếu có) đã được bổ sung vào `tests/` và vượt qua kiểm thử.
+- [ ] Đã cập nhật tài liệu liên quan (`docs/`, `README.md`) nếu có thay đổi hành vi hoặc API.
+- [ ] Không có breaking change chưa được thông báo hoặc ghi chú rõ ràng.
 
 ---
 
-## Anh minh chung (Screenshot/Artifacts) - Bat buoc neu co thay doi UI/Behavior
+## Ảnh minh chứng UI / Trải nghiệm (Bắt buộc nếu có thay đổi giao diện hoặc luồng người dùng)
 
-| Loai | Anh minh chung |
+| Loại | Ảnh minh chứng |
 |---|---|
-| UI / Chuc nang moi | ![UI Screenshot](DROP_SCREENSHOT_UI_HERE) |
-| Terminal / Log build/test | ![Terminal](DROP_SCREENSHOT_TERMINAL_HERE) |
-| Khac | ![Other](DROP_SCREENSHOT_OTHER_HERE) |
+| Giao diện / Tính năng mới | ![UI Screenshot](DÁN_ẢNH_UI_TẠI_ĐÂY) |
+| Terminal / Log thực thi | ![Terminal](DÁN_ẢNH_TERMINAL_TẠI_ĐÂY) |
+| Khác | ![Other](DÁN_ẢNH_KHÁC_TẠI_ĐÂY) |
 
 ---
 
-## Checklist Tac gia (Self-review truoc khi gui PR)
+## Checklist Tác giả (Self-review trước khi gửi PR)
 
-- [ ] Da chay toan bo test suite (`pytest tests -v`) -> **10/10 passed**.
-- [ ] Da chay regression pipeline (`pytest tests/test_pipeline_baseline.py -v`) -> **23/23 passed**.
-- [ ] Da chay test lien quan den thay doi (neu co) -> Pass.
-- [ ] Da xoa code debug, `print`, `console.log`, `debugger` neu co.
-- [ ] Da cap nhat tai lieu (`docs/`, `README.md`, `CHANGELOG.md` neu co) neu co thay doi API/Behavior.
-- [ ] Da kiem tra `git diff` -> khong co file rac, khong co file lon (>10MB) khong can thiet.
-- [ ] Da kiem tra `.gitignore` da chua cac pattern can thiet (`.venv/`, `__pycache__/`, `.pytest_cache/`, `~$*`, `*.npz` neu can).
-
----
-
-## Ghi chu / Mo ta them (Optional)
-
-Mo ta them neu co (breaking change, migration steps, performance impact, security note, rollback plan...).
+- [ ] Đã chạy toàn bộ test suite (`pytest tests -v`) $\to$ **100% Passed**.
+- [ ] Đã chạy kiểm thử hồi quy (`pytest tests/test_pipeline_baseline.py -v`) $\to$ **23/23 ký tự đúng**.
+- [ ] Đã chạy test liên quan đến phạm vi thay đổi $\to$ **Passed**.
+- [ ] Đã dọn dẹp mã nguồn debug, `print`, `console.log` thừa.
+- [ ] Đã cập nhật đầy đủ tài liệu thiết kế (`docs/api/US-0XX.md`) và nhật ký thực hiện (`docs/WORKFLOW.md`).
+- [ ] Đã kiểm tra `git diff` $\to$ không có file rác, không có file lớn (>10MB) không cần thiết.
+- [ ] Đã kiểm tra file `.gitignore` chứa đầy đủ các mẫu cần thiết (`.venv/`, `__pycache__/`, `.pytest_cache/`, `~$*`, `*.npz` nếu cần).
 
 ---
 
-## Lien quan
-- **Issue/Story ID:** [US-XXX / BUG-XXX]
-- **Epic:** [EPC-XXX]
-- **Branch:** `[feature|bugfix|hotfix|docs|chore]/[ID]`
-- **Base branch:** `develop`
-- **Deploy target:** [Staging / Production / None]
+## Ghi chú / Mô tả thêm (Tùy chọn)
+
+Mô tả thêm nếu có (breaking change, các bước migration, tác động hiệu năng, lưu ý bảo mật, kế hoạch rollback...).
 
 ---
 
-> **Luu y cho Reviewer:** Neu PR nay co chua breaking change, vui long ghi ro rang trong phan "Ghi chu / Mo ta them" va danh dau `Breaking Change` trong Checklist.
+## Thông tin Liên quan
+- **Mã User Story / Issue:** [US-XXX / BUG-XXX]
+- **Mã Epic:** [EPC-XXX]
+- **Nhánh nguồn:** `[feature|bugfix|hotfix|docs|chore]/[ID]`
+- **Nhánh đích:** `develop`
+- **Mục tiêu triển khai:** [Staging / Production / None]
+
+---
+
+> **Lưu ý cho Reviewer:** Nếu PR này có chứa breaking change, vui lòng ghi rõ ràng trong phần "Ghi chú / Mô tả thêm" và đánh dấu `Breaking Change` trong Checklist.
