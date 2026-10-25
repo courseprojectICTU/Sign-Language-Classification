@@ -15,8 +15,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "tests" / "fixtures" / "heatmap_golden.npz"
 MODULE = ROOT / "src" / "vsl" / "heatmap.py"
 
-ALPHABET = ["a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
-            "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"]
+from src.vsl.labels import VIETNAMESE_ALPHABET as ALPHABET
 
 SKIP_DIRS = {
     ".git", ".venv", "__pycache__", ".pytest_cache",

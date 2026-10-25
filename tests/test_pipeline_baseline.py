@@ -12,8 +12,7 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "train" / "vsl_cnn_pose_keras.h5"
 
-ALPHABET = ["a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
-            "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"]
+from src.vsl.labels import VIETNAMESE_ALPHABET as ALPHABET
 
 
 @pytest.fixture(scope="module")
