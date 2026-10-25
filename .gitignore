@@ -16,6 +16,9 @@ dist/
 # Jupyter
 .ipynb_checkpoints/
 
+# pytest
+.pytest_cache/
+
 # Jupyter config/data/runtime (redirected into workspace on Windows)
 .jupyter-config/
 .jupyter-data/
@@ -42,3 +45,6 @@ pip-wheel-metadata/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Office lock files (Excel/Word open)
+~\$*

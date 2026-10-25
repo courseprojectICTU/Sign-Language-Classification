@@ -6,6 +6,8 @@ _project_root = os.path.dirname(os.path.abspath(__file__))
 _venv_site = os.path.join(_project_root, '.venv', 'Lib', 'site-packages')
 if os.path.exists(_venv_site) and _venv_site not in sys.path:
     sys.path.insert(0, _venv_site)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
 import cv2
 import numpy as np
@@ -13,6 +15,8 @@ import mediapipe as mp
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.resnet50 import preprocess_input
 from PIL import Image, ImageDraw, ImageFont
+
+from src.vsl.heatmap import create_heatmap  # BR-002: ban duy nhat
 
 # Khởi tạo MediaPipe
 mp_hands = mp.solutions.hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
@@ -29,24 +33,6 @@ VIETNAMESE_ALPHABET = ['a', 'b', 'c', 'd', 'đ', 'e', 'g', 'h', 'i', 'k', 'l', '
 print(f"Đang nạp mô hình từ: {MODEL_PATH}")
 model = load_model(MODEL_PATH)
 print("Nạp mô hình thành công!\n")
-
-def create_heatmap(landmarks, img_size=(224, 224), sigma=5):
-    heatmap = np.zeros(img_size, dtype=np.float32)
-    for i in range(0, len(landmarks), 3):
-        x, y = landmarks[i], landmarks[i+1]
-        if x == 0 and y == 0:
-            continue
-        x_px = int(x * img_size[1])
-        y_px = int(y * img_size[0])
-        if 0 <= x_px < img_size[1] and 0 <= y_px < img_size[0]:
-            for j in range(-sigma * 3, sigma * 3 + 1):
-                for k in range(-sigma * 3, sigma * 3 + 1):
-                    if 0 <= y_px + k < img_size[0] and 0 <= x_px + j < img_size[1]:
-                        heatmap[y_px + k, x_px + j] += np.exp(-(j**2 + k**2) / (2 * sigma**2))
-    if np.max(heatmap) > 0:
-        heatmap = heatmap / np.max(heatmap)
-    heatmap = (heatmap * 255).astype(np.uint8)
-    return np.stack([heatmap] * 3, axis=2)
 
 def draw_vietnamese_text(image, text, position, font_size=30, color=(0, 255, 0)):
     image_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
