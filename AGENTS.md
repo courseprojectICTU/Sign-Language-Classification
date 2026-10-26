@@ -233,7 +233,7 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | ✅ **PASS (2026-10-19)** | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
 | **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | ✅ **PASS (2026-10-25)** | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
 | **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
-| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ⏳ **Chờ nghiệm thu CỔNG D** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
+| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | Chưa làm | ⏳ To Do | FastAPI / Flask endpoint |
 
 ---
