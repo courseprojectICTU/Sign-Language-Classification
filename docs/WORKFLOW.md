@@ -289,7 +289,7 @@ py -3.12 -m pytest tests -v
 | 2026-10-25 | **US-002** | `feature/US-002` | `docs/api/US-002.md` (`ANALYSIS_READY`, đã duyệt) | TSK-003, TSK-004 | AC-002-01, AC-002-02 — **14/14 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-25) |
 | 2026-10-26 | **US-003** | `feature/US-003` | `docs/api/US-003.md` (`ANALYSIS_READY`, đã duyệt) | TSK-005, TSK-006 | AC-003-01, AC-003-02 — **18/18 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 | 2026-10-26 | **US-004** | `feature/US-004` | `docs/api/US-004.md` (`ANALYSIS_READY`, đã duyệt) | TSK-007 | AC-004-01 — **21/21 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
-| 2026-10-26 | **US-005** | `feature/US-005` | `docs/api/US-005.md` (`ANALYSIS_READY`, đã duyệt) | TSK-008 | AC-005-01, AC-005-02 — **24/24 test** | ⏳ Chờ nghiệm thu CỔNG D |
+| 2026-10-26 | **US-005** | `feature/US-005` | `docs/api/US-005.md` (`ANALYSIS_READY`, đã duyệt) | TSK-008 | AC-005-01, AC-005-02 — **24/24 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 
 
 
