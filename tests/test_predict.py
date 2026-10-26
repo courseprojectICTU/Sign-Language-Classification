@@ -202,6 +202,22 @@ def test_br_001_extract_landmarks_dung_93_cot_khi_nhan_dien():
     assert len(landmarks) == 93, f"Kỳ vọng đúng 93 toạ độ (BR-001), thực tế: {len(landmarks)}"
 
 
+def test_flip_parameter_tuy_chinh_lat_guong():
+    """Kiểm tra tham số flip=True gọi cv2.flip và flip=False không gọi cv2.flip."""
+    from src.vsl.service import extract_landmarks_from_image
+
+    img_bytes = _create_dummy_image_bytes(100, 100)
+
+    with patch("cv2.flip", wraps=cv2.flip) as mock_flip:
+        extract_landmarks_from_image(img_bytes, flip=False)
+        assert mock_flip.call_count == 0, "flip=False không được gọi cv2.flip"
+
+    with patch("cv2.flip", wraps=cv2.flip) as mock_flip:
+        extract_landmarks_from_image(img_bytes, flip=True)
+        assert mock_flip.call_count == 1, "flip=True phải gọi cv2.flip 1 lần"
+
+
+
 
 # ---------------------------------------------------------------- AC-006-02: Pipeline Parity 23/23
 def test_ac_006_02_pipeline_parity_23_23_ky_tu():

@@ -28,12 +28,12 @@ logger = logging.getLogger("vsl.service")
 _mp_hands = mp.solutions.hands.Hands(
     static_image_mode=True,
     max_num_hands=1,
-    min_detection_confidence=0.7,
+    min_detection_confidence=0.5,
 )
 _mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
     static_image_mode=True,
     max_num_faces=1,
-    min_detection_confidence=0.7,
+    min_detection_confidence=0.5,
 )
 FACE_KEYPOINTS = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)
 
@@ -57,8 +57,16 @@ class PredictResponse(BaseModel):
     model_version: Optional[str] = None
 
 
-def extract_landmarks_from_image(image_bytes: bytes) -> Tuple[Optional[List[float]], bool, bool]:
-    """Giải mã ảnh, lật gương (BR-007) và trích xuất 93 toạ độ landmark qua MediaPipe (BR-001).
+def extract_landmarks_from_image(
+    image_bytes: bytes,
+    flip: bool = False,
+) -> Tuple[Optional[List[float]], bool, bool]:
+    """Giải mã ảnh, tuỳ chọn lật gương (BR-007) và trích xuất 93 toạ độ landmark qua MediaPipe (BR-001).
+
+    Tham số:
+    - image_bytes: Dữ liệu byte nhị phân của tệp ảnh.
+    - flip: Nếu True, lật gương ảnh ngang (cv2.flip) cho ảnh chụp webcam/selfie;
+            nếu False, giữ nguyên chiều cho ảnh chụp từ camera điện thoại/máy ảnh thông thường.
 
     Trả về:
     - (all_landmarks_93, has_hand, has_face) nếu nhận diện đủ 1 tay và mặt.
@@ -70,8 +78,10 @@ def extract_landmarks_from_image(image_bytes: bytes) -> Tuple[Optional[List[floa
     if image is None:
         raise ValueError("Không thể giải mã tệp ảnh.")
 
-    # Lật gương ảnh để cùng hệ quy chiếu huấn luyện (BR-007)
-    image = cv2.flip(image, 1)
+    # Lật gương ảnh nếu client yêu cầu (BR-007)
+    if flip:
+        image = cv2.flip(image, 1)
+
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     # 1. Trích xuất landmark bàn tay (21 điểm x 3 = 63 toạ độ)
@@ -221,6 +231,7 @@ def create_app() -> FastAPI:
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
         top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
+        flip: bool = Query(False, description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)"),
     ) -> PredictResponse:
         """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
         # BR-011: Kiểm tra trạng thái nạp của model
@@ -232,7 +243,7 @@ def create_app() -> FastAPI:
 
         content = await file.read()
         try:
-            landmarks, has_hand, has_face = extract_landmarks_from_image(content)
+            landmarks, has_hand, has_face = extract_landmarks_from_image(content, flip=flip)
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
