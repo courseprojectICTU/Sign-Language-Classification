@@ -17,7 +17,23 @@ from pydantic import BaseModel, Field
 from src.vsl.config import get_model_path
 from src.vsl.labels import NUM_CLASSES
 
+import mediapipe as mp
+
 logger = logging.getLogger("vsl.service")
+
+# ---------------------------------------------------------------- MediaPipe Singletons
+# Tái sử dụng instance để tránh re-init tốn tài nguyên (R-4)
+_mp_hands = mp.solutions.hands.Hands(
+    static_image_mode=True,
+    max_num_hands=1,
+    min_detection_confidence=0.7,
+)
+_mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
+    static_image_mode=True,
+    max_num_faces=1,
+    min_detection_confidence=0.7,
+)
+FACE_KEYPOINTS = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)
 
 
 # ---------------------------------------------------------------- Pydantic Schemas
@@ -40,12 +56,48 @@ class PredictResponse(BaseModel):
 
 
 def extract_landmarks_from_image(image_bytes: bytes) -> Tuple[Optional[List[float]], bool, bool]:
-    """Giải mã ảnh và trích xuất toạ độ landmark (khung TSK-009, hoàn thiện ở TSK-010)."""
+    """Giải mã ảnh, lật gương (BR-007) và trích xuất 93 toạ độ landmark qua MediaPipe (BR-001).
+
+    Trả về:
+    - (all_landmarks_93, has_hand, has_face) nếu nhận diện đủ 1 tay và mặt.
+    - (None, has_hand, has_face) nếu thiếu tay hoặc thiếu mặt.
+    - Ném ValueError nếu dữ liệu byte không thể giải mã thành ảnh.
+    """
     np_arr = np.frombuffer(image_bytes, np.uint8)
     image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     if image is None:
         raise ValueError("Không thể giải mã tệp ảnh.")
-    return None, False, False
+
+    # Lật gương ảnh để cùng hệ quy chiếu huấn luyện (BR-007)
+    image = cv2.flip(image, 1)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    # 1. Trích xuất landmark bàn tay (21 điểm x 3 = 63 toạ độ)
+    hands_results = _mp_hands.process(image_rgb)
+    has_hand = bool(hands_results.multi_hand_landmarks)
+    hand_landmarks: List[float] = []
+    if has_hand and hands_results.multi_hand_landmarks:
+        first_hand = hands_results.multi_hand_landmarks[0]
+        for lm in first_hand.landmark:
+            hand_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
+
+    # 2. Trích xuất landmark khuôn mặt (10 điểm cố định x 3 = 30 toạ độ)
+    face_results = _mp_face_mesh.process(image_rgb)
+    has_face = bool(face_results.multi_face_landmarks)
+    face_landmarks: List[float] = []
+    if has_face and face_results.multi_face_landmarks:
+        first_face = face_results.multi_face_landmarks[0]
+        for idx in FACE_KEYPOINTS:
+            lm = first_face.landmark[idx]
+            face_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
+
+    # 3. Hợp đồng landmark: đúng 93 toạ độ (BR-001)
+    all_landmarks = hand_landmarks + face_landmarks
+    if len(all_landmarks) == 93:
+        return all_landmarks, has_hand, has_face
+
+    return None, has_hand, has_face
+
 
 
 def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:

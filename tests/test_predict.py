@@ -174,6 +174,35 @@ def test_predict_model_chua_san_sang_tra_503():
     assert "detail" in response.json()
 
 
+def test_br_001_extract_landmarks_dung_93_cot_khi_nhan_dien():
+    """BR-001: Hàm extract_landmarks_from_image phải trả đúng 93 toạ độ: 63 tay + 30 mặt."""
+    from src.vsl.service import extract_landmarks_from_image, _mp_hands, _mp_face_mesh
+
+    img_bytes = _create_dummy_image_bytes(200, 200)
+
+    # Mock hands_results có 21 landmarks
+    fake_hand = MagicMock()
+    fake_hand.landmark = [MagicMock(x=0.1 * i, y=0.2 * i, z=0.0) for i in range(21)]
+    mock_hands_res = MagicMock()
+    mock_hands_res.multi_hand_landmarks = [fake_hand]
+
+    # Mock face_results có >= 454 landmarks
+    fake_face = MagicMock()
+    fake_face.landmark = {idx: MagicMock(x=0.5, y=0.5, z=0.1) for idx in range(468)}
+    mock_face_res = MagicMock()
+    mock_face_res.multi_face_landmarks = [fake_face]
+
+    with patch.object(_mp_hands, "process", return_value=mock_hands_res), \
+         patch.object(_mp_face_mesh, "process", return_value=mock_face_res):
+        landmarks, has_hand, has_face = extract_landmarks_from_image(img_bytes)
+
+    assert has_hand is True
+    assert has_face is True
+    assert landmarks is not None
+    assert len(landmarks) == 93, f"Kỳ vọng đúng 93 toạ độ (BR-001), thực tế: {len(landmarks)}"
+
+
+
 # ---------------------------------------------------------------- AC-006-02: Pipeline Parity 23/23
 def test_ac_006_02_pipeline_parity_23_23_ky_tu():
     """AC-006-02: Kiểm tra độ hợp lệ của pipeline service trên toàn bộ 23 mẫu 1.csv khớp 23/23 nhãn."""
