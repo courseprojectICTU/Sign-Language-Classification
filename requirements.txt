@@ -38,6 +38,10 @@ matplotlib==3.11.2
 notebook==7.6.3
 ipykernel==7.4.0
 
+# Web API service (EPC-02)
+fastapi==0.162.0
+uvicorn==0.54.0
+
 # ---------------------------------------------------------------------------
 # TROUBLESHOOTING: `pip install -r requirements.txt` can sit at ~100% CPU for
 # a very long time without downloading anything. That is pip's dependency

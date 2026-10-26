@@ -1,13 +1,12 @@
 """Test cho US-005 — "API kiểm tra sức khỏe /health phản ánh trạng thái model".
 
 Bám theo AC-005-01, AC-005-02 trong docs/api/US-005.md và BR-011, BR-019.
-File này được viết TRƯỚC khi tạo src/vsl/service.py (TDD) — lúc đầu phải ĐỎ (FAIL).
 """
 
 from unittest.mock import MagicMock, patch
 import pathlib
 import pytest
-import httpx
+from starlette.testclient import TestClient
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SERVICE_PATH = ROOT / "src" / "vsl" / "service.py"
@@ -25,9 +24,8 @@ def test_ac_005_01_health_tra_200_khi_model_da_nap():
     app.state.model = MagicMock(name="loaded_keras_model")
     app.state.model_version = "v1.0"
 
-    transport = httpx.ASGITransport(app=app)
-    with httpx.Client(transport=transport, base_url="http://testserver") as client:
-        response = client.get("/health")
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.get("/health")
 
     assert response.status_code == 200, f"Kỳ vọng 200 OK, thực tế: {response.status_code}"
     data = response.json()
@@ -48,9 +46,8 @@ def test_ac_005_02_health_tra_503_khi_model_chua_san_sang():
     app.state.model = None
     app.state.model_version = None
 
-    transport = httpx.ASGITransport(app=app)
-    with httpx.Client(transport=transport, base_url="http://testserver") as client:
-        response = client.get("/health")
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.get("/health")
 
     assert response.status_code == 503, (
         f"Kỳ vọng 503 Service Unavailable khi model chưa nạp, thực tế: {response.status_code}"
@@ -74,17 +71,16 @@ def test_br_011_single_model_load_khong_nap_lai_khi_goi_request():
 
         app = create_app()
 
-        # Giả lập vòng đời lifespan startup (chỉ gọi 1 lần khi container khởi động)
-        with patch.object(app.state, "model", mock_model):
-            app.state.model = mock_model
-            app.state.model_version = "v1.0"
+        # Giả lập model đã nạp xong ở startup
+        app.state.model = mock_model
+        app.state.model_version = "v1.0"
 
-            transport = httpx.ASGITransport(app=app)
-            with httpx.Client(transport=transport, base_url="http://testserver") as client:
-                # Gửi 5 request liên tiếp tới /health
-                for i in range(5):
-                    res = client.get("/health")
-                    assert res.status_code == 200
+        client = TestClient(app, raise_server_exceptions=False)
+
+        # Gửi 5 request liên tiếp tới /health
+        for _ in range(5):
+            res = client.get("/health")
+            assert res.status_code == 200
 
         # Khẳng định: Trong quá trình xử lý 5 request /health, không có lệnh load_model nào được gọi thêm
         assert mock_load_model.call_count == 0, (
