@@ -11,11 +11,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from keras.models import load_model
+from keras.applications.resnet50 import preprocess_input
 import numpy as np
 from pydantic import BaseModel, Field
 
 from src.vsl.config import get_model_path
-from src.vsl.labels import NUM_CLASSES
+from src.vsl.heatmap import create_heatmap
+from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 
 import mediapipe as mp
 
@@ -101,8 +103,49 @@ def extract_landmarks_from_image(image_bytes: bytes) -> Tuple[Optional[List[floa
 
 
 def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:
-    """Suy luận nhãn ký hiệu từ vector landmark (khung TSK-009, hoàn thiện ở TSK-011)."""
-    raise NotImplementedError("predict_from_landmarks sẽ được cài đặt ở TSK-011")
+    """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
+
+    Tuân thủ:
+    - BR-001: landmarks đúng 93 toạ độ.
+    - BR-002: create_heatmap bản duy nhất.
+    - BR-006: preprocess_input Caffe style (trừ mean BGR), nghiêm cấm chia 255.
+    - BR-003: ánh xạ nhãn qua VIETNAMESE_ALPHABET.
+    """
+    if len(landmarks) != 93:
+        raise ValueError(f"Landmarks phải có đúng 93 toạ độ (BR-001), thực tế: {len(landmarks)}")
+
+    # 1. Sinh heatmap 224x224x3 (BR-002)
+    heatmap = create_heatmap(landmarks)
+
+    # 2. Mở rộng chiều batch: (1, 224, 224, 3)
+    heatmap_batch = np.expand_dims(heatmap, axis=0)
+
+    # 3. Tiền xử lý ResNet50 kiểu Caffe (BR-006: trừ mean BGR, KHÔNG chia 255)
+    heatmap_batch = preprocess_input(heatmap_batch)
+
+    # 4. Suy luận qua mô hình
+    predictions = model(heatmap_batch, training=False)
+    if hasattr(predictions, "numpy"):
+        probs = predictions.numpy()[0]
+    else:
+        probs = np.array(predictions)[0]
+
+    predicted_class = int(np.argmax(probs))
+    predicted_letter = VIETNAMESE_ALPHABET[predicted_class]
+    confidence = float(probs[predicted_class])
+
+    # 5. Trích xuất top_k theo xác suất giảm dần
+    top_indices = np.argsort(probs)[::-1][:top_k]
+    top_k_list = [
+        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])}
+        for i in top_indices
+    ]
+
+    return {
+        "letter": predicted_letter,
+        "confidence": confidence,
+        "top_k": top_k_list,
+    }
 
 
 @asynccontextmanager
