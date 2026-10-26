@@ -29,9 +29,9 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (14/14 tests PASSED). Chưa có Dockerfile, CI workflow,
-backend API HTTP hay hạ tầng Cloud Run.
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` + 3 notebook + 1 script Python native**.
+Đã có bộ kiểm thử tự động `tests/` (**24/24 tests PASSED**). Chưa có Dockerfile, CI workflow
+hay hạ tầng Cloud Run.
 
 ---
 
@@ -41,14 +41,15 @@ backend API HTTP hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `main`, `develop`, `feature/US-001`, `feature/US-002` (đang checkout) |
-| `main` | `3d64e9d` "first commit" — bằng `develop` |
-| `develop` | `3d64e9d` "first commit" |
-| `feature/US-001` | `0963a2b` "chore: add generic pull request template for all PRs to develop" — nghiệm thu PASS US-001 |
-| `feature/US-002` | `d275f35` "docs: cap nhat file Word quy trinh review Pull Request" — nghiệm thu PASS US-002 |
+| Nhánh local | `develop`, `feature/US-001`, `feature/US-002`, `feature/US-003`, `feature/US-004`, `feature/US-005` (đang checkout) |
+| `main` | `3d64e9d` "first commit" — bằng `develop` gốc |
+| `develop` | `5867eca` Merge pull request #6 |
+| `feature/US-003` | `724b0ff` — nghiệm thu PASS US-003 |
+| `feature/US-004` | `dc129bf` — nghiệm thu PASS US-004 |
+| `feature/US-005` | `7dac0d2` — nghiệm thu PASS US-005 (đã push lên `origin/feature/US-005`) |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean**, đã đồng bộ 100% với `origin/feature/US-002` |
+| Trạng thái working tree | **Clean**, đã đồng bộ 100% với `origin/feature/US-005` |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -212,7 +213,11 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & "D:\program\python\python.exe" -m pytest tests -v
   ```
-  (Hiện tại: **14/14 tests PASSED**, ~24s).
+  (Hiện tại: **24/24 tests PASSED**, ~39s).
+- Lệnh chạy FastAPI server cục bộ chuẩn:
+  ```powershell
+  & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
+  ```
 - Khi chạy script python có in tiếng Việt ra console, luôn đặt:
   ```powershell
   $env:PYTHONIOENCODING = "utf-8"
