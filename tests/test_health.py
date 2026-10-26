@@ -6,7 +6,7 @@ Bám theo AC-005-01, AC-005-02 trong docs/api/US-005.md và BR-011, BR-019.
 from unittest.mock import MagicMock, patch
 import pathlib
 import pytest
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SERVICE_PATH = ROOT / "src" / "vsl" / "service.py"
