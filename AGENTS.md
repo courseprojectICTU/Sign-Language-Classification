@@ -29,8 +29,8 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**24/24 tests PASSED**). Chưa có Dockerfile, CI workflow
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
+Đã có bộ kiểm thử tự động `tests/` (**32/32 tests PASSED**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -41,7 +41,7 @@ hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-001`, `feature/US-002`, `feature/US-003`, `feature/US-004`, `feature/US-005` (đang checkout) |
+| Nhánh local | `develop`, `feature/US-001`, `feature/US-002`, `feature/US-003`, `feature/US-004`, `feature/US-005`, `feature/US-006` (đang checkout) |
 | `main` | `3d64e9d` "first commit" — bằng `develop` gốc |
 | `develop` | `5867eca` Merge pull request #6 |
 | `feature/US-003` | `724b0ff` — nghiệm thu PASS US-003 |
@@ -213,7 +213,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & "D:\program\python\python.exe" -m pytest tests -v
   ```
-  (Hiện tại: **24/24 tests PASSED**, ~39s).
+  (Hiện tại: **32/32 tests PASSED**, ~38s).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -243,7 +243,7 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
-| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | Chưa làm | ⏳ To Do | POST `/predict`, AC-006-01, BR-012 |
+| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 
 ---
 
@@ -251,12 +251,8 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Sau khi nghiệm thu PASS `US-005` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-006`**):
-   ```powershell
-   git -c core.hooksPath=.git/no-hooks checkout develop
-   git -c core.hooksPath=.git/no-hooks pull --ff-only
-   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-006
-   ```
-3. Đọc đặc tả US-006 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+2. Sau khi nghiệm thu PASS `US-006`, tiến hành tạo PR cho US-006 lên `develop` hoặc chuyển sang User Story tiếp theo theo kế hoạch của Chủ dự án:
+   - Đọc đặc tả US tiếp theo từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx).
+   - Làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
 
 
