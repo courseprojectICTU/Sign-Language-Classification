@@ -97,6 +97,7 @@ docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi 
 docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap - PASS)
 docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
+docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -104,6 +105,7 @@ src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLAS
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
 tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
+tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
 tests/_generate_golden.py                         script sinh lại golden (không phải test)
@@ -231,7 +233,8 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | ✅ **PASS (2026-10-19)** | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
 | **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | ✅ **PASS (2026-10-25)** | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
 | **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
-| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | Chưa làm | ⏳ To Do | `opencv-python-headless` |
+| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
+| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | Chưa làm | ⏳ To Do | FastAPI / Flask endpoint |
 
 ---
 
@@ -239,11 +242,12 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Sau khi nghiệm thu PASS `US-003` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-004`**):
+2. Sau khi nghiệm thu PASS `US-004` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-005`**):
    ```powershell
    git -c core.hooksPath=.git/no-hooks checkout develop
    git -c core.hooksPath=.git/no-hooks pull --ff-only
-   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-004
+   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-005
    ```
-3. Đọc đặc tả US-004 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+3. Đọc đặc tả US-005 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+
 
