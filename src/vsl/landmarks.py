@@ -73,4 +73,3 @@ def validate_landmark_columns(columns: Sequence[str]) -> Tuple[bool, Optional[st
             )
 
     return True, None
-

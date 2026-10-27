@@ -174,4 +174,3 @@ def test_ac_015_02_service_extract_landmarks_parity_with_contract():
     assert service.FACE_KEYPOINTS == FACE_KEYPOINTS, (
         "service.FACE_KEYPOINTS không trùng khớp với FACE_KEYPOINTS trong src.vsl.landmarks."
     )
-
