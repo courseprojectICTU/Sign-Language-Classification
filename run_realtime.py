@@ -18,15 +18,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 from src.vsl.heatmap import create_heatmap  # BR-002: ban duy nhat
 from src.vsl.labels import VIETNAMESE_ALPHABET  # BR-003: ban duy nhat
+from src.vsl.config import get_model_path  # BR-004: doc tu env / fallback tuong doi
 
 # Khởi tạo MediaPipe
 mp_hands = mp.solutions.hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mp_face_mesh = mp.solutions.face_mesh.FaceMesh(max_num_faces=1, min_detection_confidence=0.7)
 mp_drawing = mp.solutions.drawing_utils
 
-MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'train', 'vsl_cnn_pose_keras.h5')
-if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = r"D:\file\project\Sign-Language-Classification-v1.0\train\vsl_cnn_pose_keras.h5"
+MODEL_PATH = str(get_model_path())
 
 print(f"Đang nạp mô hình từ: {MODEL_PATH}")
 model = load_model(MODEL_PATH)

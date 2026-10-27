@@ -96,9 +96,12 @@ docs/api/README.md                                quy ước + 9 phase + checkli
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
 docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap - PASS)
 docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
-src/vsl/__init__.py                               re-export create_heatmap, VIETNAMESE_ALPHABET, NUM_CLASSES
+docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
+src/vsl/__init__.py                               re-export heatmap, labels, config
+src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
 src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
+tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
 tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
@@ -138,11 +141,9 @@ Tổng = **1609 mẫu**.
 1. **Dữ liệu bị bỏ quên:** `load_landmarks_data()` chỉ đọc `for i in range(1, 51)`
    (`train_cnn_pose_keras.ipynb`, cell load data) → **20 file cuối (51–70) của mọi
    ký tự bị bỏ qua**, dù đĩa có 70 file. Thực tế chỉ **1150/1609** mẫu được train.
-2. **Đường dẫn tuyệt đối hard-code — US-003 sẽ giải quyết:**
-   - `BASE_PATH` trong `capture_and_process_images.ipynb` — **còn hard-code**
-   - `BASE_PATH` trong `train_cnn_pose_keras.ipynb` — **còn hard-code**
-   - `MODEL_PATH` trong `run_realtime.ipynb` và `run_realtime.py` đã dùng đường dẫn tương đối kèm fallback.
-   Tất cả đường dẫn tuyệt đối Windows `D:\...` sẽ vỡ trên container Linux $\to$ trọng tâm của **US-003**.
+2. **Đường dẫn tuyệt đối hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-003)**.
+   Đã thay thế bằng module `src/vsl/config.py` đọc từ `VSL_MODEL_PATH`, `VSL_DATA_DIR` kèm fallback
+   tương đối tự động tính từ `PROJECT_ROOT`. Toàn bộ repository sạch 100% không còn chuỗi `D:\` (BR-004).
 3. **`np.eye(23)` và `Dense(23)` hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-002)**.
    Đã thay thế bằng `np.eye(NUM_CLASSES)` và `Dense(NUM_CLASSES)` với `NUM_CLASSES = len(VIETNAMESE_ALPHABET)`
    suy ra tự động từ `src/vsl/labels.py`.
@@ -229,7 +230,7 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 |---|---|---|---|---|
 | **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | ✅ **PASS (2026-10-19)** | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
 | **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | ✅ **PASS (2026-10-25)** | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
-| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ⏳ **Sắp thực hiện** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR` |
+| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | Chưa làm | ⏳ To Do | `opencv-python-headless` |
 
 ---
@@ -238,8 +239,11 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Kiểm tra nhánh hiện tại và tiến hành theo Bước 0 của US tiếp theo (**`US-003`**):
+2. Sau khi nghiệm thu PASS `US-003` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-004`**):
    ```powershell
-   git checkout -b feature/US-003
+   git -c core.hooksPath=.git/no-hooks checkout develop
+   git -c core.hooksPath=.git/no-hooks pull --ff-only
+   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-004
    ```
-3. Đọc đặc tả US-003 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+3. Đọc đặc tả US-004 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+

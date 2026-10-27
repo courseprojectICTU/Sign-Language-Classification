@@ -5,7 +5,7 @@ Nguon goc cua golden la **dinh nghia create_heatmap trong notebook train cu**
 Nho vay AC-001-02 kiem chung duoc "ket qua giong het ban tham chieu da luu".
 
 Chay:
-    & "D:\\program\\python\\python.exe" tests\\_generate_golden.py
+    python tests/_generate_golden.py
 """
 
 import json
