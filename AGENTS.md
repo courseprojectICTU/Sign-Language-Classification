@@ -29,9 +29,9 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (14/14 tests PASSED). Chưa có Dockerfile, CI workflow,
-backend API HTTP hay hạ tầng Cloud Run.
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` + 3 notebook + 1 script Python native**.
+Đã có bộ kiểm thử tự động `tests/` (**24/24 tests PASSED**). Chưa có Dockerfile, CI workflow
+hay hạ tầng Cloud Run.
 
 ---
 
@@ -41,14 +41,15 @@ backend API HTTP hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `main`, `develop`, `feature/US-001`, `feature/US-002` (đang checkout) |
-| `main` | `3d64e9d` "first commit" — bằng `develop` |
-| `develop` | `3d64e9d` "first commit" |
-| `feature/US-001` | `0963a2b` "chore: add generic pull request template for all PRs to develop" — nghiệm thu PASS US-001 |
-| `feature/US-002` | `d275f35` "docs: cap nhat file Word quy trinh review Pull Request" — nghiệm thu PASS US-002 |
+| Nhánh local | `develop`, `feature/US-001`, `feature/US-002`, `feature/US-003`, `feature/US-004`, `feature/US-005` (đang checkout) |
+| `main` | `3d64e9d` "first commit" — bằng `develop` gốc |
+| `develop` | `5867eca` Merge pull request #6 |
+| `feature/US-003` | `724b0ff` — nghiệm thu PASS US-003 |
+| `feature/US-004` | `dc129bf` — nghiệm thu PASS US-004 |
+| `feature/US-005` | `7dac0d2` — nghiệm thu PASS US-005 (đã push lên `origin/feature/US-005`) |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean**, đã đồng bộ 100% với `origin/feature/US-002` |
+| Trạng thái working tree | **Clean**, đã đồng bộ 100% với `origin/feature/US-005` |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -98,11 +99,14 @@ docs/api/US-001.md                                hợp đồng API của US-001
 docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
+docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
 src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
+src/vsl/service.py                                FastAPI service + GET /health (BR-011)
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
+tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
 tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
 tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
@@ -209,7 +213,11 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & "D:\program\python\python.exe" -m pytest tests -v
   ```
-  (Hiện tại: **14/14 tests PASSED**, ~24s).
+  (Hiện tại: **24/24 tests PASSED**, ~39s).
+- Lệnh chạy FastAPI server cục bộ chuẩn:
+  ```powershell
+  & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
+  ```
 - Khi chạy script python có in tiếng Việt ra console, luôn đặt:
   ```powershell
   $env:PYTHONIOENCODING = "utf-8"
@@ -234,7 +242,8 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | ✅ **PASS (2026-10-25)** | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
 | **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
-| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | Chưa làm | ⏳ To Do | FastAPI / Flask endpoint |
+| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
+| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | Chưa làm | ⏳ To Do | POST `/predict`, AC-006-01, BR-012 |
 
 ---
 
@@ -242,12 +251,12 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Sau khi nghiệm thu PASS `US-004` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-005`**):
+2. Sau khi nghiệm thu PASS `US-005` và merge PR vào `develop`, tiến hành Bước 0 của US tiếp theo (**`US-006`**):
    ```powershell
    git -c core.hooksPath=.git/no-hooks checkout develop
    git -c core.hooksPath=.git/no-hooks pull --ff-only
-   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-005
+   git -c core.hooksPath=.git/no-hooks checkout -b feature/US-006
    ```
-3. Đọc đặc tả US-005 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+3. Đọc đặc tả US-006 từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx), làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
 
 
