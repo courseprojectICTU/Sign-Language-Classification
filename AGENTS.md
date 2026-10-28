@@ -99,7 +99,6 @@ docs/api/US-003.md                                hợp đồng API của US-003
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
-docs/api/US-016.md                                tài liệu test contract US-016 (N/A public API; DRAFT)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
