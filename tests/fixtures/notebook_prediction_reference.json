@@ -1,0 +1,122 @@
+{
+  "source": "run_realtime.ipynb inference sequence replayed on the 23 labeled 1.csv samples",
+  "model_sha256": "f40a3a11614736a891b32dabd918dc718f6084c21330de736cbf84deaf651b47",
+  "interpretation": "Training-sample validity check only; not real-world accuracy.",
+  "samples": [
+    {
+      "sample": "a/1.csv",
+      "letter": "a",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "b/1.csv",
+      "letter": "b",
+      "confidence_percent": 99.23
+    },
+    {
+      "sample": "c/1.csv",
+      "letter": "c",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "d/1.csv",
+      "letter": "d",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "đ/1.csv",
+      "letter": "đ",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "e/1.csv",
+      "letter": "e",
+      "confidence_percent": 99.98
+    },
+    {
+      "sample": "g/1.csv",
+      "letter": "g",
+      "confidence_percent": 99.94
+    },
+    {
+      "sample": "h/1.csv",
+      "letter": "h",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "i/1.csv",
+      "letter": "i",
+      "confidence_percent": 99.98
+    },
+    {
+      "sample": "k/1.csv",
+      "letter": "k",
+      "confidence_percent": 99.91
+    },
+    {
+      "sample": "l/1.csv",
+      "letter": "l",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "m/1.csv",
+      "letter": "m",
+      "confidence_percent": 99.94
+    },
+    {
+      "sample": "n/1.csv",
+      "letter": "n",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "o/1.csv",
+      "letter": "o",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "p/1.csv",
+      "letter": "p",
+      "confidence_percent": 97.09
+    },
+    {
+      "sample": "q/1.csv",
+      "letter": "q",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "r/1.csv",
+      "letter": "r",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "s/1.csv",
+      "letter": "s",
+      "confidence_percent": 100.0
+    },
+    {
+      "sample": "t/1.csv",
+      "letter": "t",
+      "confidence_percent": 99.99
+    },
+    {
+      "sample": "u/1.csv",
+      "letter": "u",
+      "confidence_percent": 82.7
+    },
+    {
+      "sample": "v/1.csv",
+      "letter": "v",
+      "confidence_percent": 99.98
+    },
+    {
+      "sample": "x/1.csv",
+      "letter": "x",
+      "confidence_percent": 99.98
+    },
+    {
+      "sample": "y/1.csv",
+      "letter": "y",
+      "confidence_percent": 99.82
+    }
+  ]
+}
