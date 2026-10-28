@@ -18,6 +18,7 @@ dist/
 
 # pytest
 .pytest_cache/
+.keras/
 
 # Jupyter config/data/runtime (redirected into workspace on Windows)
 .jupyter-config/

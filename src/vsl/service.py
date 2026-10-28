@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from src.vsl.config import get_model_path
 from src.vsl.heatmap import create_heatmap
 from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
+from src.vsl.landmarks import FACE_KEYPOINTS, TOTAL_LANDMARK_COORDS
 
 import mediapipe as mp
 
@@ -25,17 +26,21 @@ logger = logging.getLogger("vsl.service")
 
 # ---------------------------------------------------------------- MediaPipe Singletons
 # Tái sử dụng instance để tránh re-init tốn tài nguyên (R-4)
-_mp_hands = mp.solutions.hands.Hands(
-    static_image_mode=True,
-    max_num_hands=1,
-    min_detection_confidence=0.5,
-)
-_mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
-    static_image_mode=True,
-    max_num_faces=1,
-    min_detection_confidence=0.5,
-)
-FACE_KEYPOINTS = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)
+if hasattr(mp, 'solutions'):
+    _mp_hands = mp.solutions.hands.Hands(
+        static_image_mode=True,
+        max_num_hands=1,
+        min_detection_confidence=0.5,
+    )
+    _mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
+        static_image_mode=True,
+        max_num_faces=1,
+        min_detection_confidence=0.5,
+    )
+else:
+    _mp_hands = None
+    _mp_face_mesh = None
+# FACE_KEYPOINTS được định nghĩa duy nhất tại src.vsl.landmarks (BR-001, US-015)
 
 
 # ---------------------------------------------------------------- Pydantic Schemas
