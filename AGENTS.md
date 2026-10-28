@@ -30,7 +30,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` (gồm hợp đồng landmark) + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Bộ kiểm thử tự động `tests/` có **41/41 tests PASSED** trong lần chạy ngày 2026-10-28 sau khi triển khai US-016. Chưa có Dockerfile, CI workflow
+Bộ kiểm thử tự động `tests/` có **42/42 tests PASSED** trong lần chạy ngày 2026-10-28 sau khi bổ sung kiểm tra notebook trực tiếp của US-016. Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -112,8 +112,10 @@ tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
 tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
 tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
+tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash model/CSV, confidence tolerance 0.0001
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
-tests/_generate_service_reference.py              tạo fixture tham chiếu từ luồng notebook (US-016)
+tests/_generate_service_reference.py              lệnh tương thích cũ, chuyển tiếp sang exporter trực tiếp (US-016)
+tests/_export_us016_from_notebook.py               xuất trực tiếp dự đoán notebook và SHA model/CSV (US-016)
 tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
@@ -218,7 +220,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy sau thay đổi US-016: **41/41 tests PASSED**, 2026-10-28, ~33s).
+  (Lần chạy mới nhất: **42/42 tests PASSED**, 2026-10-28, ~45s; gồm direct notebook/service parity US-016).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -249,7 +251,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
-| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu, test AC-016-01/02 và tài liệu hồi cứu `docs/api/US-016.md`; 41/41 test xanh, chờ chủ dự án xác nhận PASS |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001, sigma=3 regression giữ nguyên; chờ chủ dự án xác nhận PASS |
 
 ---
 
@@ -257,5 +259,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. US-016 đã hoàn tất TSK-026/027 và toàn bộ test xanh; trình báo cáo CỔNG D để Chủ dự án xác nhận PASS.
+2. US-016 đã hoàn tất TSK-026/027; direct notebook/service test mới bổ sung parity, hash model/CSV và ngưỡng confidence 0.0001; nghiệm thu sau khi chạy toàn bộ suite và chờ Chủ dự án xác nhận PASS.
 3. Không push hoặc tạo PR nếu chưa có quyết định của Chủ dự án; sau nghiệm thu, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
