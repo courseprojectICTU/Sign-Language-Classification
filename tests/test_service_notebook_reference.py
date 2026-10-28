@@ -1,5 +1,6 @@
 """Regression tests for service parity with the frozen notebook inference output."""
 
+import hashlib
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -17,22 +18,25 @@ REFERENCE_PATH = ROOT / "tests" / "fixtures" / "notebook_prediction_reference.js
 
 
 @pytest.fixture(scope="module")
-def model():
-    from keras.models import load_model
-
-    model_path = get_model_path()
-    assert model_path.is_file(), f"Model file not found: {model_path}"
-    return load_model(str(model_path))
-
-
-@pytest.fixture(scope="module")
-def reference_predictions():
+def notebook_reference():
     payload = json.loads(REFERENCE_PATH.read_text(encoding="utf-8"))
     samples = payload["samples"]
-    references = {sample["sample"].split("/")[0]: sample for sample in samples}
 
     assert "run_realtime.ipynb" in payload["source"]
     assert len(samples) == len(VIETNAMESE_ALPHABET) == 23
+    assert len(payload["model_sha256"]) == 64
+    assert all(
+        character in "0123456789abcdef"
+        for character in payload["model_sha256"]
+    )
+    return payload
+
+
+@pytest.fixture(scope="module")
+def reference_predictions(notebook_reference):
+    samples = notebook_reference["samples"]
+    references = {sample["sample"].split("/")[0]: sample for sample in samples}
+
     assert len(references) == len(samples), "Duplicate sample in notebook reference"
     assert set(references) == set(VIETNAMESE_ALPHABET)
     assert all(
@@ -40,6 +44,29 @@ def reference_predictions():
         for letter in VIETNAMESE_ALPHABET
     )
     return references
+
+
+@pytest.fixture(scope="module")
+def model(notebook_reference):
+    from keras.models import load_model
+
+    model_path = get_model_path()
+    assert model_path.is_file(), f"Model file not found: {model_path}"
+
+    digest = hashlib.sha256()
+    with model_path.open("rb") as model_file:
+        for chunk in iter(lambda: model_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    actual_sha256 = digest.hexdigest()
+    expected_sha256 = notebook_reference["model_sha256"]
+    assert actual_sha256 == expected_sha256, (
+        "Current model does not match the model used for the notebook reference: "
+        f"expected SHA-256 {expected_sha256}, got {actual_sha256}. "
+        "Review the model change and regenerate the reference intentionally if needed."
+    )
+
+    return load_model(str(model_path))
 
 
 def _load_landmarks(letter):
