@@ -44,7 +44,7 @@ hay hạ tầng Cloud Run.
 | Nhánh local | `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016` (đang checkout) |
 | `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
-| `feature/US-016` | `43ce3dc` — đang làm; gồm 2 commit TSK-026/TSK-027, dựa trên `develop` tại `520e215` |
+| `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
 | Trạng thái working tree | **Clean** sau khi cập nhật bộ nhớ dự án; nhánh `feature/US-016` chưa push |
@@ -99,6 +99,8 @@ docs/api/US-003.md                                hợp đồng API của US-003
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
+docs/api/US-016.md                                tài liệu test contract US-016 (N/A public API; DRAFT)
+docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -248,7 +250,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
-| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu và test AC-016-01/02; 41/41 test xanh, chờ chủ dự án xác nhận PASS |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu, test AC-016-01/02 và tài liệu hồi cứu `docs/api/US-016.md`; 41/41 test xanh, chờ chủ dự án xác nhận PASS |
 
 ---
 
