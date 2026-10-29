@@ -1,0 +1,168 @@
+{
+  "source": "Direct replay of the preprocessing and model inference sequence in run_realtime.ipynb",
+  "model_sha256": "f40a3a11614736a891b32dabd918dc718f6084c21330de736cbf84deaf651b47",
+  "interpretation": "Training-sample validity check only; not real-world accuracy.",
+  "samples": [
+    {
+      "sample": "a/1.csv",
+      "letter": "a",
+      "confidence": 0.9999979734420776,
+      "confidence_percent": 100.0,
+      "csv_sha256": "98ef0ae06bbbff8c073f172012d3091f50ccd16e1fecb1a1b25f9d64368efdb7"
+    },
+    {
+      "sample": "b/1.csv",
+      "letter": "b",
+      "confidence": 0.9923343062400818,
+      "confidence_percent": 99.23,
+      "csv_sha256": "d8ec244afa519744a44458be4b0a754049712278b678b6111eeee0094ecebdaa"
+    },
+    {
+      "sample": "c/1.csv",
+      "letter": "c",
+      "confidence": 0.9999203681945801,
+      "confidence_percent": 99.99,
+      "csv_sha256": "df9f658a2f1f9e429f7282edf88d1b49c6f2e9fead34a1a54dd08fe1b6f3157c"
+    },
+    {
+      "sample": "d/1.csv",
+      "letter": "d",
+      "confidence": 0.9998598098754883,
+      "confidence_percent": 99.99,
+      "csv_sha256": "8802db61e523ac8c82e8c36be24e0293684aaf86300bf638c279ebfcd07fd69a"
+    },
+    {
+      "sample": "đ/1.csv",
+      "letter": "đ",
+      "confidence": 1.0,
+      "confidence_percent": 100.0,
+      "csv_sha256": "bee848c61b53f63591d491d297ff8959883c5663742d7bba9da9e06e88d63ab5"
+    },
+    {
+      "sample": "e/1.csv",
+      "letter": "e",
+      "confidence": 0.9998276233673096,
+      "confidence_percent": 99.98,
+      "csv_sha256": "320c65e7eeb2598fc6f01b3240d17aa36b138459b6383053a10363732a200b64"
+    },
+    {
+      "sample": "g/1.csv",
+      "letter": "g",
+      "confidence": 0.9994057416915894,
+      "confidence_percent": 99.94,
+      "csv_sha256": "94d798e61b82b73027f280b30bad37c73495434709eec15a3c5d9046abedc974"
+    },
+    {
+      "sample": "h/1.csv",
+      "letter": "h",
+      "confidence": 0.9999600648880005,
+      "confidence_percent": 100.0,
+      "csv_sha256": "c7673110b2823643c180779d3f46acb6f517cc9ff72542362aad405cb307b4e1"
+    },
+    {
+      "sample": "i/1.csv",
+      "letter": "i",
+      "confidence": 0.9997628331184387,
+      "confidence_percent": 99.98,
+      "csv_sha256": "fa40df763d95c1b6fbb19924191079d7f76dd4a0e10aa9deeb1057da301b7302"
+    },
+    {
+      "sample": "k/1.csv",
+      "letter": "k",
+      "confidence": 0.9990849494934082,
+      "confidence_percent": 99.91,
+      "csv_sha256": "d9f50ddc89439617b1d0e59177dcf2224674a0eb4a922da9d6ceebeb0b556f60"
+    },
+    {
+      "sample": "l/1.csv",
+      "letter": "l",
+      "confidence": 0.9998977184295654,
+      "confidence_percent": 99.99,
+      "csv_sha256": "761658102f3c8bae7497aee7e857e80af95a0ae1e4e95d538e8e5ede0a2628c0"
+    },
+    {
+      "sample": "m/1.csv",
+      "letter": "m",
+      "confidence": 0.9994068145751953,
+      "confidence_percent": 99.94,
+      "csv_sha256": "9f90d348072a1d1672f106805dd231a4909242cb95b58462397b63d86ebb82ac"
+    },
+    {
+      "sample": "n/1.csv",
+      "letter": "n",
+      "confidence": 0.9999380111694336,
+      "confidence_percent": 99.99,
+      "csv_sha256": "e6e33bd5ce52cae64687b116135f1d669274d99a084f4cacf9ac4b044e8a876e"
+    },
+    {
+      "sample": "o/1.csv",
+      "letter": "o",
+      "confidence": 0.9999992847442627,
+      "confidence_percent": 100.0,
+      "csv_sha256": "816a4d69bb87c1a1248f729ac9d8fe845d8e4ef28832fc78dc846cd6f78578c8"
+    },
+    {
+      "sample": "p/1.csv",
+      "letter": "p",
+      "confidence": 0.9708622694015503,
+      "confidence_percent": 97.09,
+      "csv_sha256": "4a8c1b01f12cd88deaf88be4791821fdcb517e9c4573942fd37ff109aaab055b"
+    },
+    {
+      "sample": "q/1.csv",
+      "letter": "q",
+      "confidence": 0.9999862909317017,
+      "confidence_percent": 100.0,
+      "csv_sha256": "746c6732007e75a5d06bb40b14797daa226d7d616b15f1c679fd6adf9b906df8"
+    },
+    {
+      "sample": "r/1.csv",
+      "letter": "r",
+      "confidence": 0.9999034404754639,
+      "confidence_percent": 99.99,
+      "csv_sha256": "10a34919859b933ec135477b14d7fb797c20d305838a776f26e6e4b03ae187e9"
+    },
+    {
+      "sample": "s/1.csv",
+      "letter": "s",
+      "confidence": 0.999988317489624,
+      "confidence_percent": 100.0,
+      "csv_sha256": "00103e15fc426ec6a59593d3d889b8742272d6682bc2c698591b0aa3bdfaf19e"
+    },
+    {
+      "sample": "t/1.csv",
+      "letter": "t",
+      "confidence": 0.9998780488967896,
+      "confidence_percent": 99.99,
+      "csv_sha256": "e675cfcc61c2b9edc0552056f321f9fe7a45d73ad6bcc0fa06c36f72e8323931"
+    },
+    {
+      "sample": "u/1.csv",
+      "letter": "u",
+      "confidence": 0.8270323872566223,
+      "confidence_percent": 82.7,
+      "csv_sha256": "b927c0c89d8726ff2f1108945d583281a9cee68323b133a83aef85e34e941bae"
+    },
+    {
+      "sample": "v/1.csv",
+      "letter": "v",
+      "confidence": 0.9998399019241333,
+      "confidence_percent": 99.98,
+      "csv_sha256": "9f6a304e436c7107d2bbf73fb15e766ecbe7f4083cb41679556e8769e506e332"
+    },
+    {
+      "sample": "x/1.csv",
+      "letter": "x",
+      "confidence": 0.9998247027397156,
+      "confidence_percent": 99.98,
+      "csv_sha256": "5ae1bf04b8cf71249e9793b3ae968aaaad7cc1f76914ee614fa2928d5f15ab4a"
+    },
+    {
+      "sample": "y/1.csv",
+      "letter": "y",
+      "confidence": 0.9982388019561768,
+      "confidence_percent": 99.82,
+      "csv_sha256": "107205a209857dd35e71110beb80a15e9f236aa7645d7cc708e405705a286f9a"
+    }
+  ]
+}
