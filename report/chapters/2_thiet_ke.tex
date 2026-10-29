@@ -1,0 +1,65 @@
+% ==============================================================================
+% 2_THIET_KE.TEX - CHƯƠNG 2: THIẾT KẾ GIẢI PHÁP VÀ XÂY DỰNG HỆ THỐNG
+% ==============================================================================
+
+\chapter{THIẾT KẾ GIẢI PHÁP VÀ XÂY DỰNG HỆ THỐNG}
+\label{chap:thiet_ke}
+
+\section{Tái cấu trúc mã nguồn AI và xây dựng dịch vụ RESTful API}
+\label{sec:refactor_ai_api}
+
+\subsection{Chuẩn hóa module trích xuất MediaPipe và thuật toán Gaussian Heatmap}
+\label{subsec:chuan_hoa_heatmap}
+% [Nội dung sẽ bổ sung: Trích xuất hàm create_heatmap thành module duy nhất src/vsl/heatmap.py; công thức tạo ma trận điểm nhiệt Gaussian 2D với bán kính 15px, sigma=5 trên lưới 224x224x3; chuẩn hóa hợp đồng dữ liệu 93 tọa độ.]
+
+\subsection{Độc lập hóa cấu hình và nguồn chân lý nhãn theo Twelve-Factor App}
+\label{subsec:cau_hinh_va_nhan}
+% [Nội dung sẽ bổ sung: Xóa bỏ 100% đường dẫn hard-code D:\; xây dựng module cấu hình tập trung src/vsl/config.py đọc từ biến môi trường VSL_MODEL_PATH và VSL_DATA_DIR; đóng băng danh sách nhãn cố định src/vsl/labels.py gồm đúng 23 ký tự.]
+
+\subsection{Xây dựng dịch vụ FastAPI với các endpoint kiểm tra sức khỏe và suy luận}
+\label{subsec:xay_dung_fastapi}
+% [Nội dung sẽ bổ sung: Thiết kế dịch vụ FastAPI trong src/vsl/service.py; quản lý vòng đời nạp model Keras ResNet50 qua lifespan handler; hiện thực hóa GET /health (kiểm tra trạng thái model) và POST /predict (nhận ảnh, giải mã base64/binary, chạy pipeline).]
+
+
+\section{Đóng gói Container với Docker}
+\label{sec:dong_goi_docker}
+
+\subsection{Chiến lược lựa chọn Base Image tối ưu kích thước cho môi trường Linux}
+\label{subsec:chon_base_image}
+% [Nội dung sẽ bổ sung: Đánh giá giữa Ubuntu, Debian Slim và Alpine Linux; lựa chọn python:3.11-slim hoặc python:3.12-slim để cân bằng giữa dung lượng tải và tính tương thích của bánh xe C-extension.]
+
+\subsection{Xử lý phụ thuộc thư viện Deep Learning và OpenCV Headless}
+\label{subsec:xu_ly_phu_thuoc}
+% [Nội dung sẽ bổ sung: Tách biệt requirements.txt sạch chuẩn ASCII; thay thế opencv-python bằng opencv-python-headless nhằm loại bỏ phụ thuộc thư viện đồ họa GUI X11; tối ưu hóa cài đặt TensorFlow và MediaPipe trên Linux.]
+
+\subsection{Cấu hình Dockerfile tối ưu đa tầng và thiết lập bảo mật tiến trình}
+\label{subsec:cau_hinh_dockerfile}
+% [Nội dung sẽ bổ sung: Cấu trúc Dockerfile; cơ chế caching layer hiệu quả của Docker; thiết lập tài khoản non-root chạy ứng dụng Uvicorn bên trong container nhằm nâng cao an toàn an ninh đám mây.]
+
+
+\section{Thiết kế kiến trúc hạ tầng Cloud Serverless}
+\label{sec:kien_truc_cloud}
+
+\subsection{Cấu hình dịch vụ Backend trên Google Cloud Run}
+\label{subsec:google_cloud_run}
+% [Nội dung sẽ bổ sung: Thiết lập Cloud Run Service; cơ chế Autoscaling co giãn tự động từ 0 đến N instance (Scale-to-Zero khi không có tải); phân bổ tài nguyên tối ưu: 1 vCPU, 2GB RAM; phân tích hiện tượng và kỹ thuật xử lý Cold Start.]
+
+\subsection{Triển khai dịch vụ Frontend trên Cloudflare Pages}
+\label{subsec:cloudflare_pages}
+% [Nội dung sẽ bổ sung: Kiến trúc Single Page Application (SPA); lưu trữ và phân phối trên mạng lưới máy chủ biên (Edge Network) của Cloudflare; tự động hóa chứng chỉ SSL/TLS; cấu hình giao tiếp HTTPS an toàn với API Cloud Run.]
+
+
+\section{Xây dựng quy trình tự động hóa CI/CD với GitHub Actions}
+\label{sec:quy_trinh_cicd}
+
+\subsection{Thiết kế luồng CI (Continuous Integration): Linting và kiểm thử tự động}
+\label{subsec:luong_ci}
+% [Nội dung sẽ bổ sung: Thiết kế file workflow .github/workflows/ci.yml; các bước tự động kích hoạt khi có Pull Request: kiểm tra mã nguồn, cài đặt môi trường ảo và chạy toàn diện bộ kiểm thử tự động bằng pytest.]
+
+\subsection{Thiết kế luồng CD (Continuous Deployment): Đóng gói và phát hành tự động}
+\label{subsec:luong_cd}
+% [Nội dung sẽ bổ sung: Thiết kế luồng CD .github/workflows/cd.yml; tự động kích hoạt khi merge vào nhánh develop/main; xác thực với Google Cloud qua Service Account Key / Workload Identity Federation; tự động build Docker Image, gắn thẻ commit SHA, push lên Google Artifact Registry và ra lệnh Cloud Run cập nhật bản phát hành mới.]
+
+\subsection{Quản lý biến môi trường và bí mật bảo mật}
+\label{subsec:quan_ly_bi_mat}
+% [Nội dung sẽ bổ sung: Quản trị các giá trị bí mật nhạy cảm (GCP_PROJECT_ID, GCP_SA_KEY) qua GitHub Encrypted Secrets; phân quyền tối thiểu (Principle of Least Privilege) cho Service Account trong GCP IAM.]

@@ -1,0 +1,240 @@
+% ==============================================================================
+% 1_TONG_QUAN.TEX - CHƯƠNG 1: TỔNG QUAN VỀ BÀI TOÁN VÀ CƠ SỞ KỸ THUẬT
+% ==============================================================================
+
+\chapter{TỔNG QUAN VỀ BÀI TOÁN VÀ CƠ SỞ KỸ THUẬT}
+\label{chap:tong_quan}
+
+Chương này trình bày bối cảnh bài toán nhận diện ngôn ngữ ký hiệu tiếng Việt kế thừa từ đồ án Capstone AI Samsung Innovation Campus (SIC), làm rõ các công nghệ cốt lõi và vai trò của chúng trong dự án, đồng thời phân tích hiện trạng mã nguồn ban đầu để xác định các yêu cầu kỹ thuật và định hình giải pháp nâng cấp hệ thống lên đám mây.
+
+\section{Bối cảnh bài toán và các công nghệ sử dụng}
+\label{sec:boi_canh_cong_nghe}
+
+\subsection{Nguồn gốc và mục tiêu đề tài}
+\label{subsec:nguon_goc_de_tai}
+
+Đề tài xuất phát từ việc sử dụng đồ án Capstone AI cuối khóa \textbf{Samsung Innovation Campus (SIC)} do thành viên trong nhóm tự nghiên cứu, thu thập dữ liệu và huấn luyện mô hình. Bài toán ban đầu tập trung vào việc nhận diện bảng chữ cái ngôn ngữ ký hiệu ngón tay tiếng Việt từ hình ảnh camera cục bộ trên máy tính cá nhân.
+
+Trong khuôn khổ học phần \textbf{Điện toán đám mây}, nhóm hướng tới mục tiêu thực hành đóng vai trò như những kỹ sư DevOps: chuyển đổi một mô hình AI từ môi trường nghiên cứu chạy cục bộ thành một dịch vụ phần mềm hoàn chỉnh, hoạt động ổn định trên mạng Internet. Hệ thống nâng cấp phải bảo đảm khả năng tự động hóa quy trình kiểm thử, đóng gói container và triển khai lên hạ tầng đám mây Serverless với chi phí vận hành bằng \$0.
+
+\subsection{Các công nghệ cốt lõi và vai trò trong dự án}
+\label{subsec:vai_tro_cong_nghe}
+
+Để giải quyết bài toán đưa mô hình AI lên đám mây một cách hiệu quả, nhóm đã lựa chọn và kết hợp các công nghệ sau:
+
+\begin{itemize}
+    \item \textbf{Phương pháp luận DevOps và quy trình CI/CD}:
+    \begin{itemize}
+        \item \textit{Bản chất}: DevOps là sự kết hợp giữa phát triển (Dev) và vận hành (Ops). Trọng tâm là quy trình CI/CD (Tích hợp liên tục / Triển khai liên tục) nhằm tự động hóa các khâu kiểm thử mã nguồn, dựng gói phần mềm và phát hành sản phẩm.
+        \item \textit{Vai trò trong dự án}: Nhóm sử dụng \textbf{GitHub Actions} để thiết lập đường ống tự động: mỗi khi có mã nguồn mới được đẩy lên (Git Push) hoặc tạo Pull Request, hệ thống sẽ tự động kích hoạt bộ kiểm thử tự động (\texttt{pytest}), tiến hành đóng gói Docker Image và phát hành thẳng lên Cloud mà không cần thao tác thủ công qua giao diện dòng lệnh.
+    \end{itemize}
+
+    \item \textbf{Công nghệ Container hóa (Docker)}:
+    \begin{itemize}
+        \item \textit{Bản chất}: Đóng gói mã nguồn ứng dụng cùng toàn bộ môi trường thực thi, phiên bản ngôn ngữ Python và các thư viện phụ thuộc thành một đơn vị duy nhất (Docker Image).
+        \item \textit{Vai trò trong dự án}: Chuẩn hóa môi trường Python 3.11 trên nền tảng Linux Debian (\texttt{python:3.11-slim}), cài đặt sẵn các thư viện C/C++ cần thiết cho OpenCV và TensorFlow, giải quyết triệt để lỗi xung đột môi trường khi chuyển từ máy trạm Windows sang máy chủ đám mây Linux.
+    \end{itemize}
+
+    \item \textbf{Kiến trúc Serverless Container (Google Cloud Run)}:
+    \begin{itemize}
+        \item \textit{Bản chất}: Dịch vụ chạy container không máy chủ, tự động co giãn từ 0 instance khi không có lưu lượng truy cập (Scale-to-Zero) đến nhiều instance khi có yêu cầu, người dùng chỉ trả tiền theo thời gian xử lý thực tế tính theo từng mili-giây.
+        \item \textit{Vai trò trong dự án}: Làm máy chủ Backend phục vụ API dự đoán AI. Cơ chế Scale-to-Zero kết hợp hạn mức miễn phí 2 triệu lượt gọi/tháng giúp hệ thống vận hành 24/7 trên Internet mà hoàn toàn không tốn chi phí thuê máy chủ ảo.
+    \end{itemize}
+
+    \item \textbf{Dịch vụ lưu trữ Web tĩnh (Cloudflare Pages)}:
+    \begin{itemize}
+        \item \textit{Bản chất}: Nền tảng lưu trữ và phân phối website tĩnh (HTML, CSS, JavaScript) thông qua mạng lưới máy chủ biên (Edge CDN) toàn cầu, tích hợp sẵn chứng chỉ bảo mật SSL/TLS.
+        \item \textit{Vai trò trong dự án}: Đảm nhận vai trò máy chủ Frontend phục vụ giao diện người dùng (Web Client) với tốc độ cao, băng thông không giới hạn và hoàn toàn miễn phí.
+    \end{itemize}
+\end{itemize}
+
+
+\section{Hiện trạng mô hình AI gốc từ Đồ án Capstone SIC}
+\label{sec:hien_trang_sic}
+
+\subsection{Đặc tả bài toán và bảng chữ cái VSL (23 ký tự)}
+\label{subsec:dac_ta_vsl}
+
+Mô hình AI gốc giải quyết bài toán nhận diện bảng chữ cái ngón tay trong ngôn ngữ ký hiệu tiếng Việt (Vietnamese Sign Language -- VSL):
+\begin{itemize}
+    \item \textbf{Đầu vào (Input)}: Ảnh chụp tĩnh hoặc khung hình từ webcam ghi nhận cử chỉ bàn tay kết hợp vị trí khuôn mặt của người thực hiện ký hiệu.
+    \item \textbf{Đầu ra (Output)}: Ký tự chữ cái tương ứng trong bảng chữ cái VSL cùng tỷ lệ phần trăm độ tin cậy (\textit{confidence score}).
+\end{itemize}
+
+Bảng chữ cái VSL trong dự án được chuẩn hóa gồm đúng \textbf{23 ký tự}:
+\begin{equation}
+\label{eq:vsl_alphabet}
+\begin{aligned}
+\mathcal{C}_{\text{VSL}} = \{ & \text{'a'}, \text{'b'}, \text{'c'}, \text{'d'}, \text{'đ'}, \text{'e'}, \text{'g'}, \text{'h'}, \text{'i'}, \text{'k'}, \text{'l'}, \text{'m'}, \\
+& \text{'n'}, \text{'o'}, \text{'p'}, \text{'q'}, \text{'r'}, \text{'s'}, \text{'t'}, \text{'u'}, \text{'v'}, \text{'x'}, \text{'y'} \}
+\end{aligned}
+\end{equation}
+
+Tập nhãn loại bỏ các ký tự không có trong bảng chữ cái tiếng Việt cơ bản (\texttt{'f'}, \texttt{'j'}, \texttt{'w'}, \texttt{'z'}) và chứa ký tự đặc thù tiếng Việt là \textbf{\texttt{'đ'}}.
+
+\textbf{Tập dữ liệu thực nghiệm trong dự án}: Tập dữ liệu thô bao gồm 23 thư mục tương ứng với 23 nhãn chữ cái. Mỗi mẫu dữ liệu là một tệp CSV chứa 1 dòng tiêu đề và 1 dòng dữ liệu với đúng 93 cột số thực biểu diễn tọa độ các điểm mốc. Mỗi lớp chữ cái có 70 tệp mẫu (riêng ký tự \texttt{'đ'} có 69 tệp do thiếu tệp số 65), tổng dung lượng tập dữ liệu là \textbf{1.609 mẫu dữ liệu thực tế}.
+
+\subsection{Đường ống xử lý AI và kiến trúc ResNet50}
+\label{subsec:pipeline_ai_goc}
+
+Quy trình nhận diện của mô hình gốc gồm 4 bước liên hoàn (Hình \ref{fig:pipeline_ai_goc}):
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[every node/.style={transform shape}, node distance=1.8cm]
+    \node (input) [draw, rounded corners, fill=green!10, text width=2.4cm, align=center] {Ảnh đầu vào\\(Webcam / RGB)};
+    \node (mediapipe) [draw, fill=blue!10, right of=input, xshift=1.5cm, text width=3.2cm, align=center] {MediaPipe Extraction\\(21 điểm tay + 10 điểm mặt $\to$ 93 toạ độ)};
+    \node (heatmap) [draw, fill=orange!10, right of=mediapipe, xshift=2.0cm, text width=3.0cm, align=center] {Sinh Heatmap Gaussian\\(Lưới $224 \times 224 \times 3$,\\$\sigma=5$, bán kính 15px)};
+    \node (resnet) [draw, fill=purple!10, right of=heatmap, xshift=2.0cm, text width=3.0cm, align=center] {ResNet50 Classifier\\(Transfer Learning $\to$\\Softmax 23 lớp)};
+
+    \draw[->, line width=1pt] (input) -- (mediapipe);
+    \draw[->, line width=1pt] (mediapipe) -- (heatmap);
+    \draw[->, line width=1pt] (heatmap) -- (resnet);
+\end{tikzpicture}%
+}
+\caption{Quy trình xử lý của mô hình AI nhận diện ngôn ngữ ký hiệu tiếng Việt}
+\label{fig:pipeline_ai_goc}
+\end{figure}
+
+Chi tiết các thành phần kỹ thuật:
+\begin{enumerate}
+    \item \textbf{Trích xuất điểm mốc không gian (MediaPipe)}:
+    Hệ thống sử dụng bộ công cụ MediaPipe \cite{lugaresi2019mediapipe} để xác định vị trí các khớp xương bàn tay và điểm mốc trên mặt:
+    \begin{itemize}
+        \item \textit{Bàn tay}: Trích xuất 21 điểm mốc khớp xương trong không gian 3 chiều ($x, y, z$), tạo thành $21 \times 3 = 63$ giá trị tọa độ.
+        \item \textit{Khuôn mặt}: Trích xuất 10 điểm mốc mặt chiến lược có chỉ số cố định:
+        \begin{equation}
+        \mathcal{I}_{\text{face}} = [10, 152, 234, 454, 33, 263, 1, 61, 291, 199]
+        \end{equation}
+        (đỉnh đầu, cằm, gò má, khóe mắt, chóp mũi) $\to 10 \times 3 = 30$ giá trị tọa độ. Thông tin mặt giúp mô hình phân biệt các ký tự có cử chỉ bàn tay tương đồng trên camera 2D (như cặp chữ \texttt{'m'} và \texttt{'n'}).
+        \item Chuỗi dữ liệu hợp nhất gồm đúng \textbf{93 số thực} ($63 + 30$). Khi không phát hiện tay hoặc mặt, giá trị tọa độ được gán bằng $0.0$.
+    \end{itemize}
+
+    \item \textbf{Kỹ thuật sinh Bản đồ nhiệt (Gaussian Heatmap)}:
+    Để bảo toàn tương quan không gian hình học giữa các khớp ngón tay và khuôn mặt, các tọa độ $(x_i, y_i)$ được chiếu lên ma trận ảnh $224 \times 224 \times 3$. Tại mỗi điểm mốc hợp lệ, hàm nhân Gaussian 2D được áp dụng với độ lệch chuẩn $\sigma = 5$ và bán kính tác động 15 pixel:
+    \begin{equation}
+    G(u, v; x_i, y_i) = \exp\left( -\frac{(u - 224 x_i)^2 + (v - 224 y_i)^2}{2 \times 5^2} \right)
+    \end{equation}
+    Các điểm nhiệt được cộng dồn tích lũy, chuẩn hóa về dạng số nguyên không dấu \texttt{uint8} trong khoảng $[0, 255]$ và nhân bản đều trên cả 3 kênh màu RGB.
+
+    \item \textbf{Mạng nơ-ron phân loại ResNet50}:
+    Ảnh heatmap $224 \times 224 \times 3$ được đưa qua hàm tiền xử lý chuẩn Caffe \texttt{preprocess\_input} và đưa vào mạng nơ-ron tích chập ResNet50 \cite{he2016deep}:
+    \begin{equation}
+    \label{eq:resnet_architecture}
+    \begin{aligned}
+    \text{Input}(224 \times 224 \times 3) & \to \text{ResNet50 Backbone} \to \text{GAP} \\
+    & \to \text{Dense}(256, \text{ReLU}) \to \text{Dense}(23, \text{Softmax})
+    \end{aligned}
+    \end{equation}
+    Tệp trọng số mô hình đã huấn luyện là \texttt{train/vsl\_cnn\_pose\_keras.h5} có kích thước thực tế \textbf{137.042.364 bytes (~130,7 MB)}, được lưu trữ trong Git bằng Git LFS.
+\end{enumerate}
+
+\subsection{Các hạn chế thực tế của hệ thống ban đầu}
+\label{subsec:han_che_ban_dau}
+
+Khảo sát trực tiếp mã nguồn trong kho lưu trữ, nhóm nhận thấy hệ thống ban đầu bộc lộ 5 hạn chế lớn ngăn cản việc đưa ứng dụng lên môi trường thực tế:
+
+\begin{enumerate}
+    \item \textbf{Phụ thuộc hoàn toàn vào Jupyter Notebook}: Toàn bộ mã nguồn chỉ gồm 3 tệp notebook cục bộ: thu thập ảnh (\path{capture_and_process_images.ipynb}), huấn luyện mô hình (\path{train_cnn_pose_keras.ipynb}) và suy luận (\path{run_realtime.ipynb}); hoàn toàn chưa có mã nguồn Python chuẩn (\texttt{.py}) dạng module.
+    \item \textbf{Ràng buộc phần cứng webcam máy trạm}: Script thực thi thời gian thực \path{run_realtime.ipynb} gọi trực tiếp hàm mở camera vật lý \texttt{cv2.VideoCapture(0)} và mở cửa sổ đồ họa giao diện hệ điều hành \texttt{cv2.imshow()}. Khi đưa lên máy chủ Linux không có màn hình (Headless Server), các lệnh này lập tức gây crash ứng dụng.
+    \item \textbf{Đường dẫn tuyệt đối gán cứng}: Các tệp notebook gán cứng đường dẫn theo ổ đĩa máy tính Windows cá nhân (\texttt{D:\textbackslash file\textbackslash ...\textbackslash vsl\_cnn\_pose\_keras.h5}), khiến mã nguồn bị gãy ngay khi chuyển sang máy khác hoặc môi trường container.
+    \item \textbf{Bỏ sót dữ liệu khi nạp huấn luyện}: Trong tệp \path{train_cnn_pose_keras.ipynb}, vòng lặp nạp dữ liệu được viết cố định \texttt{for i in range(1, 51):}, khiến 20 tệp mẫu cuối (từ 51 đến 70) của tất cả 23 lớp bị bỏ quên (chỉ nạp 1.150 / 1.609 mẫu có sẵn trên đĩa).
+    \item \textbf{Thiếu vắng hoàn toàn hạ tầng dịch vụ và kiểm thử tự động}: Dự án chưa có API backend tiếp nhận ảnh qua mạng, chưa có tệp định nghĩa Dockerfile, chưa có bộ kiểm thử tự động và hoàn toàn chưa được thiết lập quy trình CI/CD.
+\end{enumerate}
+
+
+\section{Định hình giải pháp nâng cấp hệ thống}
+\label{sec:giai_phap_nang_cap}
+
+\subsection{Các yêu cầu cốt lõi của hệ thống nâng cấp}
+\label{subsec:yeu_cau_he_thong}
+
+Dựa trên các hạn chế đã chỉ ra, nhóm xác lập các yêu cầu kỹ thuật cần đạt được:
+\begin{itemize}
+    \item \textbf{Yêu cầu chức năng}:
+    \begin{itemize}
+        \item \textit{FR-01 (API \texttt{GET /health})}: Cung cấp điểm cuối kiểm tra trạng thái dịch vụ và kiểm tra tính sẵn sàng của mô hình ResNet50 trong bộ nhớ RAM.
+        \item \textit{FR-02 (API \texttt{POST /predict})}: Cung cấp điểm cuối tiếp nhận ảnh từ client, tự động thực thi pipeline MediaPipe 93 điểm mốc ở server, sinh heatmap và đưa qua mô hình ResNet50 để trả về kết quả dự đoán (chữ cái và độ tin cậy) dạng JSON.
+        \item \textit{FR-03 (Web Client)}: Cung cấp giao diện trực quan trên trình duyệt, mở camera người dùng, chụp khung hình và hiển thị kết quả phân loại tức thì.
+    \end{itemize}
+    \item \textbf{Yêu cầu phi chức năng}:
+    \begin{itemize}
+        \item \textit{NFR-01 (Tự động hóa CI/CD)}: Quy trình chạy kiểm thử, đóng gói Docker Image và triển khai lên Cloud Run phải được tự động hóa hoàn toàn bằng GitHub Actions.
+        \item \textit{NFR-02 (Độ tin cậy kiểm thử)}: Xây dựng bộ kiểm thử tự động bao phủ toàn diện các hàm cốt lõi (nhãn, ma trận heatmap, cấu hình đường dẫn động, API endpoint), bảo đảm 100\% các ca kiểm thử vượt qua thành công trước khi phát hành.
+        \item \textit{NFR-03 (Tách biệt cấu hình)}: Tách hoàn toàn đường dẫn mô hình và dữ liệu khỏi mã nguồn thông qua biến môi trường (\texttt{VSL\_MODEL\_PATH}, \texttt{VSL\_DATA\_DIR}) để ứng dụng có thể chạy linh hoạt trên mọi môi trường.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Kiến trúc phân tách Decoupled và tối ưu chi phí \$0}
+\label{subsec:kien_truc_decoupled}
+
+Để triển khai một mô hình AI nặng (>130 MB) lên Internet mà hoàn toàn không phát sinh chi phí, nhóm lựa chọn mô hình kiến trúc phân tách độc lập (Decoupled Architecture) giữa Cloudflare Pages và Google Cloud Run (Hình \ref{fig:kien_truc_tong_the}):
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={transform shape}]
+    % Khung Trình duyệt người dùng
+    \draw[fill=green!5, rounded corners] (-0.5,-0.5) rectangle (3.5,5.5);
+    \node at (1.5,5.1) {\textbf{Trình duyệt User}};
+    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (webcam) at (1.5,3.8) {Webcam Capture};
+    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (canvas) at (1.5,2.0) {HTML5 Canvas / UI};
+    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (fetch) at (1.5,0.5) {Fetch API (HTTPS)};
+    \draw[->] (webcam) -- (canvas);
+    \draw[->] (canvas) -- (fetch);
+
+    % Khung Frontend (Cloudflare Pages)
+    \draw[fill=orange!5, rounded corners] (4.5,2.5) rectangle (8.5,5.5);
+    \node at (6.5,5.1) {\textbf{Cloudflare Pages}};
+    \node[draw, fill=orange!20, rounded corners, align=center, minimum width=3.2cm, minimum height=1.4cm] (cf) at (6.5,3.8) {Static Web Hosting\\(HTML/CSS/JS Edge CDN)};
+
+    % Khung Backend (Google Cloud Run)
+    \draw[fill=blue!5, rounded corners] (9.5,-0.5) rectangle (15.5,5.5);
+    \node at (12.5,5.1) {\textbf{Google Cloud Run (Serverless)}};
+    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (fastapi) at (12.5,4.0) {FastAPI Service (\texttt{/predict})};
+    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (mp_py) at (12.5,2.7) {MediaPipe Python (93 Landmarks)};
+    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (hm_gen) at (12.5,1.4) {Heatmap Generator 224x224x3};
+    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (resnet_infer) at (12.5,0.1) {ResNet50 Classifier (Softmax)};
+    \draw[->] (fastapi) -- (mp_py);
+    \draw[->] (mp_py) -- (hm_gen);
+    \draw[->] (hm_gen) -- (resnet_infer);
+
+    % Các mũi tên kết nối
+    \draw[<->, dashed, line width=1pt] (canvas) -- node[above, sloped] {Tải Web (CDN)} (cf);
+    \draw[->, line width=1.2pt, color=red] (fetch) -- node[below, sloped] {Gửi ảnh (POST Multipart)} (fastapi);
+    \draw[->, line width=1.2pt, color=green!60!black] (resnet_infer) to[bend left=30] node[below, sloped] {Trả JSON kết quả} (fetch);
+\end{tikzpicture}
+\caption{Kiến trúc phân tách Decoupled giữa Frontend (Cloudflare Pages) và Backend (Google Cloud Run)}
+\label{fig:kien_truc_tong_the}
+\end{figure}
+
+Giải pháp này mang lại 3 ưu điểm kỹ thuật vượt trội:
+\begin{enumerate}
+    \item \textbf{Bảo đảm tính nhất quán của dữ liệu điểm mốc (Zero Landmark Divergence)}: Thay vì chạy MediaPipe trên trình duyệt bằng JavaScript (vốn phụ thuộc vào phần cứng WebGL từng thiết bị và dễ làm lệch tọa độ so với môi trường Python lúc huấn luyện), trình duyệt chỉ gửi ảnh thô lên server. Backend Cloud Run chạy MediaPipe bằng Python, bảo đảm quy trình trích xuất hoàn toàn trùng khớp 100\% với lúc train.
+    \item \textbf{Tận dụng bộ nhớ RAM lớn của Cloud Run}: Cloud Run cho phép cấp phát tới 1--2 GB RAM hoàn toàn miễn phí, giải quyết được bài toán nạp mô hình TensorFlow ResNet50 (137 MB) và MediaPipe vào bộ nhớ mà không bị giới hạn 250 MB như FaaS truyền thống.
+    \item \textbf{Vận hành ổn định với chi phí \$0}: Bảng \ref{tab:free_tier_limits} tóm tắt chính sách Bậc miễn phí (Free Tier) hàng tháng của các dịch vụ được sử dụng:
+\end{enumerate}
+
+\begin{table}[htbp]
+\centering
+\caption{Hạn mức miễn phí hàng tháng (Free Tier) của các dịch vụ được lựa chọn}
+\label{tab:free_tier_limits}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.8cm}}
+\toprule
+Dịch vụ & Vai trò kiến trúc & Hạn mức miễn phí hàng tháng (Free Tier) & Chi phí \\
+\midrule
+Google Cloud Run & Máy chủ Backend Serverless Container & 2.000.000 lượt yêu cầu (requests)\newline 360.000 GB-giây RAM\newline 180.000 vCPU-giây tính toán & 0 USD \\
+\midrule
+Google Artifact Registry & Kho lưu trữ Docker Images & 500 MB dung lượng lưu trữ Image OCI & 0 USD \\
+\midrule
+Cloudflare Pages & Máy chủ lưu trữ Frontend tĩnh & Băng thông truyền tải không giới hạn\newline Cấp phát chứng chỉ SSL/TLS tự động & 0 USD \\
+\midrule
+GitHub Actions & Nền tảng tự động hóa CI/CD & 2.000 phút chạy máy ảo Linux mỗi tháng cho kho mã nguồn công khai & 0 USD \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Nhờ cơ chế Scale-to-Zero của Cloud Run và chính sách băng thông miễn phí của Cloudflare Pages, hệ thống hoàn toàn đáp ứng mục tiêu hoạt động ổn định trên Internet mà không phát sinh bất kỳ khoản phí nào cho nhóm sinh viên.
+
+\section{Tóm tắt chương 1}
+Chương 1 đã làm rõ bối cảnh đề tài, vai trò của từng công nghệ trong dự án và phân tích chi tiết pipeline của mô hình AI nhận diện 23 ký tự ngôn ngữ ký hiệu tiếng Việt từ đồ án Capstone SIC. Chương cũng đã chỉ ra 5 hạn chế lớn của hệ thống chạy cục bộ ban đầu, từ đó xác lập các yêu cầu chức năng, phi chức năng và đề xuất giải pháp kiến trúc phân tách Decoupled giữa Cloudflare Pages và Google Cloud Run nhằm tối ưu chi phí \$0. Đây là cơ sở tiền đề để thực hiện thiết kế chi tiết và xây dựng hệ thống trong Chương 2.

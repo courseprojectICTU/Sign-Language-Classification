@@ -1,0 +1,57 @@
+% ==============================================================================
+% 3_THUC_NGHIEM.TEX - CHƯƠNG 3: THỰC NGHIỆM, ĐÁNH GIÁ KẾT QUẢ VÀ BÀN LUẬN
+% ==============================================================================
+
+\chapter{THỰC NGHIỆM, ĐÁNH GIÁ KẾT QUẢ VÀ BÀN LUẬN}
+\label{chap:thuc_nghiem}
+
+\section{Kết quả chuẩn hóa mã nguồn và bộ kiểm thử tự động}
+\label{sec:ket_qua_kiem_thu}
+
+\subsection{Đặc tả và kết quả bộ kiểm thử tự động toàn diện (32/32 tests passed)}
+\label{subsec:dac_ta_test}
+% [Nội dung sẽ bổ sung: Bảng tổng kết các bài kiểm thử tự động: test_config.py (đường dẫn động), test_labels.py (23 nhãn bất biến), test_heatmap.py (khớp golden reference), test_requirements.py (chuẩn hóa deps Linux), test_health.py (trạng thái model), test_predict.py (dự đoán); kết quả 100% tests PASSED trên pytest.]
+
+\subsection{Đảm bảo tính tương thích và bảo toàn độ chính xác của mô hình ResNet50}
+\label{subsec:bao_toan_ai}
+% [Nội dung sẽ bổ sung: Kiểm thử hồi quy đối chiếu giữa mã nguồn cũ và mã nguồn mới tái cấu trúc; xác nhận ma trận đặc trưng heatmap đầu ra trùng khớp 100% sai số số thực, đảm bảo trọng số mô hình đã huấn luyện từ SIC hoạt động chính xác nguyên bản.]
+
+
+\section{Đánh giá quy trình CI/CD và khả năng tự động hóa}
+\label{sec:danh_gia_cicd}
+
+\subsection{Đo lường thời gian thực thi của từng giai đoạn trong GitHub Actions Workflow}
+\label{subsec:thoi_gian_workflow}
+% [Nội dung sẽ bổ sung: Bảng thống kê thời gian chạy từng bước: Checkout code, cài đặt cache dependencies, chạy bộ test tự động (~38s), build Docker image, push Google Artifact Registry, deploy Cloud Run. Đánh giá độ trễ tổng của toàn bộ pipeline.]
+
+\subsection{Đánh giá tính ổn định khi kích hoạt qua các sự kiện Git}
+\label{subsec:tinh_on_dinh_git}
+% [Nội dung sẽ bổ sung: Quy trình kích hoạt tự động theo chiến lược nhánh: Feature branches -> Pull Request kích hoạt CI -> Reviewer phê duyệt -> Merge vào develop/main kích hoạt CD triển khai tự động lên Cloud Run.]
+
+
+\section{Đánh giá hiệu năng và chi phí vận hành trên Google Cloud}
+\label{sec:hieu_nang_cloud}
+
+\subsection{Đo lường hiện tượng Cold Start và độ trễ phản hồi của API trên Cloud Run}
+\label{subsec:do_cold_start}
+% [Nội dung sẽ bổ sung: Đo lường độ trễ khi khởi động instance mới từ trạng thái 0 (Cold Start: tải container image, nạp TensorFlow runtime và load trọng số ResNet50) so với trạng thái ấm (Warm Start: phản hồi trung bình dưới 500ms).]
+
+\subsection{Thử nghiệm tương tác người dùng qua Web Frontend trên Cloudflare Pages}
+\label{subsec:thu_nghiem_nguoi_dung}
+% [Nội dung sẽ bổ sung: Trải nghiệm người dùng thực tế: Người dùng mở web, cấp quyền camera, chụp ảnh cử chỉ tay; frontend gửi payload lên Cloud Run và nhận lại kết quả dự đoán kèm tỷ lệ phần trăm chính xác theo thời gian thực.]
+
+\subsection{Phân tích chi phí vận hành thực tế đối chiếu với chính sách Free Tier (\$0)}
+\label{subsec:phan_tich_chi_phi}
+% [Nội dung sẽ bổ sung: Bảng tính toán chi phí chi tiết: Cloud Run (số lượng request, thời gian CPU/RAM so với hạn mức miễn phí 2 triệu request/tháng và 360.000 vCPU-giây), Artifact Registry, Cloudflare Pages. Chứng minh hệ thống hoàn toàn vận hành ở mức chi phí 0 USD/tháng.]
+
+
+\section{Đánh giá tổng hợp và bài học kinh nghiệm}
+\label{sec:danh_gia_tong_hop}
+
+\subsection{So sánh đối chiếu hệ thống trước và sau khi áp dụng CI/CD \& Cloud Serverless}
+\label{subsec:so_sanh_he_thong}
+% [Nội dung sẽ bổ sung: Bảng so sánh toàn diện các chỉ tiêu kỹ thuật: Phương thức chạy (Notebook cục bộ vs Cloud Service), Khả năng truy cập (Chỉ máy cá nhân vs Toàn cầu qua Internet), Kiểm thử (Thủ công vs Tự động 32 tests), Quy trình cập nhật (Chép file tay vs CI/CD tự động 1-click).]
+
+\subsection{Các bẫy kỹ thuật và sự cố đã giải quyết trong quá trình thực hiện}
+\label{subsec:bay_ky_thuat}
+% [Nội dung sẽ bổ sung: Đúc kết kinh nghiệm xử lý các bài toán hóc búa: Phụ thuộc thư viện đồ họa GUI của OpenCV trên Linux Container; xử lý cơ chế Lazy Loading của Keras 3 / TensorFlow; tối ưu dung lượng Docker image khi đóng gói model học sâu >130MB.]

@@ -1,0 +1,20 @@
+Mô học: Điện toán đám mây
+Giảng viên: Nguyễn Đức Bình
+
+Nhóm 2: Gồm các thành viên
+- Hà Văn Dũng
+- Dương Vũ Duy
+- Nguyễn Đức Dương
+- Trần Phương Đoàn
+
+Tên mini project: Xây dựng quy trình CI/CD và triển khai hệ thống nhận diện ngôn ngữ ký hiệu tiếng Việt dựa trên kiến trúc Serverless Container trên Google Cloud
+
+Mô tả
+- Lý do chọn đề tài: Tận dụng đồ án Capstone AI cuối khóa SIC SamSung do thành viên trong nhóm tự xây dựng để thực hành mục tiêu môn học: đưa một bài toán AI thực tế từ máy cục bộ thành một dịch vụ hoàn chỉnh trên Internet.
+- Đầu vào (Input): Ảnh chụp hoặc hình ảnh từ webcam chứa cử chỉ bàn tay và khuôn mặt của người dùng.
+- Đầu ra (Output): Ký tự tương ứng trong bảng chữ cái ngôn ngữ ký hiệu tiếng Việt (23 chữ cái a–y) kèm tỷ lệ phần trăm chính xác.
+- Kiến trúc triển khai:
++ Backend: Đóng gói mô hình AI bằng Docker, chạy Serverless trên Google Cloud Run.
++ Frontend: Giao diện web chạy trên Cloudflare Pages.
+- Quy trình CI/CD: Dùng GitHub Actions tự động chạy test, đóng gói Docker image và deploy lên Google Cloud mỗi khi có mã nguồn mới.
+- Mục tiêu: Học đóng vai trò như người DevOps triển khai ứng dụng chạy ổn định trên Internet.

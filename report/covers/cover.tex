@@ -1,0 +1,49 @@
+% ==============================================================================
+% COVER.TEX - TRANG BÌA CHÍNH (CHUẨN MẪU ICTU)
+% ==============================================================================
+
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  % Khung viền đôi chuẩn lề ICTU: Trái 3.0cm, Phải 2.0cm, Trên 2.5cm, Dưới 2.5cm
+    \draw [line width=1pt]
+	($ (current page.north west) + (3.0cm,-2.5cm) $)
+	rectangle
+	($ (current page.south east) + (-2.0cm,2.5cm) $);
+	\draw [line width=2.5pt]
+	($ (current page.north west) + (3.15cm,-2.65cm) $)
+	rectangle
+	($ (current page.south east) + (-2.15cm,2.65cm) $); 
+\end{tikzpicture}
+
+\begin{center}
+	\begin{spacing}{1.1}
+		\textbf{TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG} \\
+		\textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[0.6cm]
+	\end{spacing}
+	
+	\includegraphics[width=4cm]{\figpath logo_ictu.jpg}\\[0.6cm]
+	
+	\textbf{MÔN HỌC} \\[0.2cm]
+	{\Large \textbf{ĐIỆN TOÁN ĐÁM MÂY}}\\[1.0cm]
+	
+	\textbf{ĐỀ TÀI:} \\[0.3cm]
+	{\large \textbf{XÂY DỰNG QUY TRÌNH CI/CD VÀ TRIỂN KHAI HỆ THỐNG}}\\[0.15cm]
+	{\large \textbf{NHẬN DIỆN NGÔN NGỮ KÝ HIỆU TIẾNG VIỆT DỰA TRÊN}}\\[0.15cm]
+	{\large \textbf{KIẾN TRÚC SERVERLESS CONTAINER TRÊN GOOGLE CLOUD}}\\[1.2cm]
+	
+	\begin{tabular}{ r l }
+		\textbf{Giảng viên hướng dẫn:} & \textbf{TS. Nguyễn Đức Bình} \\[0.25cm]
+		\textbf{Sinh viên thực hiện:}  & \textbf{Trần Phương Đoàn} \\
+		                               & \textbf{Hà Văn Dũng} \\
+		                               & \textbf{Dương Vũ Duy} \\
+		                               & \textbf{Nguyễn Đức Dương} \\[0.25cm]
+		\textbf{Lớp:}                  & \textbf{CNTT K22G} \\
+	\end{tabular}
+
+	\vfill
+	
+	\textbf{Thái Nguyên, năm 2026}
+\end{center}
+
+\end{titlepage}

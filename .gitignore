@@ -49,3 +49,15 @@ desktop.ini
 
 # Office lock files (Excel/Word open)
 ~\$*
+
+# LaTeX auxiliary & intermediate files
+*.aux
+*.bbl
+*.blg
+*.lof
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
