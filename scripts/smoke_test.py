@@ -20,9 +20,9 @@ import json
 import os
 import sys
 import time
-from typing import Optional
-import urllib.request
 import urllib.error
+import urllib.request
+from typing import Optional
 
 # Bảo đảm hiển thị tiếng Việt an toàn trên console Windows không bị UnicodeEncodeError
 if hasattr(sys.stdout, "reconfigure"):
@@ -70,13 +70,13 @@ def run_health_check(base_url: str, timeout: int) -> bool:
                 return False
             log_step("GET /health", "PASS", f"Model đã nạp (version={data.get('model_version')})", duration)
             return True
-    except Exception as exc:
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
         duration = (time.time() - start) * 1000
         log_step("GET /health", "FAIL", f"Lỗi kết nối: {exc}", duration)
         return False
 
 
-def run_version_check(base_url: str, expected_sha: Optional[str], timeout: int) -> bool:
+def run_version_check(base_url: str, expected_sha: str | None, timeout: int) -> bool:
     url = f"{base_url.rstrip('/')}/version"
     start = time.time()
     try:
@@ -93,7 +93,7 @@ def run_version_check(base_url: str, expected_sha: Optional[str], timeout: int) 
                 return False
             log_step("GET /version", "PASS", f"version={data.get('version')}, git_sha={git_sha}", duration)
             return True
-    except Exception as exc:
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
         duration = (time.time() - start) * 1000
         log_step("GET /version", "FAIL", f"Lỗi kết nối: {exc}", duration)
         return False
@@ -107,12 +107,12 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
         boundary = "----VSLSmokeTestBoundary7MA4YWxkTrZu0gW"
         
         body = io.BytesIO()
-        body.write(f"--{boundary}\r\n".encode("utf-8"))
+        body.write(f"--{boundary}\r\n".encode())
         body.write(b'Content-Disposition: form-data; name="file"; filename="test.jpg"\r\n')
         body.write(b"Content-Type: image/jpeg\r\n\r\n")
         body.write(image_bytes)
         body.write(b"\r\n")
-        body.write(f"--{boundary}--\r\n".encode("utf-8"))
+        body.write(f"--{boundary}--\r\n".encode())
         
         req_data = body.getvalue()
         headers = {
@@ -133,7 +133,7 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
                 return False
             log_step("POST /predict", "PASS", f"Phản hồi hợp lệ (detected={data.get('detected')})", duration)
             return True
-    except Exception as exc:
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
         duration = (time.time() - start) * 1000
         log_step("POST /predict", "FAIL", f"Lỗi kiểm thử POST /predict: {exc}", duration)
         return False

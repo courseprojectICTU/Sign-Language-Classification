@@ -7,22 +7,22 @@ Tuân thủ:
 
 from contextlib import asynccontextmanager
 import logging
-from typing import Any, Dict, List, Optional, Tuple
-import cv2
 import os
+from typing import Any
+
+import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from keras.models import load_model
 from keras.applications.resnet50 import preprocess_input
+from keras.models import load_model
+import mediapipe as mp
 import numpy as np
 from pydantic import BaseModel, Field
 
 from src.vsl.config import get_model_path
 from src.vsl.heatmap import create_heatmap
 from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
-from src.vsl.landmarks import FACE_KEYPOINTS, TOTAL_LANDMARK_COORDS
-
-import mediapipe as mp
+from src.vsl.landmarks import FACE_KEYPOINTS
 
 logger = logging.getLogger("vsl.service")
 
@@ -55,19 +55,19 @@ class TopKPrediction(BaseModel):
 class PredictResponse(BaseModel):
     """Hợp đồng JSON phản hồi từ endpoint POST /predict (US-006)."""
     detected: bool
-    letter: Optional[str] = None
+    letter: str | None = None
     confidence: float = 0.0
-    top_k: List[TopKPrediction] = Field(default_factory=list)
+    top_k: list[TopKPrediction] = Field(default_factory=list)
     has_hand: bool = False
     has_face: bool = False
-    message: Optional[str] = None
-    model_version: Optional[str] = None
+    message: str | None = None
+    model_version: str | None = None
 
 
 def extract_landmarks_from_image(
     image_bytes: bytes,
     flip: bool = False,
-) -> Tuple[Optional[List[float]], bool, bool]:
+) -> tuple[list[float] | None, bool, bool]:
     """Giải mã ảnh, tuỳ chọn lật gương (BR-007) và trích xuất 93 toạ độ landmark qua MediaPipe (BR-001).
 
     Tham số:
@@ -94,7 +94,7 @@ def extract_landmarks_from_image(
     # 1. Trích xuất landmark bàn tay (21 điểm x 3 = 63 toạ độ)
     hands_results = _mp_hands.process(image_rgb)
     has_hand = bool(hands_results.multi_hand_landmarks)
-    hand_landmarks: List[float] = []
+    hand_landmarks: list[float] = []
     if has_hand and hands_results.multi_hand_landmarks:
         first_hand = hands_results.multi_hand_landmarks[0]
         for lm in first_hand.landmark:
@@ -103,7 +103,7 @@ def extract_landmarks_from_image(
     # 2. Trích xuất landmark khuôn mặt (10 điểm cố định x 3 = 30 toạ độ)
     face_results = _mp_face_mesh.process(image_rgb)
     has_face = bool(face_results.multi_face_landmarks)
-    face_landmarks: List[float] = []
+    face_landmarks: list[float] = []
     if has_face and face_results.multi_face_landmarks:
         first_face = face_results.multi_face_landmarks[0]
         for idx in FACE_KEYPOINTS:
@@ -119,7 +119,7 @@ def extract_landmarks_from_image(
 
 
 
-def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:
+def predict_from_landmarks(landmarks: list[float], model: Any, top_k: int = 3) -> dict[str, Any]:
     """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
 
     Tuân thủ:
@@ -174,7 +174,7 @@ async def lifespan(app: FastAPI):
         app.state.model = load_model(str(model_path))
         app.state.model_version = "v1.0"
         logger.info("Nạp mô hình thành công vào app.state.")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("Lỗi khi nạp mô hình lúc khởi động: %s", exc)
         app.state.model = None
         app.state.model_version = None
@@ -228,7 +228,7 @@ def create_app() -> FastAPI:
         tags=["Monitoring"],
         status_code=status.HTTP_200_OK,
     )
-    async def health_check(response: Response) -> Dict[str, Any]:
+    async def health_check(response: Response) -> dict[str, Any]:
         """Endpoint kiểm tra sức khỏe phản ánh trung thực trạng thái nạp mô hình (BR-011).
 
         - 200 OK: Mô hình đã nạp xong và sẵn sàng nhận dự đoán.
@@ -258,7 +258,7 @@ def create_app() -> FastAPI:
         tags=["Monitoring"],
         status_code=status.HTTP_200_OK,
     )
-    async def version_info() -> Dict[str, Any]:
+    async def version_info() -> dict[str, Any]:
         """Endpoint cung cấp thông tin phiên bản phục vụ smoke test và kiểm tra rollback (US-017, BR-013)."""
         return {
             "version": "1.0.0",

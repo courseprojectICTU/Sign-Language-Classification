@@ -7,13 +7,12 @@ Quy tac:
 - Chi so trong tuple chinh la nhan lop softmax cua model.
 """
 
-from typing import Tuple
 
-VIETNAMESE_ALPHABET: Tuple[str, ...] = (
+VIETNAMESE_ALPHABET: tuple[str, ...] = (
     "a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
     "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"
 )
 
 NUM_CLASSES: int = len(VIETNAMESE_ALPHABET)
 
-__all__ = ["VIETNAMESE_ALPHABET", "NUM_CLASSES"]
+__all__ = ["NUM_CLASSES", "VIETNAMESE_ALPHABET"]

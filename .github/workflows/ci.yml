@@ -37,11 +37,11 @@ jobs:
 
       - name: Run Ruff Linter
         run: |
-          ruff check .
+          ruff check src tests scripts
 
       - name: Check code formatting (Black)
         run: |
-          black --check src tests
+          black --check src tests scripts
 
       - name: Run Unit & Contract Tests
         run: |

@@ -1,0 +1,36 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+    "*.ipynb",
+    "process_images",
+    "train/*.ipynb",
+    "report",
+    "data",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",   # Line too long
+    "B008",   # FastAPI File/Query defaults in function signature
+    "EXE001", # Shebang in files on Windows checkout
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/vsl/__init__.py" = ["F401", "RUF022"]
+"tests/*" = ["F401", "E402"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | data
+  | report
+  | process_images
+  | \.ipynb_checkpoints
+)/
+'''

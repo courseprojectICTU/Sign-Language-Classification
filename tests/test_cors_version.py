@@ -6,7 +6,6 @@ Tuân thủ:
 """
 
 from unittest.mock import MagicMock
-import os
 import pytest
 from fastapi.testclient import TestClient
 
