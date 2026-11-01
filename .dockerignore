@@ -1,0 +1,43 @@
+# Git & GitHub
+.git
+.gitignore
+.gitattributes
+.github
+
+# Python bytecode & environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv
+env/
+venv/
+ENV/
+
+# Testing & quality
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Data & Notebooks
+data/
+process_images/
+*.ipynb
+run_realtime.ipynb
+run_realtime.py
+run_realtime.cmd
+run_notebook.cmd
+train/training_plot_keras.png
+train/train_cnn_pose_keras.ipynb
+
+# Documentation & Reports
+docs/
+report/
+HUONG-DAN-CHAY.md
+AGENTS.md
+
+# OS files
+.DS_Store
+Thumbs.db
+

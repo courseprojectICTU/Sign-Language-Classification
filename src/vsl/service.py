@@ -9,7 +9,9 @@ from contextlib import asynccontextmanager
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 import cv2
+import os
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
 from keras.models import load_model
 from keras.applications.resnet50 import preprocess_input
 import numpy as np
@@ -192,6 +194,30 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Cấu hình CORS (US-025, BR-018: Same-Origin or Explicit CORS)
+    allowed_origins_env = os.getenv("VSL_ALLOWED_ORIGINS", "")
+    if allowed_origins_env.strip():
+        allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+    else:
+        allowed_origins = [
+            "https://vsl-frontend.pages.dev",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?vsl-frontend\.pages\.dev$",
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
     # Khởi tạo trạng thái mặc định
     app.state.model = None
     app.state.model_version = None
@@ -225,6 +251,21 @@ def create_app() -> FastAPI:
             "model_loaded": False,
             "model_version": None,
         }
+
+    @app.get(
+        "/version",
+        summary="Thông tin phiên bản ứng dụng và Git commit SHA",
+        tags=["Monitoring"],
+        status_code=status.HTTP_200_OK,
+    )
+    async def version_info() -> Dict[str, Any]:
+        """Endpoint cung cấp thông tin phiên bản phục vụ smoke test và kiểm tra rollback (US-017, BR-013)."""
+        return {
+            "version": "1.0.0",
+            "git_sha": os.getenv("GIT_SHA", "dev"),
+            "model_version": getattr(app.state, "model_version", "v1.0") or "v1.0",
+        }
+
 
     @app.post(
         "/predict",

@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-10-27** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-01** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -42,6 +42,12 @@ hay hạ tầng Cloud Run.
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
 | Nhánh local | `develop`, `feature/US-001`, `feature/US-002`, `feature/US-003`, `feature/US-004`, `feature/US-005`, `feature/US-006` (đang checkout) |
+| **US-038** | Tối ưu và tái lập quá trình build image | feature/US-038 | ✅ **HOÀN THÀNH** | Dockerfile multi-stage, digest ghim, --platform linux/amd64, cache gha, đo dung lượng/thời gian build (BR-025) |
+| **US-026** | Pipeline CI chạy lint, test và docker build trên PR | feature/US-038 | ✅ **HOÀN THÀNH** | .github/workflows/ci.yml, ruff, black, pytest, docker build không push (BR-021) |
+| **US-025** | Cấu hình CORS backend cho Cloudflare Pages | feature/US-038 | ✅ **HOÀN THÀNH (Backend)** | src/vsl/service.py, CORSMiddleware, VSL_ALLOWED_ORIGINS, options preflight (BR-018) |
+| **US-017** | Smoke test tự động sau triển khai | feature/US-038 | ✅ **HOÀN THÀNH** | scripts/smoke_test.py, endpoint GET /version, exit code 0/1 (BR-013) |
+| **US-031** | Rollback backend bằng traffic split và diễn tập | feature/US-038 | ✅ **HOÀN THÀNH** | scripts/rollback.sh, scripts/rollback.py, runbook diễn tập < 5 phút (BR-022) |
+| **US-035** | README hướng dẫn triển khai và runbook xử lý sự cố | feature/US-038 | ✅ **HOÀN THÀNH** | docs/RUNBOOK.md, kiến trúc hệ thống, 4 kịch bản sự cố (BR-024) |
 | `main` | `3d64e9d` "first commit" — bằng `develop` gốc |
 | `develop` | `5867eca` Merge pull request #6 |
 | `feature/US-003` | `724b0ff` — nghiệm thu PASS US-003 |
@@ -244,6 +250,12 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
+| **US-038** | Tối ưu và tái lập quá trình build image | feature/US-038 | ✅ **HOÀN THÀNH** | Dockerfile multi-stage, digest ghim, --platform linux/amd64, cache gha, đo dung lượng/thời gian build (BR-025) |
+| **US-026** | Pipeline CI chạy lint, test và docker build trên PR | feature/US-038 | ✅ **HOÀN THÀNH** | .github/workflows/ci.yml, ruff, black, pytest, docker build không push (BR-021) |
+| **US-025** | Cấu hình CORS backend cho Cloudflare Pages | feature/US-038 | ✅ **HOÀN THÀNH (Backend)** | src/vsl/service.py, CORSMiddleware, VSL_ALLOWED_ORIGINS, options preflight (BR-018) |
+| **US-017** | Smoke test tự động sau triển khai | feature/US-038 | ✅ **HOÀN THÀNH** | scripts/smoke_test.py, endpoint GET /version, exit code 0/1 (BR-013) |
+| **US-031** | Rollback backend bằng traffic split và diễn tập | feature/US-038 | ✅ **HOÀN THÀNH** | scripts/rollback.sh, scripts/rollback.py, runbook diễn tập < 5 phút (BR-022) |
+| **US-035** | README hướng dẫn triển khai và runbook xử lý sự cố | feature/US-038 | ✅ **HOÀN THÀNH** | docs/RUNBOOK.md, kiến trúc hệ thống, 4 kịch bản sự cố (BR-024) |
 
 ---
 
