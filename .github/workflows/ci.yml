@@ -51,6 +51,7 @@ jobs:
                  tests/test_requirements.py \
                  tests/test_landmark_contract.py \
                  tests/test_cors_version.py \
+                 tests/test_ops_contract.py \
                  tests/test_health.py \
                  tests/test_predict.py -v
 
