@@ -41,7 +41,10 @@ def test_cors_allowed_origin_preview_pages(client):
         headers={"Origin": "https://feat-preview.vsl-frontend.pages.dev"},
     )
     assert response.status_code == 200
-    assert response.headers.get("access-control-allow-origin") == "https://feat-preview.vsl-frontend.pages.dev"
+    assert (
+        response.headers.get("access-control-allow-origin")
+        == "https://feat-preview.vsl-frontend.pages.dev"
+    )
 
 
 def test_cors_preflight_options(client):
@@ -90,4 +93,3 @@ def test_version_endpoint_with_custom_git_sha(monkeypatch):
     assert response.status_code == 200
     data = response.json()
     assert data["git_sha"] == "commit-abc1234"
-

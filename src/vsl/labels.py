@@ -7,10 +7,30 @@ Quy tac:
 - Chi so trong tuple chinh la nhan lop softmax cua model.
 """
 
-
 VIETNAMESE_ALPHABET: tuple[str, ...] = (
-    "a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
-    "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"
+    "a",
+    "b",
+    "c",
+    "d",
+    "đ",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
 )
 
 NUM_CLASSES: int = len(VIETNAMESE_ALPHABET)

@@ -27,7 +27,11 @@ def main():
     parser.add_argument("--service", default="vsl-api", help="Tên Cloud Run service")
     parser.add_argument("--region", default="asia-southeast1", help="GCP Region")
     parser.add_argument("--project", default="", help="GCP Project ID (tùy chọn)")
-    parser.add_argument("--target-rev", default="", help="Revision chỉ định để rollback (mặc định lấy revision trước)")
+    parser.add_argument(
+        "--target-rev",
+        default="",
+        help="Revision chỉ định để rollback (mặc định lấy revision trước)",
+    )
     args = parser.parse_args()
 
     start_time = time.time()
@@ -42,7 +46,10 @@ def main():
     if not target_revision:
         print("1. Đang truy vấn danh sách revision...")
         cmd_list = [
-            "gcloud", "run", "revisions", "list",
+            "gcloud",
+            "run",
+            "revisions",
+            "list",
             f"--service={args.service}",
             f"--region={args.region}",
             "--format=value(metadata.name)",
@@ -53,7 +60,9 @@ def main():
             res = subprocess.run(cmd_list, capture_output=True, text=True, check=True)
             revisions = [line.strip() for line in res.stdout.strip().splitlines() if line.strip()]
             if len(revisions) < 2:
-                print(f"❌ LỖI: Không tìm thấy đủ 2 revision để rollback (tìm thấy: {len(revisions)}).")
+                print(
+                    f"❌ LỖI: Không tìm thấy đủ 2 revision để rollback (tìm thấy: {len(revisions)})."
+                )
                 sys.exit(1)
             current_rev, target_revision = revisions[0], revisions[1]
             print(f"   - Revision hiện tại: {current_rev}")
@@ -64,7 +73,11 @@ def main():
 
     print(f"2. Đang chuyển 100% traffic sang revision {target_revision}...")
     cmd_traffic = [
-        "gcloud", "run", "services", "update-traffic", args.service,
+        "gcloud",
+        "run",
+        "services",
+        "update-traffic",
+        args.service,
         f"--region={args.region}",
         f"--to-revisions={target_revision}=100",
     ] + project_arg

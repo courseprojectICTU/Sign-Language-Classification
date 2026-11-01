@@ -18,8 +18,14 @@ MODULE = ROOT / "src" / "vsl" / "heatmap.py"
 from src.vsl.labels import VIETNAMESE_ALPHABET as ALPHABET
 
 SKIP_DIRS = {
-    ".git", ".venv", "__pycache__", ".pytest_cache",
-    ".jupyter-config", ".jupyter-data", ".jupyter-runtime", ".ipynb_checkpoints",
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".jupyter-config",
+    ".jupyter-data",
+    ".jupyter-runtime",
+    ".ipynb_checkpoints",
 }
 
 
@@ -45,9 +51,9 @@ def _definition_hits():
 
 
 def _load_function():
-    assert MODULE.exists(), (
-        f"Chua co module dung chung: {MODULE.relative_to(ROOT).as_posix()} — TSK-001 chua lam"
-    )
+    assert (
+        MODULE.exists()
+    ), f"Chua co module dung chung: {MODULE.relative_to(ROOT).as_posix()} — TSK-001 chua lam"
     from src.vsl.heatmap import create_heatmap
 
     return create_heatmap
@@ -65,22 +71,22 @@ def test_ac_001_01_chi_con_mot_dinh_nghia_tren_toan_repo():
     hits = _definition_hits()
     total = sum(count for _, count in hits)
 
-    assert total == 1, (
-        "Phai co dung 1 dinh nghia ham, thuc te "
-        f"{total} tai: {hits}"
-    )
-    assert hits[0][0] == "src/vsl/heatmap.py", (
-        f"Dinh nghia duy nhat phai nam trong src/vsl/heatmap.py, thuc te: {hits[0][0]}"
-    )
+    assert total == 1, "Phai co dung 1 dinh nghia ham, thuc te " f"{total} tai: {hits}"
+    assert (
+        hits[0][0] == "src/vsl/heatmap.py"
+    ), f"Dinh nghia duy nhat phai nam trong src/vsl/heatmap.py, thuc te: {hits[0][0]}"
 
 
 # ---------------------------------------------------------------- AC-001-02
-@pytest.mark.parametrize("golden_key,letter", [
-    ("a", "a"),
-    ("m", "m"),
-    ("d", "đ"),
-    ("random", None),
-])
+@pytest.mark.parametrize(
+    "golden_key,letter",
+    [
+        ("a", "a"),
+        ("m", "m"),
+        ("d", "đ"),
+        ("random", None),
+    ],
+)
 def test_ac_001_02_khop_golden_tung_diem_anh(golden_key, letter):
     create_heatmap = _load_function()
     golden = np.load(GOLDEN)
@@ -91,9 +97,9 @@ def test_ac_001_02_khop_golden_tung_diem_anh(golden_key, letter):
 
     assert result.shape == expected.shape == (224, 224, 3)
     assert result.dtype == expected.dtype == np.uint8
-    assert np.array_equal(result, expected), (
-        f"{golden_key}: {int(np.count_nonzero(result != expected))} diem anh lech golden"
-    )
+    assert np.array_equal(
+        result, expected
+    ), f"{golden_key}: {int(np.count_nonzero(result != expected))} diem anh lech golden"
 
 
 def test_ac_001_02_golden_co_nguon_goc_tu_notebook_cu():

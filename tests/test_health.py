@@ -50,9 +50,9 @@ def test_ac_005_02_health_tra_503_khi_model_chua_san_sang():
     client = TestClient(app, raise_server_exceptions=False)
     response = client.get("/health")
 
-    assert response.status_code == 503, (
-        f"Kỳ vọng 503 Service Unavailable khi model chưa nạp, thực tế: {response.status_code}"
-    )
+    assert (
+        response.status_code == 503
+    ), f"Kỳ vọng 503 Service Unavailable khi model chưa nạp, thực tế: {response.status_code}"
     data = response.json()
     assert data.get("status") == "degraded", f"Trường status không đúng: {data}"
     assert data.get("model_loaded") is False, f"model_loaded phải là False: {data}"
@@ -84,6 +84,6 @@ def test_br_011_single_model_load_khong_nap_lai_khi_goi_request():
             assert res.status_code == 200
 
         # Khẳng định: Trong quá trình xử lý 5 request /health, không có lệnh load_model nào được gọi thêm
-        assert mock_load_model.call_count == 0, (
-            f"Vi phạm BR-011: load_model bị gọi bên trong request handler! Số lần: {mock_load_model.call_count}"
-        )
+        assert (
+            mock_load_model.call_count == 0
+        ), f"Vi phạm BR-011: load_model bị gọi bên trong request handler! Số lần: {mock_load_model.call_count}"

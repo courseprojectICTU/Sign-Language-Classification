@@ -28,7 +28,7 @@ logger = logging.getLogger("vsl.service")
 
 # ---------------------------------------------------------------- MediaPipe Singletons
 # Tái sử dụng instance để tránh re-init tốn tài nguyên (R-4)
-if hasattr(mp, 'solutions'):
+if hasattr(mp, "solutions"):
     _mp_hands = mp.solutions.hands.Hands(
         static_image_mode=True,
         max_num_hands=1,
@@ -48,12 +48,14 @@ else:
 # ---------------------------------------------------------------- Pydantic Schemas
 class TopKPrediction(BaseModel):
     """Mỗi mục dự đoán trong danh sách gợi ý xác suất cao nhất."""
+
     letter: str
     confidence: float
 
 
 class PredictResponse(BaseModel):
     """Hợp đồng JSON phản hồi từ endpoint POST /predict (US-006)."""
+
     detected: bool
     letter: str | None = None
     confidence: float = 0.0
@@ -118,7 +120,6 @@ def extract_landmarks_from_image(
     return None, has_hand, has_face
 
 
-
 def predict_from_landmarks(landmarks: list[float], model: Any, top_k: int = 3) -> dict[str, Any]:
     """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
 
@@ -154,8 +155,7 @@ def predict_from_landmarks(landmarks: list[float], model: Any, top_k: int = 3) -
     # 5. Trích xuất top_k theo xác suất giảm dần
     top_indices = np.argsort(probs)[::-1][:top_k]
     top_k_list = [
-        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])}
-        for i in top_indices
+        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])} for i in top_indices
     ]
 
     return {
@@ -234,9 +234,7 @@ def create_app() -> FastAPI:
         - 200 OK: Mô hình đã nạp xong và sẵn sàng nhận dự đoán.
         - 503 Service Unavailable: Mô hình chưa nạp hoặc nạp thất bại.
         """
-        is_model_loaded = (
-            hasattr(app.state, "model") and app.state.model is not None
-        )
+        is_model_loaded = hasattr(app.state, "model") and app.state.model is not None
 
         if is_model_loaded:
             return {
@@ -266,7 +264,6 @@ def create_app() -> FastAPI:
             "model_version": getattr(app.state, "model_version", "v1.0") or "v1.0",
         }
 
-
     @app.post(
         "/predict",
         summary="Dự đoán ký hiệu từ ảnh tải lên",
@@ -277,7 +274,10 @@ def create_app() -> FastAPI:
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
         top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
-        flip: bool = Query(False, description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)"),
+        flip: bool = Query(
+            False,
+            description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)",
+        ),
     ) -> PredictResponse:
         """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
         # BR-011: Kiểm tra trạng thái nạp của model
@@ -325,4 +325,3 @@ def create_app() -> FastAPI:
 
 # Instance ứng dụng mặc định cho ASGI runner (uvicorn src.vsl.service:app)
 app = create_app()
-

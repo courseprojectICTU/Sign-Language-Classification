@@ -67,9 +67,20 @@ def run_health_check(base_url: str, timeout: int) -> bool:
             if data.get("status") != "ok" or data.get("model_loaded") is not True:
                 log_step("GET /health", "FAIL", f"Phản hồi không hợp lệ: {data}", duration)
                 return False
-            log_step("GET /health", "PASS", f"Model đã nạp (version={data.get('model_version')})", duration)
+            log_step(
+                "GET /health",
+                "PASS",
+                f"Model đã nạp (version={data.get('model_version')})",
+                duration,
+            )
             return True
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        json.JSONDecodeError,
+        TimeoutError,
+        OSError,
+    ) as exc:
         duration = (time.time() - start) * 1000
         log_step("GET /health", "FAIL", f"Lỗi kết nối: {exc}", duration)
         return False
@@ -88,11 +99,27 @@ def run_version_check(base_url: str, expected_sha: str | None, timeout: int) -> 
             data = json.loads(resp.read().decode("utf-8"))
             git_sha = data.get("git_sha", "")
             if expected_sha and not git_sha.startswith(expected_sha):
-                log_step("GET /version", "FAIL", f"git_sha '{git_sha}' không khớp mong đợi '{expected_sha}'", duration)
+                log_step(
+                    "GET /version",
+                    "FAIL",
+                    f"git_sha '{git_sha}' không khớp mong đợi '{expected_sha}'",
+                    duration,
+                )
                 return False
-            log_step("GET /version", "PASS", f"version={data.get('version')}, git_sha={git_sha}", duration)
+            log_step(
+                "GET /version",
+                "PASS",
+                f"version={data.get('version')}, git_sha={git_sha}",
+                duration,
+            )
             return True
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        json.JSONDecodeError,
+        TimeoutError,
+        OSError,
+    ) as exc:
         duration = (time.time() - start) * 1000
         log_step("GET /version", "FAIL", f"Lỗi kết nối: {exc}", duration)
         return False
@@ -128,11 +155,27 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
                 return False
             data = json.loads(resp.read().decode("utf-8"))
             if "detected" not in data:
-                log_step("POST /predict", "FAIL", f"Thiếu trường 'detected' trong phản hồi: {data}", duration)
+                log_step(
+                    "POST /predict",
+                    "FAIL",
+                    f"Thiếu trường 'detected' trong phản hồi: {data}",
+                    duration,
+                )
                 return False
-            log_step("POST /predict", "PASS", f"Phản hồi hợp lệ (detected={data.get('detected')})", duration)
+            log_step(
+                "POST /predict",
+                "PASS",
+                f"Phản hồi hợp lệ (detected={data.get('detected')})",
+                duration,
+            )
             return True
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        json.JSONDecodeError,
+        TimeoutError,
+        OSError,
+    ) as exc:
         duration = (time.time() - start) * 1000
         log_step("POST /predict", "FAIL", f"Lỗi kiểm thử POST /predict: {exc}", duration)
         return False
@@ -140,8 +183,14 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description="VSL API Smoke Test (US-017)")
-    parser.add_argument("--url", default=os.getenv("SERVICE_URL", "http://localhost:8080"), help="Base URL của dịch vụ")
-    parser.add_argument("--expected-sha", default=os.getenv("EXPECTED_GIT_SHA"), help="Git commit SHA mong đợi")
+    parser.add_argument(
+        "--url",
+        default=os.getenv("SERVICE_URL", "http://localhost:8080"),
+        help="Base URL của dịch vụ",
+    )
+    parser.add_argument(
+        "--expected-sha", default=os.getenv("EXPECTED_GIT_SHA"), help="Git commit SHA mong đợi"
+    )
     parser.add_argument("--timeout", type=int, default=30, help="Thời gian chờ mỗi request (giây)")
     args = parser.parse_args()
 

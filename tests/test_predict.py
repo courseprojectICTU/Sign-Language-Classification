@@ -56,14 +56,18 @@ def test_ac_006_01_predict_anh_hop_le_tra_200_va_dung_schema():
 
     # Giả lập pipeline trích xuất landmark trả về 93 toạ độ hợp lệ
     dummy_landmarks = [0.5] * 93
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)):
+    with patch(
+        "src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)
+    ):
         img_bytes = _create_dummy_image_bytes(200, 200)
         response = client.post(
             "/predict",
             files={"file": ("test.jpg", io.BytesIO(img_bytes), "image/jpeg")},
         )
 
-    assert response.status_code == 200, f"Kỳ vọng 200 OK, thực tế: {response.status_code} - {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Kỳ vọng 200 OK, thực tế: {response.status_code} - {response.text}"
     data = response.json()
 
     assert data.get("detected") is True, f"Kỳ vọng detected=True: {data}"
@@ -97,7 +101,9 @@ def test_ac_006_01_predict_top_k_parameter_tuy_chinh():
     client = TestClient(app, raise_server_exceptions=False)
     dummy_landmarks = [0.5] * 93
 
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)):
+    with patch(
+        "src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)
+    ):
         img_bytes = _create_dummy_image_bytes(200, 200)
         response = client.post(
             "/predict?top_k=5",
@@ -126,7 +132,9 @@ def test_ac_006_01_predict_khong_thay_tay_hoac_mat_tra_200_detected_false():
         files={"file": ("blank.jpg", io.BytesIO(black_img), "image/jpeg")},
     )
 
-    assert response.status_code == 200, f"Kỳ vọng 200, nhận: {response.status_code} - {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Kỳ vọng 200, nhận: {response.status_code} - {response.text}"
     data = response.json()
     assert data.get("detected") is False, f"detected phải là False: {data}"
     assert data.get("letter") is None, f"letter phải là None: {data}"
@@ -171,7 +179,9 @@ def test_predict_model_chua_san_sang_tra_503():
         files={"file": ("test.jpg", io.BytesIO(img_bytes), "image/jpeg")},
     )
 
-    assert response.status_code == 503, f"Kỳ vọng 503 khi model chưa nạp, nhận: {response.status_code}"
+    assert (
+        response.status_code == 503
+    ), f"Kỳ vọng 503 khi model chưa nạp, nhận: {response.status_code}"
     assert "detail" in response.json()
 
 
@@ -193,8 +203,10 @@ def test_br_001_extract_landmarks_dung_93_cot_khi_nhan_dien():
     mock_face_res = MagicMock()
     mock_face_res.multi_face_landmarks = [fake_face]
 
-    with patch.object(_mp_hands, "process", return_value=mock_hands_res), \
-         patch.object(_mp_face_mesh, "process", return_value=mock_face_res):
+    with (
+        patch.object(_mp_hands, "process", return_value=mock_hands_res),
+        patch.object(_mp_face_mesh, "process", return_value=mock_face_res),
+    ):
         landmarks, has_hand, has_face = extract_landmarks_from_image(img_bytes)
 
     assert has_hand is True
@@ -216,8 +228,6 @@ def test_flip_parameter_tuy_chinh_lat_guong():
     with patch("cv2.flip", wraps=cv2.flip) as mock_flip:
         extract_landmarks_from_image(img_bytes, flip=True)
         assert mock_flip.call_count == 1, "flip=True phải gọi cv2.flip 1 lần"
-
-
 
 
 # ---------------------------------------------------------------- AC-006-02: Pipeline Parity 23/23

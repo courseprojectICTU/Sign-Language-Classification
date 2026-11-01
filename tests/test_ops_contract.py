@@ -87,7 +87,9 @@ def test_ac_025_01_cors_allowed_origin_and_preflight():
             },
         )
         assert opt_resp.status_code == 200
-        assert opt_resp.headers.get("access-control-allow-origin") == "https://vsl-frontend.pages.dev"
+        assert (
+            opt_resp.headers.get("access-control-allow-origin") == "https://vsl-frontend.pages.dev"
+        )
         assert "POST" in opt_resp.headers.get("access-control-allow-methods", "")
 
         # 2. Origin pages.dev preview subdomain (regex matching)
@@ -96,7 +98,10 @@ def test_ac_025_01_cors_allowed_origin_and_preflight():
             headers={"Origin": "https://pr-12.vsl-frontend.pages.dev"},
         )
         assert preview_resp.status_code == 200
-        assert preview_resp.headers.get("access-control-allow-origin") == "https://pr-12.vsl-frontend.pages.dev"
+        assert (
+            preview_resp.headers.get("access-control-allow-origin")
+            == "https://pr-12.vsl-frontend.pages.dev"
+        )
     else:
         content = SERVICE_PATH.read_text(encoding="utf-8")
         assert "CORSMiddleware" in content
@@ -136,9 +141,13 @@ def test_ac_026_01_ci_workflow_structure_and_jobs():
 
     # docker build không push
     build_steps = jobs["docker-build"].get("steps", [])
-    build_step = next((s for s in build_steps if "docker/build-push-action" in str(s.get("uses", ""))), None)
+    build_step = next(
+        (s for s in build_steps if "docker/build-push-action" in str(s.get("uses", ""))), None
+    )
     assert build_step is not None, "Thiếu bước docker/build-push-action"
-    assert build_step.get("with", {}).get("push") is False, "Docker build trong CI KHÔNG được phép push (TSK-050)"
+    assert (
+        build_step.get("with", {}).get("push") is False
+    ), "Docker build trong CI KHÔNG được phép push (TSK-050)"
 
 
 def test_ac_026_02_ci_failure_blocking():
@@ -146,7 +155,9 @@ def test_ac_026_02_ci_failure_blocking():
     content = CI_WORKFLOW_PATH.read_text(encoding="utf-8")
     workflow = yaml.safe_load(content)
     docker_job = workflow.get("jobs", {}).get("docker-build", {})
-    assert docker_job.get("needs") == "lint-and-test", "docker-build phải phụ thuộc (needs) vào lint-and-test"
+    assert (
+        docker_job.get("needs") == "lint-and-test"
+    ), "docker-build phải phụ thuộc (needs) vào lint-and-test"
 
 
 # -----------------------------------------------------------------------------
@@ -164,7 +175,9 @@ def test_ac_027_01_no_master_branch():
     )
     branches = res.stdout.splitlines()
     master_branches = [b.strip() for b in branches if "master" in b and "backlog" not in b]
-    assert len(master_branches) == 0, f"Phát hiện nhánh master còn tồn tại: {master_branches}. Cần xóa theo BR-021."
+    assert (
+        len(master_branches) == 0
+    ), f"Phát hiện nhánh master còn tồn tại: {master_branches}. Cần xóa theo BR-021."
 
 
 # -----------------------------------------------------------------------------
@@ -195,7 +208,9 @@ def test_ac_031_02_smoke_test_failure_triggers_exit_code():
         encoding="utf-8",
         errors="replace",
     )
-    assert res.returncode != 0, f"Smoke test với URL lỗi phải trả mã thoát khác 0, thực tế: {res.returncode}"
+    assert (
+        res.returncode != 0
+    ), f"Smoke test với URL lỗi phải trả mã thoát khác 0, thực tế: {res.returncode}"
 
 
 # -----------------------------------------------------------------------------
@@ -209,7 +224,9 @@ def test_ac_035_01_runbook_contains_all_four_scenarios():
     assert "Khởi động nguội chậm" in content, "Runbook thiếu kịch bản Cold start"
     assert "Pipeline CI báo đỏ" in content, "Runbook thiếu kịch bản CI đỏ"
     assert "Smoke test thất bại" in content, "Runbook thiếu kịch bản Smoke test fail & Rollback"
-    assert "Vượt ngân sách" in content or "vượt chi phí" in content.lower(), "Runbook thiếu kịch bản chi phí"
+    assert (
+        "Vượt ngân sách" in content or "vượt chi phí" in content.lower()
+    ), "Runbook thiếu kịch bản chi phí"
 
 
 # -----------------------------------------------------------------------------
@@ -239,7 +256,9 @@ def test_ac_038_02_multistage_and_digest():
     assert "AS builder" in content, "Dockerfile thiếu stage builder"
     assert "AS runtime" in content, "Dockerfile thiếu stage runtime"
     assert "@sha256:" in content, "Base image phải ghim bằng digest SHA-256 (BR-025)"
-    assert "COPY --from=builder /opt/venv /opt/venv" in content, "Runtime stage phải copy virtualenv từ builder"
+    assert (
+        "COPY --from=builder /opt/venv /opt/venv" in content
+    ), "Runtime stage phải copy virtualenv từ builder"
 
 
 def test_ac_038_03_explicit_platform_linux_amd64():
