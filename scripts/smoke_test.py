@@ -22,7 +22,6 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from typing import Optional
 
 # Bảo đảm hiển thị tiếng Việt an toàn trên console Windows không bị UnicodeEncodeError
 if hasattr(sys.stdout, "reconfigure"):
@@ -105,7 +104,7 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
     try:
         image_bytes = base64.b64decode(DUMMY_JPEG_B64)
         boundary = "----VSLSmokeTestBoundary7MA4YWxkTrZu0gW"
-        
+
         body = io.BytesIO()
         body.write(f"--{boundary}\r\n".encode())
         body.write(b'Content-Disposition: form-data; name="file"; filename="test.jpg"\r\n')
@@ -113,14 +112,14 @@ def run_predict_check(base_url: str, timeout: int) -> bool:
         body.write(image_bytes)
         body.write(b"\r\n")
         body.write(f"--{boundary}--\r\n".encode())
-        
+
         req_data = body.getvalue()
         headers = {
             "Content-Type": f"multipart/form-data; boundary={boundary}",
             "Content-Length": str(len(req_data)),
             "User-Agent": "VSL-SmokeTest/1.0",
         }
-        
+
         req = urllib.request.Request(url, data=req_data, headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             duration = (time.time() - start) * 1000

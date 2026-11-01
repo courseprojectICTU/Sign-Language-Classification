@@ -11,11 +11,12 @@ Bao phủ các Acceptance Criteria theo yêu cầu:
           AC-038-03 (Chỉ định platform linux/amd64), AC-038-04 (Đo kích thước & thời gian)
 """
 
-from pathlib import Path
-from unittest.mock import MagicMock
 import ast
 import os
 import subprocess
+from pathlib import Path
+from unittest.mock import MagicMock
+
 import yaml
 
 try:
@@ -25,6 +26,7 @@ except ImportError:
 
 try:
     from fastapi.testclient import TestClient
+
     from src.vsl.service import create_app
 except ImportError:
     TestClient = None
@@ -161,7 +163,7 @@ def test_ac_027_01_no_master_branch():
         check=True,
     )
     branches = res.stdout.splitlines()
-    master_branches = [b.strip() for b in branches if "master" in b and not "backlog" in b]
+    master_branches = [b.strip() for b in branches if "master" in b and "backlog" not in b]
     assert len(master_branches) == 0, f"Phát hiện nhánh master còn tồn tại: {master_branches}. Cần xóa theo BR-021."
 
 

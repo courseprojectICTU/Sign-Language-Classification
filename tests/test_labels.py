@@ -6,6 +6,7 @@ File nay duoc viet TRUOC khi tao src/vsl/labels.py (TDD) — luc dau phai DO (FA
 
 import json
 import pathlib
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -36,7 +37,7 @@ def test_ac_002_01_labels_module_ton_tai_va_dung_23_ky_tu():
     """AC-002-01: Module src/vsl/labels.py ton tai, dinh nghia dung 23 ky tu."""
     assert MODULE_PATH.exists(), f"Module chua ton tai: {MODULE_PATH}"
 
-    from src.vsl.labels import VIETNAMESE_ALPHABET, NUM_CLASSES
+    from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 
     # Kiem tra kieu tuple (bat bien)
     assert isinstance(VIETNAMESE_ALPHABET, tuple), (
@@ -72,7 +73,7 @@ def test_ac_002_01_re_export_qua_vsl_package():
     assert hasattr(vsl, "VIETNAMESE_ALPHABET"), "src.vsl phai re-export VIETNAMESE_ALPHABET"
     assert hasattr(vsl, "NUM_CLASSES"), "src.vsl phai re-export NUM_CLASSES"
 
-    from src.vsl import VIETNAMESE_ALPHABET, NUM_CLASSES
+    from src.vsl import NUM_CLASSES, VIETNAMESE_ALPHABET
     assert VIETNAMESE_ALPHABET == EXPECTED_ALPHABET
     assert NUM_CLASSES == 23
 

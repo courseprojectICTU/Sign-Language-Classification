@@ -11,19 +11,20 @@ Bao phủ:
 
 from pathlib import Path
 from typing import List, Tuple
-import pytest
+
 import pandas as pd
+import pytest
 
 from src.vsl.config import get_data_dir
 from src.vsl.labels import VIETNAMESE_ALPHABET
 from src.vsl.landmarks import (
-    FACE_KEYPOINTS,
-    NUM_HAND_LANDMARKS,
-    NUM_FACE_KEYPOINTS,
-    HAND_COORDS_COUNT,
     FACE_COORDS_COUNT,
-    TOTAL_LANDMARK_COORDS,
+    FACE_KEYPOINTS,
+    HAND_COORDS_COUNT,
     LANDMARK_COLUMN_NAMES,
+    NUM_FACE_KEYPOINTS,
+    NUM_HAND_LANDMARKS,
+    TOTAL_LANDMARK_COORDS,
     build_expected_landmark_columns,
     validate_landmark_columns,
 )

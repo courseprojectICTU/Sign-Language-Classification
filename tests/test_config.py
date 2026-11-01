@@ -8,6 +8,7 @@ import json
 import os
 import pathlib
 import re
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -77,12 +78,12 @@ def test_ac_003_02_config_module_ton_tai_va_fallback_mac_dinh():
     assert MODULE_PATH.exists(), f"Module cấu hình chưa tồn tại: {MODULE_PATH}"
 
     from src.vsl.config import (
-        PROJECT_ROOT,
-        MODEL_PATH,
-        DATA_DIR,
         BASE_PATH,
-        get_model_path,
+        DATA_DIR,
+        MODEL_PATH,
+        PROJECT_ROOT,
         get_data_dir,
+        get_model_path,
     )
 
     # PROJECT_ROOT phải trỏ đúng gốc repo
@@ -113,7 +114,7 @@ def test_ac_003_02_doc_duong_dan_tu_bien_moi_truong(monkeypatch):
     monkeypatch.setenv("VSL_MODEL_PATH", custom_model_path)
     monkeypatch.setenv("VSL_DATA_DIR", custom_data_dir)
 
-    from src.vsl.config import get_model_path, get_data_dir
+    from src.vsl.config import get_data_dir, get_model_path
 
     resolved_model = get_model_path()
     resolved_data = get_data_dir()

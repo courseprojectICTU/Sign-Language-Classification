@@ -7,9 +7,10 @@ Bám theo:
 - BR-001 (Landmark 93 cột), BR-006 (Caffe preprocessing), BR-007 (Mirror parity), BR-011 (Single model load)
 """
 
-from unittest.mock import MagicMock, patch
 import io
 import pathlib
+from unittest.mock import MagicMock, patch
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -19,8 +20,8 @@ from fastapi.testclient import TestClient
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SERVICE_PATH = ROOT / "src" / "vsl" / "service.py"
 
-from src.vsl.labels import VIETNAMESE_ALPHABET, NUM_CLASSES
 from src.vsl.config import get_model_path
+from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 
 
 def _create_dummy_image_bytes(width: int = 100, height: int = 100, color: int = 0) -> bytes:
@@ -176,7 +177,7 @@ def test_predict_model_chua_san_sang_tra_503():
 
 def test_br_001_extract_landmarks_dung_93_cot_khi_nhan_dien():
     """BR-001: Hàm extract_landmarks_from_image phải trả đúng 93 toạ độ: 63 tay + 30 mặt."""
-    from src.vsl.service import extract_landmarks_from_image, _mp_hands, _mp_face_mesh
+    from src.vsl.service import _mp_face_mesh, _mp_hands, extract_landmarks_from_image
 
     img_bytes = _create_dummy_image_bytes(200, 200)
 
@@ -223,6 +224,7 @@ def test_flip_parameter_tuy_chinh_lat_guong():
 def test_ac_006_02_pipeline_parity_23_23_ky_tu():
     """AC-006-02: Kiểm tra độ hợp lệ của pipeline service trên toàn bộ 23 mẫu 1.csv khớp 23/23 nhãn."""
     from keras.models import load_model
+
     from src.vsl.service import predict_from_landmarks
 
     model_path = get_model_path()

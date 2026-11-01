@@ -35,7 +35,7 @@ def main():
             fn()
             print(f"  [PASS] {test_name}: {doc}")
             passed += 1
-        except Exception as exc:
+        except Exception:
             print(f"  [FAIL] {test_name}: {doc}")
             traceback.print_exc()
             failed += 1

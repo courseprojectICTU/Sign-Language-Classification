@@ -5,18 +5,18 @@ Tuân thủ:
 - BR-019: Warm-Up on Page Load (cung cấp endpoint /health nhận ping từ frontend).
 """
 
-from contextlib import asynccontextmanager
 import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Any
 
 import cv2
+import mediapipe as mp
+import numpy as np
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from keras.applications.resnet50 import preprocess_input
 from keras.models import load_model
-import mediapipe as mp
-import numpy as np
 from pydantic import BaseModel, Field
 
 from src.vsl.config import get_model_path
