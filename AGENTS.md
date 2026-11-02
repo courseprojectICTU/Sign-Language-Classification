@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-10-28** — trạng thái Git, kiểm thử và US-016 được đối chiếu
+**Cập nhật lần cuối: 2026-11-02** — trạng thái Git, kiểm thử và US-018 được đối chiếu
 trực tiếp trong phiên này. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -29,25 +29,25 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` (gồm hợp đồng landmark) + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Bộ kiểm thử tự động `tests/` có **42/42 tests PASSED** trong lần chạy ngày 2026-10-28 sau khi bổ sung kiểm tra notebook trực tiếp của US-016. Chưa có Dockerfile, CI workflow
-hay hạ tầng Cloud Run.
+Mã nguồn hiện tại = **package `src/vsl/` (gồm hợp đồng landmark) + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native + cấu hình Terraform GCP cho Google provider và remote state GCS**.
+Bộ kiểm thử tự động `tests/` có **45/45 tests PASSED** trong lần chạy ngày 2026-11-02. Terraform bootstrap của bucket đã plan thành công; bucket chưa được tạo và remote backend chưa được khởi tạo. Chưa có Dockerfile, CI workflow hay hạ tầng Cloud Run.
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-10-28) |
+| Mục | Giá trị (đối chiếu 2026-11-02) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016` (đang checkout) |
-| `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016`, `feature/US-018` (đang checkout) |
+| `develop` | `1eee157` (đồng bộ `origin/develop`) |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
+| `feature/US-018` | Terraform provider, GCS backend, staging/production tfvars và bucket bootstrap; chờ tạo bucket/khởi tạo remote backend |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean** sau khi cập nhật bộ nhớ dự án; nhánh `feature/US-016` chưa push |
+| Trạng thái working tree | **Clean** trên nhánh `feature/US-018`, chưa push |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -89,6 +89,12 @@ docs/ADR-001-frontend-hosting.md                  ADR chọn Cloudflare Pages
 docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md            kế hoạch 2 tuần / 4 người
 docs/product-backlog-cicd-2-tuan.xlsx             backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
 docs/WORKFLOW.md                                  quy trình bắt buộc cho mọi US
+infra/versions.tf                                 ghim Terraform và Google provider
+infra/provider.tf                                 cấu hình Google provider theo biến project/region
+infra/backend.tf                                  GCS remote backend
+infra/environments/{staging,production}.tfvars   biến theo môi trường
+infra/bootstrap/                                  bootstrap bucket state (state local lúc đầu)
+infra/README.md                                   hướng dẫn init/plan với GCS state
 docs/QUY-TRINH-REVIEW-PULL-REQUEST.md             hướng dẫn 5 bước thẩm định PR cho Reviewer
 docs/QUY-TRINH-REVIEW-PULL-REQUEST.docx           bản xuất bản Word (.docx) của quy trình Reviewer
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
@@ -113,6 +119,7 @@ tests/test_labels.py                              test US-002 (AC-002-01, AC-002
 tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
 tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
 tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash model/CSV, confidence tolerance 0.0001
+tests/test_us018_terraform.py                     kiểm tra provider, môi trường, GCS backend và bootstrap bucket
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/_generate_service_reference.py              lệnh tương thích cũ, chuyển tiếp sang exporter trực tiếp (US-016)
 tests/_export_us016_from_notebook.py               xuất trực tiếp dự đoán notebook và SHA model/CSV (US-016)
@@ -220,7 +227,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy mới nhất: **42/42 tests PASSED**, 2026-10-28, ~45s; gồm direct notebook/service parity US-016).
+  (Lần chạy mới nhất: **45/45 tests PASSED**, 2026-11-02, ~53s; gồm Terraform config checks US-018).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -252,6 +259,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001, sigma=3 regression giữ nguyên; chờ chủ dự án xác nhận PASS |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa | `feature/US-018` | 🛠 **CHỜ NGHIỆM THU GCP** | Provider, GCS backend, tfvars staging/production và bootstrap bucket; `fmt`, `validate`, test bootstrap plan PASS; bucket `nhan-dien-tay-state` chưa tồn tại, user chưa cho phép `apply`, chưa chạy được `terraform init`/`plan` với backend từ xa |
 
 ---
 
@@ -259,5 +267,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. US-016 đã hoàn tất TSK-026/027; direct notebook/service test mới bổ sung parity, hash model/CSV và ngưỡng confidence 0.0001; nghiệm thu sau khi chạy toàn bộ suite và chờ Chủ dự án xác nhận PASS.
-3. Không push hoặc tạo PR nếu chưa có quyết định của Chủ dự án; sau nghiệm thu, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+2. US-018 có bootstrap plan tạo 1 bucket GCS tại project `nhan-dien-tay`; **không chạy `terraform apply` nếu chưa được Chủ dự án cho phép**. Sau khi bucket được tạo, chạy `terraform init`/`plan` cho backend GCS, xác minh locking rồi chờ nghiệm thu AC-018-01.
+3. US-016 vẫn chờ Chủ dự án xác nhận PASS; US-018 cũng chưa nghiệm thu GCP.
+4. Không push hoặc tạo PR nếu chưa có quyết định của Chủ dự án; sau nghiệm thu, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
