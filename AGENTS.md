@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-10-27** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-02** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -30,7 +30,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**39/39 tests PASSED**). Chưa có Dockerfile, CI workflow
+Đã có bộ kiểm thử tự động `tests/` (**44/44 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -100,6 +100,7 @@ docs/api/US-002.md                                hợp đồng API của US-002
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
+docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -244,6 +245,7 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ⏳ **Đã triển khai, chờ nghiệm thu** | `status`: `ok`/`no_hand`/`no_face`; log WARNING có timestamp UTC và reason; full suite 44/44 (2026-11-02) |
 
 ---
 
@@ -251,8 +253,6 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Sau khi nghiệm thu PASS `US-006`, tiến hành tạo PR cho US-006 lên `develop` hoặc chuyển sang User Story tiếp theo theo kế hoạch của Chủ dự án:
-   - Đọc đặc tả US tiếp theo từ [`docs/product-backlog-cicd-2-tuan.xlsx`](docs/product-backlog-cicd-2-tuan.xlsx).
-   - Làm Bước 2 tóm tắt trình Chủ dự án duyệt (CỔNG A) trước khi code.
+2. Sau khi Chủ dự án xác nhận nghiệm thu `US-007`, tiến hành PR cho nhánh này vào `develop`; cập nhật trạng thái PASS trong nhật ký và bảng tiến độ.
 
 
