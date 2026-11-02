@@ -1,3 +1,3 @@
-project_id  = "replace-with-production-project-id"
+project_id  = "replace-production-project"
 region      = "us-central1"
 environment = "production"
