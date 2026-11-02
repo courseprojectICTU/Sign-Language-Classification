@@ -45,3 +45,30 @@ def test_tsk_031_gcs_backend_and_state_safety_are_documented():
     assert "terraform init" in readme
     assert "backend-config" in readme
     assert "lock" in readme.lower()
+
+
+def test_state_bucket_bootstrap_is_private_versioned_and_protected():
+    bootstrap = INFRA / "bootstrap"
+    main = bootstrap / "main.tf"
+    variables = bootstrap / "variables.tf"
+    readme = bootstrap / "README.md"
+
+    assert main.is_file(), f"Missing Terraform bootstrap configuration: {main}"
+    assert variables.is_file(), f"Missing Terraform bootstrap variables: {variables}"
+    assert readme.is_file(), f"Missing Terraform bootstrap instructions: {readme}"
+
+    config = main.read_text(encoding="utf-8")
+    variable_config = variables.read_text(encoding="utf-8")
+    instructions = readme.read_text(encoding="utf-8")
+
+    assert re.search(r'resource\s+"google_storage_bucket"\s+"terraform_state"\s*\{', config)
+    assert re.search(r'project\s*=\s*var\.project_id', config)
+    assert re.search(r'name\s*=\s*var\.bucket_name', config)
+    assert re.search(r'uniform_bucket_level_access\s*=\s*true', config)
+    assert re.search(r'public_access_prevention\s*=\s*"enforced"', config)
+    assert re.search(r'versioning\s*\{\s*enabled\s*=\s*true\s*\}', config, re.DOTALL)
+    assert re.search(r'prevent_destroy\s*=\s*true', config)
+    assert re.search(r'variable\s+"project_id"', variable_config)
+    assert re.search(r'variable\s+"bucket_name"', variable_config)
+    assert "terraform apply" in instructions
+    assert "backend-config" in instructions
