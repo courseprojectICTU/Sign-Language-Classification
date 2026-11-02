@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-10-27** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-02** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -30,7 +30,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**49/49 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
+Đã có bộ kiểm thử tự động `tests/` (**58/58 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -95,7 +95,7 @@ docs/QUY-TRINH-REVIEW-PULL-REQUEST.md             hướng dẫn 5 bước thẩ
 docs/QUY-TRINH-REVIEW-PULL-REQUEST.docx           bản xuất bản Word (.docx) của quy trình Reviewer
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
-docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap - PASS)
+docs/api/US-001.md                                hợp đồng create_heatmap; input sai ném ValueError theo US-014
 docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
@@ -110,7 +110,8 @@ src/vsl/service.py                                FastAPI service + GET /health 
 scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
 tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
-tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
+tests/test_heatmap.py                             NumPy-only heatmap tests US-014 (9 test, <30s)
+tests/test_heatmap_contract.py                    golden/repository contract tests US-001 (9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
 tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
 tests/test_cold_start_benchmark.py                 unit test harness benchmark US-013
@@ -217,7 +218,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & "D:\program\python\python.exe" -m pytest tests -v
   ```
-   (Đo ngày 2026-11-02 trên nhánh `feature/US-013`: **49/49 tests PASSED**, ~29s trên Python 3.12.10).
+   (Đo ngày 2026-11-02 trên nhánh `feature/US-014`: **58/58 tests PASSED**, ~25s trên Python 3.12.10).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -249,6 +250,7 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | ⛔ **BLOCKED — chưa có Cloud Run staging access** | Harness + 10 unit tests; AC-013-01 chưa đo (0/5), không có URL/gcloud/Docker |
+| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` (dựa trên `feature/US-013`) | ⏳ **Đã triển khai, chờ nghiệm thu** | `tests/test_heatmap.py` 9/9 trong 0.24s; input sai ném `ValueError`; full suite 58/58 |
 
 ---
 

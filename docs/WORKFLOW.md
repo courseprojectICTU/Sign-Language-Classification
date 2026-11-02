@@ -292,6 +292,7 @@ py -3.12 -m pytest tests -v
 | 2026-10-26 | **US-005** | `feature/US-005` | `docs/api/US-005.md` (`ANALYSIS_READY`, đã duyệt) | TSK-008 | AC-005-01, AC-005-02 — **24/24 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 | 2026-10-26 | **US-006** | `feature/US-006` | `docs/api/US-006.md` (`ANALYSIS_READY`, đã duyệt) | TSK-009, TSK-010, TSK-011 | AC-006-01, AC-006-02 — **32/32 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 | 2026-11-02 | **US-013** | `feature/US-013` | `docs/api/US-013.md` (`ANALYSIS_READY`) | TSK-021 — harness benchmark và unit tests | AC-013-01 — **BLOCKED, 0/5 staging measurements**; 10 unit tests pass | ⛔ Chưa có Cloud Run staging URL/credentials/CLI; báo cáo `docs/reports/US-013.md` |
+| 2026-11-02 | **US-014** | `feature/US-014` (dựa trên `feature/US-013`) | Hợp đồng `create_heatmap` cập nhật tại `docs/api/US-001.md` | TSK-022, TSK-023 | AC-014-01, AC-014-02 — **58/58 test toàn repo; NumPy-only 9/9 (<30s)** | ⏳ Chờ Chủ dự án xác nhận nghiệm thu |
 
 
 
