@@ -29,8 +29,8 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**44/44 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + 3 notebook + 1 script Python native**.
+Đã có bộ kiểm thử tự động `tests/` (**47/47 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -100,17 +100,21 @@ docs/api/US-002.md                                hợp đồng API của US-002
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
+docs/api/US-006.md                                hợp đồng API của US-006 (/predict)
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
+docs/api/US-008.md                                hợp đồng API của US-008 (version metadata)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
 src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
-src/vsl/service.py                                FastAPI service + GET /health (BR-011)
+src/vsl/service.py                                FastAPI service + GET /health, POST /predict, GET /version
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
 tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
 tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
+tests/test_predict.py                             tests API US-006/US-007 (detection, logging, pipeline)
 tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
+tests/test_version.py                             test US-008 (AC-008-01: 3 test)
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
 tests/_generate_golden.py                         script sinh lại golden (không phải test)
@@ -214,7 +218,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & "D:\program\python\python.exe" -m pytest tests -v
   ```
-  (Hiện tại: **32/32 tests PASSED**, ~38s).
+   (Đo ngày 2026-11-02 trên nhánh kết hợp US-007/US-008: **47/47 tests PASSED**, ~25s trên Python 3.12.10).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -245,7 +249,8 @@ $\implies$ Không lưu cache/config ra ngoài thư mục workspace.
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
-| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ⏳ **Đã triển khai, chờ nghiệm thu** | `status`: `ok`/`no_hand`/`no_face`; log WARNING có timestamp UTC và reason; full suite 44/44 (2026-11-02) |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ⏳ **Đã triển khai, chờ nghiệm thu** | `status`: `ok`/`no_hand`/`no_face`; log WARNING có timestamp UTC và reason; full suite kết hợp 47/47 (2026-11-02) |
+| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` (dựa trên `feature/US-007`) | ⏳ **Đã triển khai, chờ nghiệm thu** | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 47/47 |
 
 ---
 
