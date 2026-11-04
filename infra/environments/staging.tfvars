@@ -1,3 +1,3 @@
-project_id  = "project-6e4a1507-5ddb-4ec2-aa6"
+project_id  = "project-9ea40b5e-8258-4b97-a24"
 region      = "us-central1"
 environment = "staging"

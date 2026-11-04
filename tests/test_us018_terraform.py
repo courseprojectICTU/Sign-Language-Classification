@@ -75,7 +75,7 @@ def test_state_bucket_bootstrap_is_private_versioned_and_protected():
 
 
 def test_staging_and_production_use_confirmed_google_cloud_project():
-    project_id = "project-6e4a1507-5ddb-4ec2-aa6"
+    project_id = "project-9ea40b5e-8258-4b97-a24"
 
     for environment in ("staging", "production"):
         tfvars = _read(f"environments/{environment}.tfvars")
