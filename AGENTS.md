@@ -31,7 +31,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**48/48 tests PASSED trên Python 3.12.7 ngày 2026-11-04; đang thẩm định US-008 gồm 3 test mới**). Chưa có Dockerfile, CI workflow
+Đã có bộ kiểm thử tự động `tests/` (**51/51 tests PASSED trên Python 3.12.7 ngày 2026-11-04**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -42,7 +42,7 @@ hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016` (đang checkout) |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-008` (đang checkout), `feature/US-015`, `feature/US-016` |
 | `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
@@ -226,7 +226,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy gần nhất: **48/48 tests PASSED** trên develop, 2026-11-04, ~63s; US-008 bổ sung 3 test mới).
+  (Lần chạy gần nhất: **51/51 tests PASSED**, 2026-11-04, ~67s; gồm 3 test mới US-008).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -257,7 +257,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ✅ **PASS (2026-11-04)** | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
-| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | ⏳ **Đang thẩm định (Review)** | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; test US-008 3/3 |
+| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | ✅ **PASS (2026-11-04)** | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | ✅ **PASS (2026-10-28)** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
@@ -267,6 +267,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. US-007 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-04. Tiến hành tạo Pull Request hợp nhất `feature/US-007` vào `develop` theo quy trình [`docs/QUY-TRINH-REVIEW-PULL-REQUEST.md`](docs/QUY-TRINH-REVIEW-PULL-REQUEST.md).
-3. US-016 đã nghiệm thu ✅ PASS và đã merge vào `develop` qua PR #12.
-4. Sau khi hoàn tất PR của US-007, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+2. US-008 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-04. Tiến hành hoàn tất Pull Request hợp nhất `feature/US-008` vào `develop`.
+3. Sau khi merge `feature/US-008` vào `develop`, đồng bộ `develop` và làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
