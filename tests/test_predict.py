@@ -259,8 +259,8 @@ def test_br_001_extract_landmarks_dung_93_cot_khi_nhan_dien():
     assert len(landmarks) == 93, f"Kỳ vọng đúng 93 toạ độ (BR-001), thực tế: {len(landmarks)}"
 
 
-def test_extract_landmarks_luon_lat_guong():
-    """Pipeline luôn lật ảnh ngang trước khi trích xuất landmark."""
+def test_flip_parameter_tuy_chinh_lat_guong():
+    """Kiểm tra tham số flip=True gọi cv2.flip và flip=False không gọi cv2.flip."""
     from src.vsl.service import extract_landmarks_from_image
 
     img_bytes = _create_dummy_image_bytes(100, 100)
@@ -268,15 +268,43 @@ def test_extract_landmarks_luon_lat_guong():
     hands_processor.process.return_value = MagicMock(multi_hand_landmarks=None)
     face_mesh_processor = MagicMock()
     face_mesh_processor.process.return_value = MagicMock(multi_face_landmarks=None)
+
     with patch(
         "src.vsl.service._get_mediapipe_processors",
         return_value=(hands_processor, face_mesh_processor),
-    ), \
-         patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip:
-        extract_landmarks_from_image(img_bytes)
+    ), patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip:
+        extract_landmarks_from_image(img_bytes, flip=False)
+        assert mock_flip.call_count == 0, "flip=False không được gọi cv2.flip"
 
-    assert mock_flip.call_count == 1
-    assert mock_flip.call_args.args[1] == 1
+    with patch(
+        "src.vsl.service._get_mediapipe_processors",
+        return_value=(hands_processor, face_mesh_processor),
+    ), patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip:
+        extract_landmarks_from_image(img_bytes, flip=True)
+        assert mock_flip.call_count == 1, "flip=True phải gọi cv2.flip 1 lần"
+
+
+def test_predict_endpoint_flip_parameter_truyen_dung():
+    """Kiểm tra endpoint /predict nhận query flip và chuyển tiếp vào extract_landmarks_from_image."""
+    from src.vsl.service import create_app
+
+    app = create_app()
+    app.state.model = MagicMock()
+    client = TestClient(app, raise_server_exceptions=False)
+    dummy_img = _create_dummy_image_bytes(100, 100)
+
+    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
+        client.post("/predict?flip=true", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
+        assert mock_extract.call_args.kwargs.get("flip") is True
+
+    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
+        client.post("/predict?flip=false", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
+        assert mock_extract.call_args.kwargs.get("flip") is False
+
+    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
+        client.post("/predict", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
+        assert mock_extract.call_args.kwargs.get("flip") is False
+
 
 
 

@@ -68,11 +68,14 @@ class PredictResponse(BaseModel):
 
 def extract_landmarks_from_image(
     image_bytes: bytes,
+    flip: bool = False,
 ) -> Tuple[Optional[List[float]], bool, bool]:
-    """Giải mã, lật gương theo realtime và trích xuất 93 landmark qua MediaPipe.
+    """Giải mã ảnh, tuỳ chọn lật gương (BR-007) và trích xuất 93 toạ độ landmark qua MediaPipe (BR-001).
 
     Tham số:
     - image_bytes: Dữ liệu byte nhị phân của tệp ảnh.
+    - flip: Nếu True, lật gương ảnh ngang (cv2.flip) cho ảnh chụp webcam/selfie;
+            nếu False, giữ nguyên chiều cho ảnh chụp từ camera điện thoại/máy ảnh thông thường.
 
     Trả về:
     - (all_landmarks_93, has_hand, has_face) nếu nhận diện đủ 1 tay và mặt.
@@ -84,7 +87,9 @@ def extract_landmarks_from_image(
     if image is None:
         raise ValueError("Không thể giải mã tệp ảnh.")
 
-    image = cv2.flip(image, 1)
+    # Lật gương ảnh nếu client yêu cầu (BR-007)
+    if flip:
+        image = cv2.flip(image, 1)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     hands_processor, face_mesh_processor = _get_mediapipe_processors()
@@ -252,6 +257,7 @@ def create_app() -> FastAPI:
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
         top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
+        flip: bool = Query(False, description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)"),
     ) -> PredictResponse:
         """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
         # BR-011: Kiểm tra trạng thái nạp của model
@@ -263,7 +269,7 @@ def create_app() -> FastAPI:
 
         content = await file.read()
         try:
-            landmarks, has_hand, has_face = extract_landmarks_from_image(content)
+            landmarks, has_hand, has_face = extract_landmarks_from_image(content, flip=flip)
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
