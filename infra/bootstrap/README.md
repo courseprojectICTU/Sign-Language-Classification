@@ -11,7 +11,7 @@ committing credentials:
 ```powershell
 terraform init
 terraform plan `
-  -var="project_id=project-6e4a1507-5ddb-4ec2-aa2" `
+  -var="project_id=project-6e4a1507-5ddb-4ec2-aa6" `
   -var="bucket_name=nhan-dien-tay-state"
 ```
 
@@ -19,7 +19,7 @@ After reviewing the plan, create the bucket only with explicit approval:
 
 ```powershell
 terraform apply `
-  -var="project_id=project-6e4a1507-5ddb-4ec2-aa2" `
+  -var="project_id=project-6e4a1507-5ddb-4ec2-aa6" `
   -var="bucket_name=nhan-dien-tay-state"
 ```
 
