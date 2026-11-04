@@ -6,12 +6,11 @@ Tuân thủ:
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
-from keras.models import load_model
-from keras.applications.resnet50 import preprocess_input
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -20,27 +19,31 @@ from src.vsl.heatmap import create_heatmap
 from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 from src.vsl.landmarks import FACE_KEYPOINTS, TOTAL_LANDMARK_COORDS
 
-import mediapipe as mp
-
 logger = logging.getLogger("vsl.service")
 
 # ---------------------------------------------------------------- MediaPipe Singletons
-# Tái sử dụng instance để tránh re-init tốn tài nguyên (R-4)
-if hasattr(mp, 'solutions'):
-    _mp_hands = mp.solutions.hands.Hands(
-        static_image_mode=True,
-        max_num_hands=1,
-        min_detection_confidence=0.5,
-    )
-    _mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
-        static_image_mode=True,
-        max_num_faces=1,
-        min_detection_confidence=0.5,
-    )
-else:
-    _mp_hands = None
-    _mp_face_mesh = None
+_mp_hands = None
+_mp_face_mesh = None
 # FACE_KEYPOINTS được định nghĩa duy nhất tại src.vsl.landmarks (BR-001, US-015)
+
+
+def _get_mediapipe_processors() -> Tuple[Any, Any]:
+    """Tạo và tái sử dụng MediaPipe graphs khi ảnh hợp lệ đầu tiên được xử lý."""
+    global _mp_hands, _mp_face_mesh
+    if _mp_hands is None or _mp_face_mesh is None:
+        import mediapipe as mp
+
+        _mp_hands = mp.solutions.hands.Hands(
+            static_image_mode=True,
+            max_num_hands=1,
+            min_detection_confidence=0.5,
+        )
+        _mp_face_mesh = mp.solutions.face_mesh.FaceMesh(
+            static_image_mode=True,
+            max_num_faces=1,
+            min_detection_confidence=0.5,
+        )
+    return _mp_hands, _mp_face_mesh
 
 
 # ---------------------------------------------------------------- Pydantic Schemas
@@ -52,6 +55,7 @@ class TopKPrediction(BaseModel):
 
 class PredictResponse(BaseModel):
     """Hợp đồng JSON phản hồi từ endpoint POST /predict (US-006)."""
+    status: Literal["ok", "no_hand", "no_face"]
     detected: bool
     letter: Optional[str] = None
     confidence: float = 0.0
@@ -88,29 +92,34 @@ def extract_landmarks_from_image(
         image = cv2.flip(image, 1)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    hands_processor, face_mesh_processor = _get_mediapipe_processors()
+
+    # Chạy cả hai detector để response có thể phân biệt chính xác phần bị thiếu.
+    hands_results = hands_processor.process(image_rgb)
+    face_results = face_mesh_processor.process(image_rgb)
+
+    has_hand = bool(hands_results.multi_hand_landmarks)
+    has_face = bool(face_results.multi_face_landmarks)
+
+    if not has_hand or not has_face:
+        return None, has_hand, has_face
 
     # 1. Trích xuất landmark bàn tay (21 điểm x 3 = 63 toạ độ)
-    hands_results = _mp_hands.process(image_rgb)
-    has_hand = bool(hands_results.multi_hand_landmarks)
+    first_hand = hands_results.multi_hand_landmarks[0]
     hand_landmarks: List[float] = []
-    if has_hand and hands_results.multi_hand_landmarks:
-        first_hand = hands_results.multi_hand_landmarks[0]
-        for lm in first_hand.landmark:
-            hand_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
+    for lm in first_hand.landmark:
+        hand_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
 
     # 2. Trích xuất landmark khuôn mặt (10 điểm cố định x 3 = 30 toạ độ)
-    face_results = _mp_face_mesh.process(image_rgb)
-    has_face = bool(face_results.multi_face_landmarks)
+    first_face = face_results.multi_face_landmarks[0]
     face_landmarks: List[float] = []
-    if has_face and face_results.multi_face_landmarks:
-        first_face = face_results.multi_face_landmarks[0]
-        for idx in FACE_KEYPOINTS:
-            lm = first_face.landmark[idx]
-            face_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
+    for idx in FACE_KEYPOINTS:
+        lm = first_face.landmark[idx]
+        face_landmarks.extend([float(lm.x), float(lm.y), float(lm.z)])
 
     # 3. Hợp đồng landmark: đúng 93 toạ độ (BR-001)
     all_landmarks = hand_landmarks + face_landmarks
-    if len(all_landmarks) == 93:
+    if len(all_landmarks) == TOTAL_LANDMARK_COORDS:
         return all_landmarks, has_hand, has_face
 
     return None, has_hand, has_face
@@ -126,8 +135,11 @@ def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -
     - BR-006: preprocess_input Caffe style (trừ mean BGR), nghiêm cấm chia 255.
     - BR-003: ánh xạ nhãn qua VIETNAMESE_ALPHABET.
     """
-    if len(landmarks) != 93:
-        raise ValueError(f"Landmarks phải có đúng 93 toạ độ (BR-001), thực tế: {len(landmarks)}")
+    if len(landmarks) != TOTAL_LANDMARK_COORDS:
+        raise ValueError(
+            f"Landmarks phải có đúng {TOTAL_LANDMARK_COORDS} toạ độ (BR-001), "
+            f"thực tế: {len(landmarks)}"
+        )
 
     # 1. Sinh heatmap 224x224x3 (BR-002)
     heatmap = create_heatmap(landmarks)
@@ -136,7 +148,7 @@ def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -
     heatmap_batch = np.expand_dims(heatmap, axis=0)
 
     # 3. Tiền xử lý ResNet50 kiểu Caffe (BR-006: trừ mean BGR, KHÔNG chia 255)
-    heatmap_batch = preprocess_input(heatmap_batch)
+    heatmap_batch = preprocess_heatmap(heatmap_batch)
 
     # 4. Suy luận qua mô hình
     predictions = model(heatmap_batch, training=False)
@@ -163,11 +175,20 @@ def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -
     }
 
 
+def preprocess_heatmap(heatmap_batch: np.ndarray) -> np.ndarray:
+    """Áp ResNet50 Caffe preprocessing khi inference cần dùng TensorFlow/Keras."""
+    from keras.applications.resnet50 import preprocess_input
+
+    return preprocess_input(heatmap_batch)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Quản lý vòng đời ứng dụng — nạp mô hình một lần duy nhất lúc khởi động (BR-011)."""
     model_path = get_model_path()
     try:
+        from keras.models import load_model
+
         logger.info("Đang nạp mô hình từ: %s", model_path)
         app.state.model = load_model(str(model_path))
         app.state.model_version = "v1.0"
@@ -256,20 +277,52 @@ def create_app() -> FastAPI:
             )
 
         if landmarks is None:
+            if not has_hand:
+                result_status = "no_hand"
+                message = "Không phát hiện bàn tay. Vui lòng đưa bàn tay vào khung hình."
+            elif not has_face:
+                result_status = "no_face"
+                message = "Không phát hiện khuôn mặt. Vui lòng đưa khuôn mặt vào khung hình."
+            else:
+                logger.error("MediaPipe returned incomplete landmark vector despite both detections")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Không thể dựng đủ landmark cho ảnh này.",
+                )
+
+            if not has_hand and not has_face:
+                reason = "missing_hand_and_face"
+            elif not has_hand:
+                reason = "missing_hand"
+            else:
+                reason = "missing_face"
+
+            timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+            logger.warning(
+                "prediction_skipped timestamp=%s status=%s reason=%s "
+                "has_hand=%s has_face=%s",
+                timestamp,
+                result_status,
+                reason,
+                has_hand,
+                has_face,
+            )
             return PredictResponse(
+                status=result_status,
                 detected=False,
                 letter=None,
                 confidence=0.0,
                 top_k=[],
                 has_hand=has_hand,
                 has_face=has_face,
-                message="Không nhận diện đủ 1 bàn tay và khuôn mặt trong ảnh.",
+                message=message,
                 model_version=getattr(app.state, "model_version", "v1.0") or "v1.0",
             )
 
         inference_result = predict_from_landmarks(landmarks, app.state.model, top_k=top_k)
 
         return PredictResponse(
+            status="ok",
             detected=True,
             letter=inference_result["letter"],
             confidence=inference_result["confidence"],
