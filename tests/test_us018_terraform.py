@@ -72,3 +72,15 @@ def test_state_bucket_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'variable\s+"bucket_name"', variable_config)
     assert "terraform apply" in instructions
     assert "backend-config" in instructions
+
+
+def test_staging_and_production_use_confirmed_google_cloud_project():
+    project_id = "project-6e4a1507-5ddb-4ec2-aa2"
+
+    for environment in ("staging", "production"):
+        tfvars = _read(f"environments/{environment}.tfvars")
+        assert re.search(
+            rf'^\s*project_id\s*=\s*"{re.escape(project_id)}"\s*$',
+            tfvars,
+            re.MULTILINE,
+        )
