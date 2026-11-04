@@ -1,0 +1,42 @@
+# Version Control & CI/CD
+.git
+.github
+.gitignore
+.gitattributes
+
+# Virtual Environment & Python dependencies
+.venv/
+venv/
+env/
+ENV/
+
+# Raw Dataset & Data Collection (Tránh phình 1600+ CSV và dữ liệu thô)
+data/
+process_images/
+
+# Local scripts & Interactive Notebooks
+run_notebook.cmd
+run_realtime.cmd
+run_realtime.py
+run_realtime.ipynb
+*.ipynb
+
+# Python bytecode, cache & Tests
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+tests/
+requirements-dev.txt
+
+# Documentation & Reports
+docs/
+report/
+*.md
+*.doc
+*.docx
+*.txt
+
+# Training visual assets
+train/training_plot_keras.png
+train/train_cnn_pose_keras.ipynb
