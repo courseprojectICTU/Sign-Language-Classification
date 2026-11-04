@@ -1,13 +1,9 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-<<<<<<< HEAD
-**Cập nhật lần cuối: 2026-11-02** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+
+**Cập nhật lần cuối: 2026-11-04** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
-=======
-**Cập nhật lần cuối: 2026-10-28** — trạng thái Git, kiểm thử và US-016 được đối chiếu
-trực tiếp trong phiên này. Nếu bạn phát hiện file này lệch với thực tế,
->>>>>>> develop
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
@@ -34,13 +30,8 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-<<<<<<< HEAD
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**44/44 tests PASSED trên Python 3.12.10 ngày 2026-11-02**). Chưa có Dockerfile, CI workflow
-=======
-Mã nguồn hiện tại = **package `src/vsl/` (gồm hợp đồng landmark) + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict) + 3 notebook + 1 script Python native**.
-Bộ kiểm thử tự động `tests/` có **42/42 tests PASSED** trong lần chạy ngày 2026-10-28 sau khi bổ sung kiểm tra notebook trực tiếp của US-016. Chưa có Dockerfile, CI workflow
->>>>>>> develop
+Đã có bộ kiểm thử tự động `tests/` (**48/48 tests PASSED trên Python 3.12.7 ngày 2026-11-04**). Chưa có Dockerfile, CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -108,12 +99,9 @@ docs/api/US-002.md                                hợp đồng API của US-002
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
-<<<<<<< HEAD
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
-=======
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
->>>>>>> develop
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -234,7 +222,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy mới nhất: **42/42 tests PASSED**, 2026-10-28, ~45s; gồm direct notebook/service parity US-016).
+  (Lần chạy mới nhất: **48/48 tests PASSED**, 2026-11-04, ~63s; gồm direct notebook/service parity US-016 và kiểm thử trạng thái/flip của US-007).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -264,9 +252,9 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
 | **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
-| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ⏳ **Đã triển khai, chờ nghiệm thu** | `status`: `ok`/`no_hand`/`no_face`; log WARNING có timestamp UTC và reason; full suite 44/44 (2026-11-02) |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ✅ **PASS (2026-11-04)** | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
-| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | 🛠 **ĐANG CHỜ NGHIỆM THU** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001, sigma=3 regression giữ nguyên; chờ chủ dự án xác nhận PASS |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | ✅ **PASS (2026-10-28)** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
 ---
 
@@ -274,6 +262,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. Sau khi Chủ dự án xác nhận nghiệm thu `US-007`, tiến hành PR cho nhánh này vào `develop`; cập nhật trạng thái PASS trong nhật ký và bảng tiến độ.
-3. US-016 đã hoàn tất TSK-026/027; direct notebook/service test mới bổ sung parity, hash model/CSV và ngưỡng confidence 0.0001; nghiệm thu sau khi chạy toàn bộ suite và chờ Chủ dự án xác nhận PASS.
-4. Không push hoặc tạo PR nếu chưa có quyết định của Chủ dự án; sau nghiệm thu, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+2. US-007 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-04. Tiến hành tạo Pull Request hợp nhất `feature/US-007` vào `develop` theo quy trình [`docs/QUY-TRINH-REVIEW-PULL-REQUEST.md`](docs/QUY-TRINH-REVIEW-PULL-REQUEST.md).
+3. US-016 đã nghiệm thu ✅ PASS và đã merge vào `develop` qua PR #12.
+4. Sau khi hoàn tất PR của US-007, làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
