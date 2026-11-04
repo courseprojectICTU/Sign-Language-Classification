@@ -1,5 +1,5 @@
-# Base image Linux x86_64 tuân thủ BR-005 và BR-025
-FROM --platform=linux/amd64 python:3.12-slim
+# Base image Linux tuân thủ BR-005
+FROM python:3.12-slim
 
 # Thiết lập môi trường không tương tác cho apt
 ENV DEBIAN_FRONTEND=noninteractive

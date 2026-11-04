@@ -94,3 +94,4 @@ def test_ac_010_01_layer_caching_order_requirements_before_src() -> None:
     assert req_copy_idx < src_copy_idx, (
         "Để tối ưu Docker layer cache (BR-025), COPY requirements.txt phải đứng trước COPY src/"
     )
+
