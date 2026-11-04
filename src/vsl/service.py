@@ -8,18 +8,70 @@ Tuân thủ:
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import logging
+import os
+import subprocess
 from typing import Any, Dict, List, Literal, Optional, Tuple
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 import numpy as np
 from pydantic import BaseModel, Field
 
-from src.vsl.config import get_model_path
+from src.vsl.config import PROJECT_ROOT, get_model_path
 from src.vsl.heatmap import create_heatmap
 from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 from src.vsl.landmarks import FACE_KEYPOINTS, TOTAL_LANDMARK_COORDS
 
 logger = logging.getLogger("vsl.service")
+DEFAULT_MODEL_VERSION = "v1.0"
+
+
+def _utc_timestamp(value: Optional[str] = None) -> str:
+    """Return a configured timestamp normalized to ISO 8601 UTC, or current UTC."""
+    if value:
+        try:
+            parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc).isoformat(timespec="seconds").replace(
+                "+00:00", "Z"
+            )
+        except (OverflowError, ValueError):
+            logger.warning("Invalid BUILD_TIME value; using service startup time")
+
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
+        "+00:00", "Z"
+    )
+
+
+def _resolve_git_sha() -> str:
+    """Resolve the image Git SHA, falling back to the local checkout or unknown."""
+    configured_sha = os.environ.get("GIT_SHA", "").strip()
+    if configured_sha:
+        return configured_sha
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.info("Git SHA unavailable; using 'unknown': %s", exc)
+        return "unknown"
+
+    return result.stdout.strip() or "unknown"
+
+
+def _resolve_model_version(configured_version: Optional[str] = None) -> str:
+    """Resolve model version from environment, app state, then project default."""
+    return (
+        os.environ.get("VSL_MODEL_VERSION", "").strip()
+        or (configured_version or "").strip()
+        or DEFAULT_MODEL_VERSION
+    )
 
 # ---------------------------------------------------------------- MediaPipe Singletons
 _mp_hands = None
@@ -64,6 +116,14 @@ class PredictResponse(BaseModel):
     has_face: bool = False
     message: Optional[str] = None
     model_version: Optional[str] = None
+
+
+class VersionResponse(BaseModel):
+    """Build and model metadata returned by GET /version."""
+
+    model_version: str
+    git_sha: str
+    build_time: str
 
 
 def extract_landmarks_from_image(
@@ -191,7 +251,7 @@ async def lifespan(app: FastAPI):
 
         logger.info("Đang nạp mô hình từ: %s", model_path)
         app.state.model = load_model(str(model_path))
-        app.state.model_version = "v1.0"
+        app.state.model_version = _resolve_model_version()
         logger.info("Nạp mô hình thành công vào app.state.")
     except Exception as exc:
         logger.error("Lỗi khi nạp mô hình lúc khởi động: %s", exc)
@@ -215,7 +275,9 @@ def create_app() -> FastAPI:
 
     # Khởi tạo trạng thái mặc định
     app.state.model = None
-    app.state.model_version = None
+    app.state.model_version = _resolve_model_version()
+    app.state.git_sha = _resolve_git_sha()
+    app.state.build_time = _utc_timestamp(os.environ.get("BUILD_TIME"))
 
     @app.get(
         "/health",
@@ -246,6 +308,21 @@ def create_app() -> FastAPI:
             "model_loaded": False,
             "model_version": None,
         }
+
+    @app.get(
+        "/version",
+        summary="Thông tin phiên bản model và mã commit đang chạy",
+        tags=["Monitoring"],
+        response_model=VersionResponse,
+        status_code=status.HTTP_200_OK,
+    )
+    async def version_info() -> VersionResponse:
+        """Return model version, source commit, and UTC build/start time."""
+        return VersionResponse(
+            model_version=_resolve_model_version(app.state.model_version),
+            git_sha=app.state.git_sha,
+            build_time=app.state.build_time,
+        )
 
     @app.post(
         "/predict",
