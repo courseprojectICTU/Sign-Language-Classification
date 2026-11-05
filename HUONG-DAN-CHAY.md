@@ -1,55 +1,82 @@
 # HƯỚNG DẪN CHẠY DỰ ÁN
 
-Sign-Language-Classification-v1.0 — chạy trên Windows.
+Sign-Language-Classification-v1.0 — chạy trên Windows và Docker Linux.
 Mọi lệnh dưới đây đã được **kiểm chứng và chạy thử thật 100%**.
 
 ---
 
 ## 0. Hiểu đúng trước khi bắt đầu
 
-Dự án này là hệ thống nhận diện **ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) qua webcam sử dụng MediaPipe và mô hình ResNet50.
+Dự án này là hệ thống nhận diện **ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) qua ảnh và webcam sử dụng MediaPipe và mô hình CNN ResNet50.
 
-**Model đã được huấn luyện sẵn** tại `train/vsl_cnn_pose_keras.h5` (130.7 MB). Bạn **không cần train lại** để chạy thử.
+**Model đã được huấn luyện sẵn** tại `train/vsl_cnn_pose_keras.h5` (137 MB, Git LFS). Bạn **không cần train lại** để chạy thử.
 
-Dự án cung cấp 2 hình thức chạy nhận diện:
-1. **Chạy trực tiếp 1-click (Khuyến nghị - Nhanh và mượt nhất):** Dùng `run_realtime.cmd` hoặc `run_realtime.py`.
-2. **Chạy qua Jupyter Notebook:** Dùng `run_realtime.ipynb` (qua Jupyter Web hoặc VS Code).
+Dự án cung cấp 2 hình thức sử dụng chính:
+1. **Dịch vụ Backend API qua Container Docker (Chuẩn hóa đám mây & Web hóa - Khuyến nghị):** Chạy FastAPI server đóng gói trong Docker, phục vụ các endpoint `/health`, `/version` và `/predict` cho website hoặc hệ thống khác.
+2. **Nhận diện Realtime trực tiếp từ Webcam:** Dùng `run_realtime.cmd` (1-click native OpenCV) hoặc `run_realtime.ipynb` (Jupyter Notebook).
 
 ---
 
-## 1. Kiểm tra Python — bước quan trọng nhất
+## 1. CÁCH CHẠY BACKEND API BẰNG DOCKER (KHUYẾN NGHỊ)
 
-Mở **PowerShell** tại thư mục project và chạy:
+Dành cho việc đóng gói artifact bất biến, kiểm thử API hoặc chuẩn bị triển khai lên Google Cloud Run.
+
+### Bước 1: Mở Docker Desktop
+Đảm bảo phần mềm **Docker Desktop** trên máy tính đã được bật và đang ở trạng thái chạy (Engine Running).
+
+### Bước 2: Build Docker Image
+Mở **PowerShell** tại thư mục gốc dự án và chạy:
 
 ```powershell
-py -0p
+docker build -t vsl-api .
 ```
 
-Bạn cần thấy một dòng **3.12** (hoặc 3.9–3.12).
+> **💡 Mẹo:** Để endpoint `/version` phản ánh đúng mã commit Git hiện tại (theo quy tắc `BR-009`):
+> ```powershell
+> docker build --build-arg GIT_SHA=$(git rev-parse HEAD) -t vsl-api .
+> ```
 
-> ⚠️ **Nếu dòng có dấu `*` là Python 3.13 hoặc 3.14:**
-> Python 3.13/3.14 **không cài được TensorFlow** (báo `No matching distribution found for tensorflow`).
-> Vì vậy hãy đảm bảo máy đã cài Python 3.12: [Tải Python 3.12.7](https://www.python.org/downloads/release/python-3127/).
+### Bước 3: Khởi chạy Container
+```powershell
+docker run -d -p 8080:8080 --name vsl-service vsl-api
+```
+
+*(Lưu ý: Nếu cổng `8080` trên máy đang bận, bạn có thể đổi cổng ngoài máy host sang `8088:8080`: `docker run -d -p 8088:8080 --name vsl-service vsl-api`)*.
+
+### Bước 4: Kiểm tra & Trải nghiệm API trên Trình duyệt
+Sau khi chạy container khoảng 5–10 giây (server nạp xong mô hình):
+* **Giao diện Swagger UI tương tác:** Truy cập **[http://localhost:8080/docs](http://localhost:8080/docs)**
+  - `GET /health`: Kiểm tra trạng thái sẵn sàng của mô hình (`{"status": "ok", "model_loaded": true}`).
+  - `GET /version`: Xem phiên bản mô hình, mã Git SHA và build time.
+  - `POST /predict`: Tải ảnh chụp ký hiệu tay để nhận kết quả dự đoán chữ cái tiếng Việt.
+* **Theo dõi log hoạt động của container:**
+  ```powershell
+  docker logs -f vsl-service
+  ```
+  *(Nhấn `Ctrl + C` để thoát màn hình xem log)*.
+
+### Bước 5: Tắt và dọn dẹp Container khi dùng xong
+```powershell
+docker stop vsl-service
+docker rm vsl-service
+```
 
 ---
 
-## 2. Chuẩn bị môi trường (Chỉ làm lần đầu nếu máy chưa có .venv)
+## 2. CÁCH CHẠY BACKEND API TRỰC TIẾP QUA PYTHON (KHÔNG CẦN DOCKER)
 
-*(Nếu trong thư mục dự án đã có sẵn thư mục `.venv`, bạn có thể bỏ qua bước này và chạy ngay sang Mục 3).*
-
-Mở PowerShell tại thư mục gốc dự án:
+Nếu bạn chưa cài Docker hoặc muốn chạy nhanh mã nguồn Python cục bộ:
 
 ```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -U pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+& "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
 ```
+Truy cập giao diện Swagger UI tại: **[http://localhost:8000/docs](http://localhost:8000/docs)**.
 
 ---
 
-## 3. CÁCH CHẠY NHẬN DIỆN REALTIME (Chọn 1 trong 3 cách)
+## 3. CÁCH CHẠY NHẬN DIỆN REALTIME QUA WEBCAM CỤC BỘ
 
-### Cách 1: Chạy trực tiếp 1-click (Khuyến nghị — Nhanh & Mượt nhất)
+### Cách 1: Chạy trực tiếp 1-click (Nhanh & Mượt nhất)
 
 Mở terminal tại thư mục dự án và gõ:
 
@@ -66,7 +93,7 @@ Mở terminal tại thư mục dự án và gõ:
 
 ### Cách 2: Chạy trực tiếp trong VS Code / Antigravity IDE (Interactive Notebook)
 
-1. Mở file [run_realtime.ipynb](file:///d:/file/project/Sign-Language-Classification-v1.0/run_realtime.ipynb) trong IDE.
+1. Mở file [run_realtime.ipynb](run_realtime.ipynb) trong IDE.
 2. Nhìn lên **góc trên bên phải** của giao diện Notebook (nút chọn **Kernel**):
    - Chọn kernel: **Python 3.12 (VSL)** hoặc **Python 3.12.7** (`D:\program\python\python.exe`).
    - *(Lưu ý: Không chọn `.venv\Scripts\python.exe` vì launcher stub của Windows có thể gây lỗi nạp DLL)*.
@@ -107,8 +134,8 @@ Trình duyệt tự động mở Jupyter:
 
 ## 5. Thu thập dữ liệu và Train lại (Chỉ khi cần)
 
-- **Thu thập thêm mẫu mới:** Mở [process_images/capture_and_process_images.ipynb](file:///d:/file/project/Sign-Language-Classification-v1.0/process_images/capture_and_process_images.ipynb) → sửa tên ký tự cần chụp ở cell cuối `capture_for_letter('...')` → **Run All**.
-- **Train lại mô hình ResNet50:** Mở [train/train_cnn_pose_keras.ipynb](file:///d:/file/project/Sign-Language-Classification-v1.0/train/train_cnn_pose_keras.ipynb) → **Run All** (khuyến nghị có GPU, train trên CPU sẽ mất nhiều giờ).
+- **Thu thập thêm mẫu mới:** Mở [process_images/capture_and_process_images.ipynb](process_images/capture_and_process_images.ipynb) → sửa tên ký tự cần chụp ở cell cuối `capture_for_letter('...')` → **Run All**.
+- **Train lại mô hình ResNet50:** Mở [train/train_cnn_pose_keras.ipynb](train/train_cnn_pose_keras.ipynb) → **Run All** (khuyến nghị có GPU, train trên CPU sẽ mất nhiều giờ).
 
 ---
 
@@ -116,7 +143,9 @@ Trình duyệt tự động mở Jupyter:
 
 | Triệu chứng | Nguyên nhân | Cách khắc phục |
 |---|---|---|
-| `ImportError: DLL load failed while importing cv2` | Chạy trực tiếp bằng binary `.venv\Scripts\python.exe` bị lỗi Windows DLL launcher | Dùng `.\run_realtime.cmd` hoặc trong IDE chọn Kernel trỏ vào `Python 3.12 (VSL)` |
+| `docker run` báo `port is already allocated` | Cổng 8080 đang bị socket TIME_WAIT hoặc ứng dụng khác chiếm | Đổi sang cổng khác bằng cờ `-p 8088:8080` khi chạy container |
+| `docker compose up` báo `no configuration file provided` | Dự án dùng trực tiếp `Dockerfile` theo chuẩn Cloud Run | Sử dụng lệnh `docker build` và `docker run` |
+| `ImportError: DLL load failed while importing cv2` | Chạy trực tiếp bằng binary `.venv\Scripts\python.exe` bị lỗi Windows DLL launcher | Dùng `.\run_realtime.cmd` hoặc dùng Python gốc `D:\program\python\python.exe` |
 | `PermissionError: C:\Users\...\.jupyter\migrated` | Jupyter mặc định ghi cache ngoài thư mục project bị Windows giới hạn quyền | Khởi động bằng `.\run_notebook.cmd` |
 | `Không thể mở camera` / `Không đọc được frame` | Camera không ở index 0 hoặc đang bị app khác chiếm (Zoom/Teams/Camera) | Tắt các app dùng camera, hoặc đổi `cv2.VideoCapture(0)` thành `(1)` |
 | Camera bật nhưng không hiện chữ dự đoán | Chưa đưa đủ cả 1 bàn tay và mặt vào khung hình | Nhìn dòng trạng thái `Dang tim: Tay [X] / Mat [X]`, đưa cả mặt và tay vào vùng sáng rõ |
