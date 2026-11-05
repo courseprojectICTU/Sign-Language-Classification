@@ -30,8 +30,8 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**51/51 tests PASSED trên Python 3.12.7 ngày 2026-11-04**). Chưa có Dockerfile, CI workflow
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
+Đã có bộ kiểm thử tự động `tests/` (**54/54 tests PASSED trên Python 3.12.7 ngày 2026-11-05**). Đã có Dockerfile, .dockerignore; chưa có CI workflow
 hay hạ tầng Cloud Run.
 
 ---
@@ -42,7 +42,7 @@ hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-008` (đang checkout), `feature/US-015`, `feature/US-016` |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010` (đang checkout), `feature/US-015`, `feature/US-016` |
 | `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
@@ -83,6 +83,8 @@ run_realtime.cmd                                  launcher 1-click cho run_realt
 run_notebook.cmd                                  launcher Jupyter an toàn (xem mục 12.1)
 requirements.txt                                  deps đã pin, THUẦN ASCII (mục 10.1)
 requirements-dev.txt                              pytest (dev-only)
+Dockerfile                                        Dockerfile Linux chạy uvicorn tại cổng 8080 (US-010)
+.dockerignore                                     loại trừ context nặng cho build container (US-010)
 HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
 AGENTS.md                                         file này (bộ nhớ dự án)
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
@@ -101,7 +103,8 @@ docs/api/US-004.md                                hợp đồng API của US-004
 docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
 docs/api/US-006.md                                hợp đồng API của US-006 (/predict)
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
-docs/api/US-008.md                                hợp đồng API của US-008 (version metadata)
+docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
+docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
 src/vsl/__init__.py                               re-export heatmap, labels, config
@@ -111,6 +114,7 @@ src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLAS
 src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
 src/vsl/service.py                                FastAPI service + GET /health, POST /predict, GET /version
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
+tests/test_dockerfile.py                          test US-010 (AC-010-01, BR-005, BR-009, BR-011, BR-025: 3 test)
 tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
 tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
@@ -226,7 +230,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy gần nhất: **51/51 tests PASSED**, 2026-11-04, ~67s; gồm 3 test mới US-008).
+  (Lần chạy gần nhất: **54/54 tests PASSED**, 2026-11-05, ~68s; gồm 3 test mới US-010 và kiểm chứng docker run thành công).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -258,6 +262,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ✅ **PASS (2026-11-04)** | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
 | **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | ✅ **PASS (2026-11-04)** | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
+| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | ✅ **PASS (2026-11-05)** | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | ✅ **PASS (2026-10-28)** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
@@ -267,5 +272,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. US-008 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-04. Tiến hành hoàn tất Pull Request hợp nhất `feature/US-008` vào `develop`.
-3. Sau khi merge `feature/US-008` vào `develop`, đồng bộ `develop` và làm US tiếp theo theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+2. US-010 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-05 và đã merge vào `develop`.
+3. Làm US tiếp theo (US-009 hoặc US-011/US-026) theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
