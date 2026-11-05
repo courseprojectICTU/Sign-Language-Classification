@@ -31,7 +31,7 @@ Mở **PowerShell** tại thư mục gốc dự án và chạy:
 docker build -t vsl-api .
 ```
 
-> **💡 Mẹo:** Để endpoint `/version` phản ánh đúng mã commit Git hiện tại (theo quy tắc `BR-009`):
+> **Mẹo:** Để endpoint `/version` phản ánh đúng mã commit Git hiện tại (theo quy tắc `BR-009`):
 > ```powershell
 > docker build --build-arg GIT_SHA=$(git rev-parse HEAD) -t vsl-api .
 > ```
