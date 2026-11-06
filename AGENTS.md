@@ -1,8 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-
-**Cập nhật lần cuối: 2026-11-04** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-06** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -31,23 +30,25 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**64/64 tests PASSED trên feature/US-013 ngày 2026-11-06**). Đã có Dockerfile, .dockerignore; hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Chưa có CI/CD workflow tự động.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile và benchmark harness US-013). Đã có Dockerfile, .dockerignore; hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Chưa có CI/CD workflow tự động.
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-10-28) |
+| Mục | Giá trị (đối chiếu 2026-11-06) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013` (đang checkout), `feature/US-015`, `feature/US-016` |
-| `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013`, `feature/US-014` (đang checkout), `feature/US-015`, `feature/US-016` |
+| `develop` | `65b2946` Merge branch 'feature/US-013' into develop (ahead 2 so với `origin/develop`) |
+| `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
+| `feature/US-014` | đang giải quyết conflict merge `develop` và nghiệm thu US-014 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
-| `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
+| `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean** sau khi cập nhật bộ nhớ dự án; nhánh `feature/US-016` chưa push |
+| Trạng thái working tree | Đang hoàn tất resolve conflict merge `develop` vào `feature/US-014` |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -101,7 +102,7 @@ docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và
 docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
-docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap - PASS)
+docs/api/US-001.md                                hợp đồng create_heatmap; input sai ném ValueError theo US-014
 docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
 docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
 docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
@@ -111,6 +112,7 @@ docs/api/US-007.md                                hợp đồng API cho trạng 
 docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
 docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
 docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
+docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
@@ -125,7 +127,8 @@ scripts/benchmark_cold_start.py                  benchmark 5 cold starts với p
 tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
 tests/test_dockerfile.py                          test US-010 (AC-010-01, BR-005, BR-009, BR-011, BR-025: 3 test)
 tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
-tests/test_heatmap.py                             test US-001 (AC-001-01, AC-001-02 + biên: 9 test)
+tests/test_heatmap.py                             NumPy-only heatmap tests US-014 (9 test, <30s)
+tests/test_heatmap_contract.py                    golden/repository contract tests US-001 (9 test)
 tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
 tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
 tests/test_predict.py                             tests API US-006/US-007 (detection, logging, pipeline)
@@ -240,7 +243,7 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   ```powershell
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Lần chạy gần nhất trên develop: **54/54 tests PASSED**, 2026-11-05, ~68s; nhánh `feature/US-013` bổ sung unit tests cho benchmark harness).
+  (Bộ test thuần NumPy `tests/test_heatmap.py` đo ngày 2026-11-06: **9/9 tests PASSED** trong 0.28s; `tests/test_heatmap_contract.py`: **9/9 tests PASSED** trong 2.45s).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -273,7 +276,8 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
 | **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
-| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng |
+| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng; hợp đồng API và báo cáo benchmark đã hợp nhất tại docs/api/US-013.md |
+| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
@@ -283,5 +287,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-010 và hạ tầng Staging Azure Container Apps đã sẵn sàng hoạt động.
-3. Tiến hành merge US-013 vào `develop` và làm US tiếp theo (US-017 hoặc US-026) theo quy trình trong [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
+2. Nhánh `feature/US-014` đã được nghiệm thu PASS toàn diện. Tiến hành thực hiện merge `feature/US-014` vào `develop`.
+3. Sau khi hợp nhất US-014 vào `develop`, bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
