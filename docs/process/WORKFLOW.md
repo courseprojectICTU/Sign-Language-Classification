@@ -297,6 +297,7 @@ py -3.12 -m pytest tests -v
 | 2026-11-04 | **US-008** | `feature/US-008` | `docs/api/US-008.md` (`ANALYSIS_READY`, đã duyệt) | TSK-013 | AC-008-01, BR-009 — **51/51 test toàn repo; test US-008 3/3** | PASS (chủ dự án xác nhận 2026-11-04) |
 | 2026-11-05 | **US-010** | `feature/US-010` | `docs/api/US-010.md` (`ANALYSIS_READY`, đã duyệt) | TSK-015, TSK-016 | AC-010-01, BR-005, BR-009, BR-011, BR-025 — **54/54 test toàn repo; docker run /health 200** | PASS (chủ dự án xác nhận 2026-11-05) |
 | 2026-11-06 | **US-013** | `feature/US-013` | `docs/api/US-013.md` (`ANALYSIS_READY`, đã duyệt) | TSK-021, TSK-022, TSK-023 | AC-013-01 — **64/64 test toàn repo; Staging Azure Container Apps URL sẵn sàng** | PASS (Harness & Tests) |
+| 2026-11-06 | **US-014** | `feature/US-014` | `docs/api/US-014.md` (`ANALYSIS_READY`, đã duyệt) | TSK-022, TSK-023 | AC-014-01, AC-014-02 — **9/9 unit test thuần NumPy (0.28s); 9/9 test hợp đồng (2.43s)** | PASS (chủ dự án xác nhận 2026-11-06) |
 
 
 

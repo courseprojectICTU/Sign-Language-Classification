@@ -112,6 +112,7 @@ docs/api/US-007.md                                hợp đồng API cho trạng 
 docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
 docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
 docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
+docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
@@ -276,7 +277,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng; hợp đồng API và báo cáo benchmark đã hợp nhất tại docs/api/US-013.md |
-| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | ⏳ **Đang nghiệm thu** | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; tách test golden sang `tests/test_heatmap_contract.py` (9/9) |
+| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
@@ -286,5 +287,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. Thẩm định, review và nghiệm thu Pull Request cho nhánh `feature/US-014` theo quy trình tại [`docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md`](docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md).
-3. Sau khi nghiệm thu và hợp nhất US-014 vào `develop`, bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
+2. Nhánh `feature/US-014` đã được nghiệm thu PASS toàn diện. Tiến hành thực hiện merge `feature/US-014` vào `develop`.
+3. Sau khi hợp nhất US-014 vào `develop`, bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
