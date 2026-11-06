@@ -3,7 +3,6 @@
 import pathlib
 
 import numpy as np
-import pandas as pd
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -48,7 +47,9 @@ def _load_function():
 
 
 def _landmarks(letter):
-    values = pd.read_csv(ROOT / "data" / "anphabet" / letter / "1.csv").values.flatten()
+    values = np.loadtxt(
+        ROOT / "data" / "anphabet" / letter / "1.csv", delimiter=",", skiprows=1
+    ).flatten()
     values = values.astype(np.float64)
     assert values.shape == (93,)
     return values

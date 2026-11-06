@@ -5,8 +5,6 @@
 \chapter{TỔNG QUAN VỀ BÀI TOÁN VÀ CƠ SỞ KỸ THUẬT}
 \label{chap:tong_quan}
 
-Chương này trình bày bối cảnh bài toán nhận diện ngôn ngữ ký hiệu tiếng Việt kế thừa từ đồ án Capstone AI Samsung Innovation Campus (SIC), làm rõ các công nghệ cốt lõi và vai trò của chúng trong dự án, đồng thời phân tích hiện trạng mã nguồn ban đầu để xác định các yêu cầu kỹ thuật và định hình giải pháp nâng cấp hệ thống lên đám mây.
-
 \section{Bối cảnh bài toán và các công nghệ sử dụng}
 \label{sec:boi_canh_cong_nghe}
 
@@ -166,44 +164,15 @@ Dựa trên các hạn chế đã chỉ ra, nhóm xác lập các yêu cầu k�
     \end{itemize}
 \end{itemize}
 
+\clearpage
 \subsection{Kiến trúc phân tách Decoupled và tối ưu chi phí \$0}
 \label{subsec:kien_truc_decoupled}
 
 Để triển khai một mô hình AI nặng (>130 MB) lên Internet mà hoàn toàn không phát sinh chi phí, nhóm lựa chọn mô hình kiến trúc phân tách độc lập (Decoupled Architecture) giữa Cloudflare Pages và Google Cloud Run (Hình \ref{fig:kien_truc_tong_the}):
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
-\begin{tikzpicture}[scale=0.85, every node/.style={transform shape}]
-    % Khung Trình duyệt người dùng
-    \draw[fill=green!5, rounded corners] (-0.5,-0.5) rectangle (3.5,5.5);
-    \node at (1.5,5.1) {\textbf{Trình duyệt User}};
-    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (webcam) at (1.5,3.8) {Webcam Capture};
-    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (canvas) at (1.5,2.0) {HTML5 Canvas / UI};
-    \node[draw, fill=white, rounded corners, minimum width=2.8cm, minimum height=1.0cm] (fetch) at (1.5,0.5) {Fetch API (HTTPS)};
-    \draw[->] (webcam) -- (canvas);
-    \draw[->] (canvas) -- (fetch);
-
-    % Khung Frontend (Cloudflare Pages)
-    \draw[fill=orange!5, rounded corners] (4.5,2.5) rectangle (8.5,5.5);
-    \node at (6.5,5.1) {\textbf{Cloudflare Pages}};
-    \node[draw, fill=orange!20, rounded corners, align=center, minimum width=3.2cm, minimum height=1.4cm] (cf) at (6.5,3.8) {Static Web Hosting\\(HTML/CSS/JS Edge CDN)};
-
-    % Khung Backend (Google Cloud Run)
-    \draw[fill=blue!5, rounded corners] (9.5,-0.5) rectangle (15.5,5.5);
-    \node at (12.5,5.1) {\textbf{Google Cloud Run (Serverless)}};
-    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (fastapi) at (12.5,4.0) {FastAPI Service (\texttt{/predict})};
-    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (mp_py) at (12.5,2.7) {MediaPipe Python (93 Landmarks)};
-    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (hm_gen) at (12.5,1.4) {Heatmap Generator 224x224x3};
-    \node[draw, fill=blue!20, rounded corners, minimum width=4.5cm, minimum height=1.0cm] (resnet_infer) at (12.5,0.1) {ResNet50 Classifier (Softmax)};
-    \draw[->] (fastapi) -- (mp_py);
-    \draw[->] (mp_py) -- (hm_gen);
-    \draw[->] (hm_gen) -- (resnet_infer);
-
-    % Các mũi tên kết nối
-    \draw[<->, dashed, line width=1pt] (canvas) -- node[above, sloped] {Tải Web (CDN)} (cf);
-    \draw[->, line width=1.2pt, color=red] (fetch) -- node[below, sloped] {Gửi ảnh (POST Multipart)} (fastapi);
-    \draw[->, line width=1.2pt, color=green!60!black] (resnet_infer) to[bend left=30] node[below, sloped] {Trả JSON kết quả} (fetch);
-\end{tikzpicture}
+\includegraphics[width=0.82\textwidth]{Anh1.png}
 \caption{Kiến trúc phân tách Decoupled giữa Frontend (Cloudflare Pages) và Backend (Google Cloud Run)}
 \label{fig:kien_truc_tong_the}
 \end{figure}
@@ -215,7 +184,7 @@ Giải pháp này mang lại 3 ưu điểm kỹ thuật vượt trội:
     \item \textbf{Vận hành ổn định với chi phí \$0}: Bảng \ref{tab:free_tier_limits} tóm tắt chính sách Bậc miễn phí (Free Tier) hàng tháng của các dịch vụ được sử dụng:
 \end{enumerate}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Hạn mức miễn phí hàng tháng (Free Tier) của các dịch vụ được lựa chọn}
 \label{tab:free_tier_limits}
