@@ -61,6 +61,9 @@ docker stop vsl-service
 docker rm vsl-service
 ```
 
+> **Triển khai lên Đám mây (Cloud Deployment):**
+> Để đưa container này lên chạy 24/24 trên Microsoft Azure (miễn phí 100% bằng tài khoản sinh viên), xem hướng dẫn chi tiết tại [docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md](docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md).
+
 ---
 
 ## 2. CÁCH CHẠY BACKEND API TRỰC TIẾP QUA PYTHON (KHÔNG CẦN DOCKER)
@@ -112,7 +115,7 @@ Trình duyệt tự động mở Jupyter:
 2. Chọn menu **Cell → Run All**.
 3. Cửa sổ camera sẽ bật lên. Nhấn **`q`** trên cửa sổ camera để dừng.
 
-> ⚠️ **Lưu ý:** Luôn khởi động bằng `.\run_notebook.cmd` thay vì gọi `notebook` trần, vì script này đã cấu hình sẵn thư mục cache và kernel chuẩn tránh lỗi quyền ghi trên Windows.
+> **Lưu ý:** Luôn khởi động bằng `.\run_notebook.cmd` thay vì gọi `notebook` trần, vì script này đã cấu hình sẵn thư mục cache và kernel chuẩn tránh lỗi quyền ghi trên Windows.
 
 ---
 

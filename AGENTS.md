@@ -7,7 +7,7 @@ từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file n�
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
-trước → làm từng task → nghiệm thu): xem [docs/WORKFLOW.md](docs/WORKFLOW.md).
+trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md).
 Áp dụng cho **mọi** User Story, không có ngoại lệ.
 
 ---
@@ -27,12 +27,11 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | Nguồn | Trạng thái |
 |---|---|
 | `README.md` | mô tả dự án gốc, có **2 số liệu sai** (xem mục 5, ý 10) |
-| `docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/ADR-001-*` | kế hoạch web hóa + CI/CD, **một phần đã lỗi thời** (xem mục 13) |
+| `docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/architecture/ADR-001-*` | kế hoạch web hóa + CI/CD trên Azure |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (**54/54 tests PASSED trên develop ngày 2026-11-05; nhánh US-013 bổ sung test harness cold start**). Đã có Dockerfile, .dockerignore; chưa có CI workflow
-hay hạ tầng Cloud Run.
+Đã có bộ kiểm thử tự động `tests/` (**64/64 tests PASSED trên feature/US-013 ngày 2026-11-06**). Đã có Dockerfile, .dockerignore; hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Chưa có CI/CD workflow tự động.
 
 ---
 
@@ -42,7 +41,7 @@ hay hạ tầng Cloud Run.
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010` (đang checkout), `feature/US-015`, `feature/US-016` |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013` (đang checkout), `feature/US-015`, `feature/US-016` |
 | `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
@@ -88,12 +87,18 @@ Dockerfile                                        Dockerfile Linux chạy uvicor
 HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
 AGENTS.md                                         file này (bộ nhớ dự án)
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
-docs/ADR-001-frontend-hosting.md                  ADR chọn Cloudflare Pages
-docs/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md            kế hoạch 2 tuần / 4 người
-docs/product-backlog-cicd-2-tuan.xlsx             backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
-docs/WORKFLOW.md                                  quy trình bắt buộc cho mọi US
-docs/QUY-TRINH-REVIEW-PULL-REQUEST.md             hướng dẫn 5 bước thẩm định PR cho Reviewer
-docs/QUY-TRINH-REVIEW-PULL-REQUEST.docx           bản xuất bản Word (.docx) của quy trình Reviewer
+docs/README.md                                    sơ đồ và mục lục tra cứu toàn bộ tài liệu dự án
+docs/architecture/ADR-001-frontend-hosting.md     ADR chọn Cloudflare Pages kết hợp backend Azure
+docs/architecture/THONG_TIN_DE_TAI.txt            tổng quan đề tài và kiến trúc đám mây
+docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md   kế hoạch 2 tuần / 4 mảng công việc kỹ thuật
+docs/planning/KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md kế hoạch chuyển đổi tài liệu sang Azure
+docs/planning/product-backlog-cicd-2-tuan.xlsx    backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
+docs/process/WORKFLOW.md                          quy trình bắt buộc cho mọi US
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md     hướng dẫn 5 bước thẩm định PR cho Reviewer
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.docx   bản xuất bản Word (.docx) của quy trình Reviewer
+docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md     hồ sơ bàn giao kỹ thuật hạ tầng Azure
+docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và triển khai Azure Container Apps
+docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
 docs/api/US-001.md                                hợp đồng API của US-001 (create_heatmap - PASS)
@@ -108,7 +113,9 @@ docs/api/US-010.md                                hợp đồng đóng gói cont
 docs/api/US-013.md                                hợp đồng CLI benchmark cold start
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
-docs/reports/US-013.md                            báo cáo cold start (BLOCKED: staging chưa khả dụng)
+docs/reports/US-013.md                            báo cáo cold start staging Azure
+docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
+docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -258,24 +265,24 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 | Mã US | Tiêu đề | Nhánh | Trạng thái | Ghi chú nghiệm thu |
 |---|---|---|---|---|
-| **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | ✅ **PASS (2026-10-19)** | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
-| **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | ✅ **PASS (2026-10-25)** | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
-| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | ✅ **PASS (2026-10-26)** | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
-| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | ✅ **PASS (2026-10-26)** | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
-| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
-| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | ✅ **PASS (2026-10-26)** | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
-| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | ✅ **PASS (2026-11-04)** | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
-| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | ✅ **PASS (2026-11-04)** | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
-| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | ✅ **PASS (2026-11-05)** | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
-| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | ⛔ **BLOCKED — chưa có Cloud Run staging access** | Harness + 10 unit tests; AC-013-01 chưa đo (0/5), không có URL/gcloud/Docker |
-| **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | ✅ **PASS (2026-10-27)** | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
-| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | ✅ **PASS (2026-10-28)** | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
+| **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | PASS (2026-10-19) | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
+| **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | PASS (2026-10-25) | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
+| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | PASS (2026-10-26) | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
+| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | PASS (2026-10-26) | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
+| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | PASS (2026-10-26) | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
+| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
+| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
+| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
+| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng |
+| **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
 
 Khi bắt đầu phiên làm việc mới:
-1. Đọc lại file này (`AGENTS.md`) và [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
-2. US-010 đã được Chủ dự án nghiệm thu ✅ PASS ngày 2026-11-05 và đã merge vào `develop`.
-3. Làm US tiếp theo (US-009 hoặc US-011/US-026) theo đầy đủ quy trình trong [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
+2. US-010 và hạ tầng Staging Azure Container Apps đã sẵn sàng hoạt động.
+3. Tiến hành merge US-013 vào `develop` và làm US tiếp theo (US-017 hoặc US-026) theo quy trình trong [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
