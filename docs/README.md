@@ -24,12 +24,12 @@ docs/
 │   ├── HO-SO-BAN-GIAO-HA-TANG.md      # Hồ sơ thông số kỹ thuật hạ tầng Staging Azure
 │   ├── HUONG-DAN-TRIEN-KHAI-AZURE.md  # Hướng dẫn đóng gói và triển khai Azure Container Apps
 │   └── HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md   # Hướng dẫn cấu hình tên miền vsl-vietnam.azurewebsites.net
-├── api/                               # Hợp đồng giao tiếp API (API Contracts)
+├── api/                               # Hợp đồng giao tiếp API & Báo cáo kỹ thuật (API Contracts)
 │   ├── README.md                      # Quy ước viết và thẩm định tài liệu API
 │   ├── _TEMPLATE.md                   # Khung chuẩn 17 mục cho tài liệu API
+│   ├── US-013.md                      # Hợp đồng CLI và báo cáo đo lường Cold Start Staging
 │   └── US-001.md ... US-016.md        # Đặc tả chi tiết từng User Story
-├── reports/                           # Báo cáo kỹ thuật & Đo lường thực tế
-│   ├── US-013.md                      # Báo cáo đo lường Cold Start trên môi trường Staging
+├── reports/                           # Báo cáo tổng hợp đồ án
 │   └── TAI_LIEU_BAO_CAO.doc           # Báo cáo tổng hợp môn học định dạng Word
 └── backup_gcp_docs/                   # Bản sao lưu tài liệu gốc trước khi chuyển đổi hạ tầng
 ```
@@ -56,11 +56,10 @@ docs/
 - [HUONG-DAN-TRIEN-KHAI-AZURE.md](infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md): Hướng dẫn chi tiết từng bước đóng gói Docker image, đẩy lên Azure Container Registry và cấu hình Azure Container Apps.
 - [HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md](infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md): Hướng dẫn cấu hình tên miền dịch vụ `vsl-vietnam.azurewebsites.net`.
 
-### 2.5. Nhóm Hợp Đồng API (`docs/api/`)
+### 2.5. Nhóm Hợp Đồng API & Báo Cáo Kỹ Thuật (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.
-- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-013.md` (benchmark cold start), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
+- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
 
-### 2.6. Nhóm Báo Cáo Kỹ Thuật (`docs/reports/`)
-- [US-013.md](reports/US-013.md): Báo cáo đo lường thời gian khởi động nguội (Cold Start) của dịch vụ nhận diện trên môi trường Staging.
-- [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án.
+### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
+- [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
 

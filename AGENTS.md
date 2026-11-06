@@ -110,10 +110,9 @@ docs/api/US-006.md                                hợp đồng API của US-006
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
 docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
 docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
-docs/api/US-013.md                                hợp đồng CLI benchmark cold start
+docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
-docs/reports/US-013.md                            báo cáo cold start staging Azure
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
 docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
 src/vsl/__init__.py                               re-export heatmap, labels, config
