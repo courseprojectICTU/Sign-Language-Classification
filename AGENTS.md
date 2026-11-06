@@ -2,7 +2,7 @@
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
 
-**Cập nhật lần cuối: 2026-11-04** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-06** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -37,17 +37,18 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-10-28) |
+| Mục | Giá trị (đối chiếu 2026-11-06) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
 | Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013` (đang checkout), `feature/US-015`, `feature/US-016` |
 | `develop` | `520e215` Merge pull request #11 from `feature/US-015` (đồng bộ `origin/develop`) |
+| `feature/US-013` | `1a200db` — hoàn tất chuyển đổi tài liệu sang Azure, phân nhóm `docs/`, gộp báo cáo cold start vào `docs/api/US-013.md`, đã push đồng bộ `origin/feature/US-013` |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — hoàn tất TSK-026/TSK-027 và cập nhật trạng thái dự án; dựa trên `develop` tại `520e215` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean** sau khi cập nhật bộ nhớ dự án; nhánh `feature/US-016` chưa push |
+| Trạng thái working tree | **Clean** sau khi cập nhật bộ nhớ dự án; nhánh `feature/US-013` đã push hoàn tất |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -273,7 +274,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
 | **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
-| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng |
+| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng; hợp đồng API và báo cáo benchmark đã hợp nhất tại docs/api/US-013.md |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
 
@@ -283,5 +284,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-010 và hạ tầng Staging Azure Container Apps đã sẵn sàng hoạt động.
-3. Tiến hành merge US-013 vào `develop` và làm US tiếp theo (US-017 hoặc US-026) theo quy trình trong [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
+2. Mở Pull Request thẩm định và hợp nhất nhánh `feature/US-013` vào `develop` theo quy trình tại [`docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md`](docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md).
+3. Sau khi hợp nhất US-013 vào `develop`, bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
