@@ -294,6 +294,7 @@ py -3.12 -m pytest tests -v
 | 2026-11-04 | **US-007** | `feature/US-007` | `docs/api/US-007.md` (`ANALYSIS_READY`, đã duyệt) | TSK-012 | AC-007-01, AC-007-02, BR-008 — **48/48 test toàn repo** | ✅ **PASS** (chủ dự án xác nhận 2026-11-04) |
 | 2026-11-04 | **US-008** | `feature/US-008` | `docs/api/US-008.md` (`ANALYSIS_READY`, đã duyệt) | TSK-013 | AC-008-01, BR-009 — **51/51 test toàn repo; test US-008 3/3** | ✅ **PASS** (chủ dự án xác nhận 2026-11-04) |
 | 2026-11-05 | **US-010** | `feature/US-010` | `docs/api/US-010.md` (`ANALYSIS_READY`, đã duyệt) | TSK-015, TSK-016 | AC-010-01, BR-005, BR-009, BR-011, BR-025 — **54/54 test toàn repo; docker run /health 200** | ✅ **PASS** (chủ dự án xác nhận 2026-11-05) |
+| 2026-11-02 | **US-013** | `feature/US-013` | `docs/api/US-013.md` (`ANALYSIS_READY`) | TSK-021 — harness benchmark và unit tests | AC-013-01 — **BLOCKED, 0/5 staging measurements**; 10 unit tests pass | ⛔ Chưa có Cloud Run staging URL/credentials/CLI; báo cáo `docs/reports/US-013.md` |
 
 
 
