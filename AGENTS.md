@@ -41,14 +41,14 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
 | Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013`, `feature/US-014` (đang checkout), `feature/US-015`, `feature/US-016` |
-| `develop` | `65b2946` Merge branch 'feature/US-013' into develop (ahead 2 so với `origin/develop`) |
+| `develop` | `150214f` Merge pull request #20 from courseprojectICTU/feature/US-014 (đồng bộ `origin/develop`) |
 | `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
-| `feature/US-014` | đang giải quyết conflict merge `develop` và nghiệm thu US-014 |
+| `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | Đang hoàn tất resolve conflict merge `develop` vào `feature/US-014` |
+| Trạng thái working tree | **Clean**, đang ở nhánh `develop` |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -287,5 +287,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. Nhánh `feature/US-014` đã được nghiệm thu PASS toàn diện. Tiến hành thực hiện merge `feature/US-014` vào `develop`.
-3. Sau khi hợp nhất US-014 vào `develop`, bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
+2. US-014 đã được thẩm định và hợp nhất thành công vào `develop` qua PR #20.
+3. Bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
