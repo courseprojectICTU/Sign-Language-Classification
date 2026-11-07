@@ -211,6 +211,15 @@ def test_tsk_039_camera_capture_creates_preview(
     assert page.get_by_role("img", name="Ảnh xem trước").is_visible()
 
 
+def test_tsk_039_preview_stays_hidden_until_an_image_is_selected(
+    page: Page, test_site: LocalSite
+) -> None:
+    _open_site(page, test_site)
+
+    assert not page.get_by_role("img", name="Ảnh xem trước").is_visible()
+    assert page.get_by_text("Ảnh xem trước sẽ hiển thị tại đây").is_visible()
+
+
 def test_tsk_042_renders_supported_letters_and_fits_small_viewport(
     page: Page, test_site: LocalSite
 ) -> None:
