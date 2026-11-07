@@ -227,6 +227,15 @@ def test_tsk_042_renders_supported_letters_and_fits_small_viewport(
     assert page.get_by_text("đ", exact=True).is_visible()
 
 
+def test_tsk_042_generated_label_asset_matches_python_source() -> None:
+    labels_path = WEB_ROOT / "labels.json"
+
+    assert labels_path.is_file(), "Generated web/labels.json is missing"
+    assert json.loads(labels_path.read_text(encoding="utf-8")) == list(
+        VIETNAMESE_ALPHABET
+    )
+
+
 @pytest.mark.parametrize("browser_name", ["chromium", "edge", "firefox"])
 def test_tsk_041_browser_matrix_and_mobile_layout(
     browser_name: str, test_site: LocalSite
