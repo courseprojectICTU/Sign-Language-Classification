@@ -1,4 +1,5 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
+provider "azurerm" {
+  features {}
+
+  subscription_id = var.subscription_id
 }

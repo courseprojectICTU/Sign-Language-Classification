@@ -1,3 +1,4 @@
-project_id  = "project-9ea40b5e-8258-4b97-a24"
-region      = "us-central1"
-environment = "production"
+subscription_id     = "REPLACE_WITH_PRODUCTION_SUBSCRIPTION_ID"
+resource_group_name = "REPLACE_WITH_PRODUCTION_RESOURCE_GROUP"
+location            = "REPLACE_WITH_PRODUCTION_AZURE_REGION"
+environment         = "production"

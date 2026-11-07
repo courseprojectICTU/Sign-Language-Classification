@@ -1,3 +1,4 @@
-project_id  = "project-9ea40b5e-8258-4b97-a24"
-region      = "us-central1"
-environment = "staging"
+subscription_id     = "373b1f03-330f-4302-a9e9-aa1fe793bf2e"
+resource_group_name = "rg-vsl-staging"
+location            = "eastasia"
+environment         = "staging"

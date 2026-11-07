@@ -1,10 +1,20 @@
-variable "project_id" {
-  description = "Google Cloud project ID for this environment."
+variable "subscription_id" {
+  description = "Azure subscription ID for this environment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F-]{36}$", var.subscription_id))
+    error_message = "subscription_id must be a UUID."
+  }
+}
+
+variable "resource_group_name" {
+  description = "Existing Azure Resource Group for this environment."
   type        = string
 }
 
-variable "region" {
-  description = "Default Google Cloud region for this environment."
+variable "location" {
+  description = "Azure region for this environment."
   type        = string
 }
 
