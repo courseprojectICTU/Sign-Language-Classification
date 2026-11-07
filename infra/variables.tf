@@ -37,3 +37,8 @@ variable "acr_name" {
     error_message = "acr_name must contain 5-50 lowercase letters or digits."
   }
 }
+
+variable "container_app_name" {
+  description = "Container App receiving deployment updates."
+  type        = string
+}
