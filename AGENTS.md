@@ -47,10 +47,10 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
 | `feature/US-018` | Terraform AzureRM + Azure Blob backend; branch local |
-| `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; local validation PASS, chưa provision cloud |
+| `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; code đã commit; ACR staging đã import vào remote state, apply bị chặn bởi quyền Entra và provider registration |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | US-019 code đã hoàn tất; Terraform cache và bootstrap local state được giữ local/ignored, không được ghi đè hoặc commit |
+| Trạng thái working tree | US-019 code đã commit; ACR staging đã import vào Terraform remote state. Chưa tạo resource US-019; Terraform cache và bootstrap local state được giữ local/ignored, không được ghi đè hoặc commit |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -301,6 +301,13 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
+
+**Cập nhật trạng thái US-019 (2026-11-07):** ACR staging `vslacr3795` đã được
+import vào remote Terraform state. `terraform apply` chưa tạo resource nào:
+Entra trả 403 khi tạo App Registration và subscription chưa đăng ký
+`Microsoft.ManagedIdentity`. Chỉ tiếp tục apply sau khi Azure admin cấp quyền
+Entra phù hợp và đăng ký resource provider. Chủ dự án sẽ push/merge nhánh qua
+quy trình review; GitHub Secrets cũ do chủ repository tự kiểm tra/xóa.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
