@@ -26,6 +26,7 @@ def test_tsk_030_uses_azurerm_and_separates_environment_inputs():
     )
     assert re.search(r'provider\s+"azurerm"\s*\{', provider)
     assert re.search(r"subscription_id\s*=\s*var\.subscription_id", provider)
+    assert re.search(r'resource_provider_registrations\s*=\s*"none"', provider)
 
     for variable in ("subscription_id", "resource_group_name", "location", "environment"):
         assert re.search(rf'variable\s+"{variable}"', variables)
@@ -78,6 +79,7 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'versioning_enabled\s*=\s*true', config)
     assert len(re.findall(r'prevent_destroy\s*=\s*true', config)) >= 2
     assert re.search(r'storage_use_azuread\s*=\s*true', provider)
+    assert re.search(r'resource_provider_registrations\s*=\s*"none"', provider)
     assert re.search(r'data\s+"azurerm_client_config"\s+"current"', config)
     assert re.search(r'resource\s+"azurerm_role_assignment"\s+"terraform_state_blob_data"', config)
     assert re.search(r'role_definition_name\s*=\s*"Storage Blob Data Contributor"', config)
