@@ -1,43 +1,46 @@
-# Git & GitHub
+# Version Control & CI/CD
 .git
+.github
 .gitignore
 .gitattributes
-.github
 
-# Python bytecode & environments
+# Virtual Environment & Python dependencies
+.venv/
+venv/
+env/
+ENV/
+
+# Raw Dataset & Data Collection (Tránh phình 1600+ CSV và dữ liệu thô)
+data/
+process_images/
+
+# Local scripts & Interactive Notebooks
+run_notebook.cmd
+run_realtime.cmd
+run_realtime.py
+run_realtime.ipynb
+*.ipynb
+
+# Python bytecode, cache & Tests
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.venv
-env/
-venv/
-ENV/
-
-# Testing & quality
 .pytest_cache/
-.coverage
-htmlcov/
 tests/
-
-# Data & Notebooks
-data/
-process_images/
-*.ipynb
-run_realtime.ipynb
-run_realtime.py
-run_realtime.cmd
-run_notebook.cmd
-train/training_plot_keras.png
-train/train_cnn_pose_keras.ipynb
+requirements-dev.txt
 
 # Documentation & Reports
 docs/
 report/
-HUONG-DAN-CHAY.md
-AGENTS.md
+*.md
+*.doc
+*.docx
+THONG_TIN_DE_TAI.txt
 
-# OS files
-.DS_Store
-Thumbs.db
+# Bắt buộc giữ lại requirements.txt cho Docker build
+!requirements.txt
+!README.md
 
+# Training visual assets
+train/training_plot_keras.png
+train/train_cnn_pose_keras.ipynb

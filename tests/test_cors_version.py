@@ -74,14 +74,13 @@ def test_cors_disallowed_origin(client):
 
 # ---------------------------------------------------------------- US-017: /version Tests
 def test_version_endpoint_default(client):
-    """AC-017-01: GET /version trả về status 200 với các trường version, git_sha, model_version."""
+    """AC-017-01: GET /version trả về model_version, git_sha và build_time."""
     response = client.get("/version")
     assert response.status_code == 200
     data = response.json()
-    assert "version" in data
-    assert "git_sha" in data
     assert "model_version" in data
-    assert data["version"] == "1.0.0"
+    assert "git_sha" in data
+    assert "build_time" in data
 
 
 def test_version_endpoint_with_custom_git_sha(monkeypatch):

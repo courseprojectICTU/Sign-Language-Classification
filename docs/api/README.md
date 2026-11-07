@@ -15,12 +15,12 @@ Bắt buộc khi US tạo mới hoặc thay đổi **hợp đồng mà bên ngo�
 
 | Loại | Ví dụ | Bắt buộc |
 |---|---|---|
-| Endpoint HTTP | `GET /health`, `POST /predict`, `GET /version` | ✅ |
-| Định dạng request/response | JSON body, mã lỗi | ✅ |
-| Hàm/module công khai dùng chung | `src/vsl/heatmap.py: create_heatmap(...)` | ✅ |
-| CLI / tham số dòng lệnh | `run_realtime.py --camera 1` | ✅ |
-| Định dạng file trao đổi | CSV 93 cột | ✅ |
-| Refactor thuần nội bộ, không đổi hợp đồng | đổi tên biến, tách file | ❌ (ghi `N/A` + lý do) |
+| Endpoint HTTP | `GET /health`, `POST /predict`, `GET /version` | Có |
+| Định dạng request/response | JSON body, mã lỗi | Có |
+| Hàm/module công khai dùng chung | `src/vsl/heatmap.py: create_heatmap(...)` | Có |
+| CLI / tham số dòng lệnh | `run_realtime.py --camera 1` | Có |
+| Định dạng file trao đổi | CSV 93 cột | Có |
+| Refactor thuần nội bộ, không đổi hợp đồng | đổi tên biến, tách file | Không (ghi `N/A` + lý do) |
 
 Nếu US **không** rơi vào nhóm bắt buộc, vẫn phải ghi rõ trong báo cáo:
 `API docs: N/A — lý do: ...` và được chủ dự án xác nhận.
@@ -57,15 +57,15 @@ DRAFT
 
 | Phase | Nội dung | Bắt buộc |
 |---|---|---|
-| 1 | Repository Discovery — cấu trúc thật, module liên quan | ✅ |
-| 2 | Story Analysis — actor, goal, resource, action, BR, AC | ✅ |
-| 3 | Architecture & Domain Analysis — entity/service hiện có | ✅ |
-| 4 | Existing API & Security Analysis | ✅ |
-| 5 | Business Rules & Acceptance Criteria → rule kiểm thử được | ✅ |
-| 6 | API Gap Analysis — REUSE / MODIFY / NEW / NO API NEEDED | ✅ |
-| 7 | API Design — request, response, status, validation, error | ✅ |
-| 8 | Tạo `US-0XX.md` từ `_TEMPLATE.md`, đủ 17 mục | ✅ |
-| 9 | Self-review theo checklist mục 5 dưới đây | ✅ |
+| 1 | Repository Discovery — cấu trúc thật, module liên quan | Có |
+| 2 | Story Analysis — actor, goal, resource, action, BR, AC | Có |
+| 3 | Architecture & Domain Analysis — entity/service hiện có | Có |
+| 4 | Existing API & Security Analysis | Có |
+| 5 | Business Rules & Acceptance Criteria → rule kiểm thử được | Có |
+| 6 | API Gap Analysis — REUSE / MODIFY / NEW / NO API NEEDED | Có |
+| 7 | API Design — request, response, status, validation, error | Có |
+| 8 | Tạo `US-0XX.md` từ `_TEMPLATE.md`, đủ 17 mục | Có |
+| 9 | Self-review theo checklist mục 5 dưới đây | Có |
 
 Không được nhảy sang test/code khi phase 8–9 chưa xong.
 

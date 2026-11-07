@@ -13,27 +13,45 @@ Luu y bat bien:
     - Diem (0, 0) duoc coi la landmark thieu va bi bo qua.
 """
 
+from typing import Sequence, Tuple, Union
+
 import numpy as np
 
 
-def create_heatmap(landmarks, img_size=(224, 224), sigma=5):
-    """Tra ve heatmap uint8 shape (img_size[0], img_size[1], 3).
+def create_heatmap(
+    landmarks: Union[Sequence[float], np.ndarray],
+    img_size: Tuple[int, int] = (224, 224),
+    sigma: Union[int, float] = 5,
+) -> np.ndarray:
+    """Return a uint8 heatmap and reject malformed landmark vectors.
 
-    Tham so:
-        landmarks: day so, do dai chia het cho 3, moi bo 3 la (x, y, z) chuan hoa 0..1.
-        img_size: kich thuoc anh, mac dinh (224, 224).
-        sigma: do rong Gaussian, mac dinh 5.
-
-    Dau vao sai (do dai khong chia het cho 3) -> in canh bao va tra mang 0,
-    giu nguyen hanh vi cu de khong pha notebook dang chay.
+    Landmarks must be a one-dimensional real numeric vector of finite xyz
+    coordinates. Invalid shape, values, or a length not divisible by three
+    raises ValueError instead of silently returning a blank heatmap.
     """
-    if len(landmarks) % 3 != 0:
-        print(f"Warning: Invalid landmark data length {len(landmarks)}. Expected multiple of 3.")
-        return np.zeros((img_size[0], img_size[1], 3), dtype=np.uint8)
+    try:
+        landmark_array = np.asarray(landmarks)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Landmarks must be a one-dimensional numeric vector.") from exc
+
+    if landmark_array.ndim != 1:
+        raise ValueError("Landmarks must be a one-dimensional numeric vector.")
+    if landmark_array.size % 3 != 0:
+        raise ValueError(
+            f"Landmark data length {landmark_array.size} must be a multiple of 3."
+        )
+    if not np.issubdtype(landmark_array.dtype, np.number) or np.issubdtype(
+        landmark_array.dtype, np.complexfloating
+    ):
+        raise ValueError("Landmarks must contain real numeric coordinates.")
+
+    landmark_array = landmark_array.astype(np.float64, copy=False)
+    if not np.all(np.isfinite(landmark_array)):
+        raise ValueError("Landmarks must contain only finite coordinates.")
 
     heatmap = np.zeros(img_size, dtype=np.float32)
-    for i in range(0, len(landmarks), 3):
-        x, y = landmarks[i], landmarks[i + 1]
+    for i in range(0, landmark_array.size, 3):
+        x, y = landmark_array[i], landmark_array[i + 1]
         if x == 0 and y == 0:
             continue
         x_px = int(x * img_size[1])

@@ -43,11 +43,17 @@ RUN pip install --upgrade pip setuptools wheel && \
 # =========================
 FROM --platform=linux/amd64 python:3.12.7-slim-bookworm@sha256:60d9996b6a8a3689d36db740b49f4327be3be09a21122bd02fb8895abb38b50d AS runtime
 
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=""
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH" \
     PORT=8080
+
+ENV GIT_SHA=${GIT_SHA}
+ENV BUILD_TIME=${BUILD_TIME}
 
 WORKDIR /app
 
@@ -59,15 +65,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxext6 \
     libxrender1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Sao chép virtualenv từ stage builder
 COPY --from=builder /opt/venv /opt/venv
 
 # Sao chép mã nguồn ứng dụng và model đã huấn luyện
+COPY requirements.txt ./requirements.txt
 COPY src ./src
 COPY train/vsl_cnn_pose_keras.h5 ./train/vsl_cnn_pose_keras.h5
-COPY requirements.txt ./requirements.txt
 COPY README.md ./README.md
 
 # Tạo user không đặc quyền để tăng cường bảo mật container
@@ -77,5 +84,7 @@ USER appuser
 
 EXPOSE 8080
 
-CMD ["uvicorn", "src.vsl.service:app", "--host", "0.0.0.0", "--port", "8080"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://localhost:8080/health || exit 1
 
+CMD ["uvicorn", "src.vsl.service:app", "--host", "0.0.0.0", "--port", "8080"]
