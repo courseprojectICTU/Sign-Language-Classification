@@ -233,21 +233,21 @@ def test_ac_035_01_runbook_contains_all_four_scenarios():
 # US-038: Tối ưu và tái lập quá trình build image (BR-025)
 # -----------------------------------------------------------------------------
 def test_ac_038_01_layer_cache_order():
-    """AC-038-01: COPY requirements.txt trước khi COPY mã nguồn để tối ưu Docker layer cache."""
+    """AC-038-01: Copy runtime requirements before source to maximize dependency caching."""
     assert DOCKERFILE_PATH.is_file(), "Thiếu Dockerfile"
     lines = DOCKERFILE_PATH.read_text(encoding="utf-8").splitlines()
 
     req_idx = -1
     src_idx = -1
     for i, line in enumerate(lines):
-        if "COPY requirements.txt" in line and req_idx == -1:
+        if "COPY requirements-runtime.txt" in line and req_idx == -1:
             req_idx = i
         if "COPY src" in line and src_idx == -1:
             src_idx = i
 
-    assert req_idx != -1, "Dockerfile thiếu bước COPY requirements.txt"
+    assert req_idx != -1, "Dockerfile thiếu bước COPY requirements-runtime.txt"
     assert src_idx != -1, "Dockerfile thiếu bước COPY src"
-    assert req_idx < src_idx, "COPY requirements.txt phải đứng trước COPY src để tận dụng cache"
+    assert req_idx < src_idx, "COPY runtime requirements phải đứng trước COPY src để tận dụng cache"
 
 
 def test_ac_038_02_multistage_and_digest():

@@ -72,11 +72,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Record start time
-        run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+      - name: Record build start time
+        run: |
+          echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Build Docker Image with GHA Cache (US-038, TSK-073)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -86,23 +88,23 @@ jobs:
           tags: vsl-api:ci-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
 
       - name: Record Image Size & Build Duration (US-038, TSK-074, AC-038-04)
         run: |
           BUILD_END=$(date +%s)
           DURATION=$((BUILD_END - BUILD_START))
           IMAGE_SIZE=$(docker image inspect vsl-api:ci-test --format='{{.Size}}')
-          SIZE_MB=$((IMAGE_SIZE / 1024 / 1024))
-          
-          echo "=========================================================="
-          echo "DOCKER BUILD METRICS (US-038 / EPC-03)"
-          echo "Thoi gian build: ${DURATION} giay"
-          echo "Kich thuoc Image: ${SIZE_MB} MB (${IMAGE_SIZE} bytes)"
-          echo "=========================================================="
-          
-          echo "### 🐳 Docker Build Metrics (US-038)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Thoi gian build:** ${DURATION} giay" >> $GITHUB_STEP_SUMMARY
-          echo "- **Kich thuoc Image:** ${SIZE_MB} MB" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform:** linux/amd64 (BR-025)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Cache status:** type=gha enabled" >> $GITHUB_STEP_SUMMARY
+          SIZE_MIB=$(awk -v bytes="$IMAGE_SIZE" 'BEGIN { printf "%.2f", bytes / 1024 / 1024 }')
 
+          echo "Docker build duration: ${DURATION}s"
+          echo "Docker image size: ${SIZE_MIB} MiB (${IMAGE_SIZE} bytes)"
+          {
+            echo "### Docker build metrics (US-038)"
+            echo "- Duration: ${DURATION}s"
+            echo "- Image size: ${SIZE_MIB} MiB (${IMAGE_SIZE} bytes)"
+            echo "- Platform: linux/amd64"
+            echo "- BuildKit cache: type=gha"
+          } >> "$GITHUB_STEP_SUMMARY"
