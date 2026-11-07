@@ -8,7 +8,7 @@
 
 | Story | Status | Branch / evidence | Remaining limitation |
 |---|---|---|---|
-| US-038 — Reproducible, optimized Docker build | **Blocked / not implemented here** | `feature/US-038` already exists remotely at `c92a193` | That branch contains a mixed changeset for several stories and unrelated changes. It was not overwritten. Current Dockerfile remains single-stage, digest-unpinned, and without the requested platform/cache configuration. |
+| US-038 — Reproducible, optimized Docker build | **Implemented and pushed; runtime build unverified** | `feature/US-038`, commit `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` | Branch already contains a mixed historical changeset. New commit only changes US-038 files. Docker daemon is unavailable locally; full Ruff/Black baseline failures currently block the dependent hosted Docker job. |
 | US-026 — Pull-request CI | **Implemented on separate branch** | `feature/US-026`, `6ad9e9dfd38d915dc4fc99d36dd5540ffa2e765d` | Docker Engine was unavailable locally, and a GitHub Actions run was not verified. Workflow does not push or deploy. |
 | US-017 — Deployment smoke test | **Script and tests implemented; live check incomplete** | `feature/US-017`, `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | No verified sample image or revision-specific deployment URL was available. No staging/production smoke test is claimed. |
 | US-025 — CORS and network errors | **Backend CORS implemented; frontend portion unavailable** | `feature/US-025`, `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Repository contains no frontend, and no deployed Cloudflare Pages origin was verified. JavaScript network/cold-start/business-error UX is not implemented. |
@@ -23,14 +23,25 @@ merged into another branch or into `main`. Features remain unavailable from
 
 ### US-038
 
-- No files changed for this story in this work.
-- The pre-existing remote branch `feature/US-038` was left untouched because it
-  contains combined/in-scope and unrelated changes. Do not force-push or assume
-  its contents are a clean implementation of US-038.
-- To continue: the repository owner must review/reconcile that branch and
-  authorize a safe branch/PR path. Then test a multi-stage build against the
-  real model and runtime, including BuildKit/GHA cache, `linux/amd64`, digest
-  pinning, build duration, and image size.
+- Implemented in commit `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` on
+  `feature/US-038`; the branch was pushed after the previous remote ref was
+  found absent.
+- Replaced the single-stage Dockerfile with a two-stage build using a verified
+  Python 3.12.7 slim-bookworm manifest digest and explicit `linux/amd64`,
+  BuildKit pip cache, a pinned runtime dependency manifest, and non-root runtime
+  user. Updated CI GHA cache, source/build metadata arguments, and image/build
+  metrics. Added Docker acceptance tests and updated the US-038 contract.
+- Evidence: focused Docker/ops/requirements tests **23 passed**; CI-selected
+  suite **70 passed**; updated workflow YAML parsed; Docker Hub manifest
+  reported the configured digest and an amd64 image entry.
+- Limitation: Docker daemon is unavailable locally. Branch-wide Ruff currently
+  has 11 findings and Black reports 13 unformatted files; because `docker-build`
+  depends on the quality job, the hosted workflow will not reach build until
+  those pre-existing checks are resolved. No actual image size/build duration
+  has yet been recorded.
+- The branch contains a prior combined changeset for multiple stories; this
+  implementation commit is limited to US-038 files, but the branch PR still
+  needs an owner review of its existing history/diff.
 
 ### US-026
 
@@ -152,13 +163,14 @@ merged into another branch or into `main`. Features remain unavailable from
 | US-031 Ruff / Black / diff check | Passed |
 | US-031 Azure rehearsal | Not run: Azure CLI/revision evidence/approval unavailable |
 | US-035 documentation | Updated; no documentation test command configured |
-| US-038 optimized build | Not implemented or measured |
+| US-038 Docker contract | 23 focused tests passed; selected CI suite 70 passed |
+| US-038 Docker build | Not run locally (Docker Engine unavailable); hosted build blocked by pre-existing lint/format failures |
 
 ## Git handoff
 
 | Branch | Commit | Push |
 |---|---|---|
-| `feature/US-038` | Existing remote branch, observed at `c92a193`; not modified | Pre-existing; not pushed by this work |
+| `feature/US-038` | `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` | Pushed; branch contains pre-existing mixed changes |
 | `feature/US-026` | `6ad9e9dfd38d915dc4fc99d36dd5540ffa2e765d` | Pushed |
 | `feature/US-017` | `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | Pushed |
 | `feature/US-025` | `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Pushed |
@@ -173,3 +185,4 @@ available by opening:
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-025`
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-031`
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-035`
+- `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-038`
