@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#183153">
+    <title>Nhận diện ngôn ngữ ký hiệu tiếng Việt</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Nhận diện ngôn ngữ ký hiệu">
+        <span class="brand-mark" aria-hidden="true">VSL</span>
+        <span>Nhận diện ngôn ngữ ký hiệu</span>
+      </a>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">BẢNG CHỮ CÁI TIẾNG VIỆT</p>
+        <h1 id="page-title">Nhận diện ký hiệu bàn tay</h1>
+        <p>Chọn ảnh hoặc chụp một ảnh có bàn tay để xem ký tự dự đoán.</p>
+      </section>
+
+      <section class="workspace" aria-labelledby="input-title">
+        <div class="workspace-heading">
+          <div>
+            <p class="step-label">BƯỚC 1</p>
+            <h2 id="input-title">Thêm ảnh bàn tay</h2>
+          </div>
+          <span class="privacy-note">Ảnh chỉ được gửi khi bạn bấm Dự đoán</span>
+        </div>
+
+        <div class="input-actions">
+          <label class="button button-secondary" for="image-input">Chọn ảnh</label>
+          <input
+            class="visually-hidden"
+            id="image-input"
+            type="file"
+            accept="image/*"
+            aria-describedby="image-help"
+          >
+          <span class="action-divider" aria-hidden="true">hoặc</span>
+          <button class="button button-secondary" id="open-camera" type="button">
+            Mở camera
+          </button>
+        </div>
+        <p class="help-text" id="image-help">Chọn ảnh từ thiết bị hoặc cấp quyền camera để chụp ảnh.</p>
+
+        <p class="camera-message" id="camera-message" role="status" aria-live="polite" hidden></p>
+        <section class="camera-panel" id="camera-panel" aria-label="Chụp ảnh" hidden>
+          <video id="camera-video" autoplay muted playsinline aria-label="Hình ảnh từ camera"></video>
+          <div class="camera-actions">
+            <button class="button button-secondary" id="capture-image" type="button" disabled>
+              Chụp ảnh
+            </button>
+            <button class="button button-quiet" id="close-camera" type="button">Tắt camera</button>
+          </div>
+        </section>
+
+        <section class="preview-panel" aria-label="Ảnh đã chọn">
+          <div class="preview-placeholder" id="preview-placeholder">
+            <span class="preview-icon" aria-hidden="true">＋</span>
+            <p>Ảnh xem trước sẽ hiển thị tại đây</p>
+          </div>
+          <img id="image-preview" alt="Ảnh xem trước" hidden>
+        </section>
+
+        <canvas id="capture-canvas" hidden></canvas>
+
+        <div class="submit-row">
+          <button class="button button-primary" id="predict-button" type="button" disabled>
+            Dự đoán
+          </button>
+        </div>
+        <p class="loading-message" id="loading-status" role="status" aria-live="polite" hidden>
+          Đang xử lý ảnh, vui lòng chờ...
+        </p>
+        <p class="error-message" id="error-message" role="alert" hidden></p>
+
+        <section
+          class="result-panel"
+          id="result-region"
+          role="region"
+          aria-label="Kết quả dự đoán"
+          aria-live="polite"
+          hidden
+        >
+          <h2>Kết quả dự đoán</h2>
+          <p class="result-letter" id="result-letter"></p>
+          <p id="result-confidence"></p>
+        </section>
+      </section>
+
+      <section class="supported-section" aria-labelledby="supported-title">
+        <p class="step-label">THÔNG TIN</p>
+        <h2 id="supported-title">Các ký tự được hỗ trợ</h2>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Phân loại bảng chữ cái ngôn ngữ ký hiệu tiếng Việt.</p>
+    </footer>
+  </body>
+</html>
