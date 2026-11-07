@@ -204,11 +204,15 @@ def test_tsk_039_camera_capture_creates_preview(
 ) -> None:
     _open_site(page, test_site)
 
-    page.get_by_role("button", name="Mở camera").click()
+    open_camera = page.get_by_role("button", name="Mở camera")
+    open_camera.click()
+    expect(open_camera).to_be_disabled()
     page.locator("video").wait_for(state="visible")
     page.get_by_role("button", name="Chụp ảnh").click()
 
     expect(page.get_by_role("img", name="Ảnh xem trước")).to_be_visible()
+    page.get_by_role("button", name="Tắt camera").click()
+    expect(open_camera).to_be_enabled()
 
 
 def test_tsk_039_preview_stays_hidden_until_an_image_is_selected(
