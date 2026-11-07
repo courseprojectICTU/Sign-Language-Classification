@@ -11,8 +11,10 @@ import logging
 import os
 import subprocess
 from typing import Any, Dict, List, Literal, Optional, Tuple
+from urllib.parse import urlsplit
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -32,14 +34,16 @@ def _utc_timestamp(value: Optional[str] = None) -> str:
             parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=timezone.utc)
-            return parsed.astimezone(timezone.utc).isoformat(timespec="seconds").replace(
-                "+00:00", "Z"
+            return (
+                parsed.astimezone(timezone.utc)
+                .isoformat(timespec="seconds")
+                .replace("+00:00", "Z")
             )
         except (OverflowError, ValueError):
             logger.warning("Invalid BUILD_TIME value; using service startup time")
 
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
-        "+00:00", "Z"
+    return (
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     )
 
 
@@ -73,6 +77,54 @@ def _resolve_model_version(configured_version: Optional[str] = None) -> str:
         or DEFAULT_MODEL_VERSION
     )
 
+
+def _configured_cors_origins() -> List[str]:
+    """Return exact CORS origins from VSL_ALLOWED_ORIGINS; reject broad or malformed values."""
+    origins = []
+    configured_origins = os.environ.get("VSL_ALLOWED_ORIGINS", "")
+    for configured_origin in configured_origins.split(","):
+        value = configured_origin.strip()
+        if not value:
+            continue
+
+        try:
+            parsed = urlsplit(value)
+            hostname = parsed.hostname
+            port = parsed.port
+        except ValueError as exc:
+            raise ValueError(
+                "VSL_ALLOWED_ORIGINS must contain exact HTTP(S) origins"
+            ) from exc
+
+        if (
+            "*" in value
+            or parsed.scheme.lower() not in {"http", "https"}
+            or not parsed.netloc
+            or not hostname
+            or parsed.path not in {"", "/"}
+            or parsed.query
+            or parsed.fragment
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            raise ValueError(
+                "VSL_ALLOWED_ORIGINS must contain exact HTTP(S) origins without "
+                "wildcards, credentials, paths, queries, or fragments"
+            )
+
+        host = f"[{hostname.lower()}]" if ":" in hostname else hostname.lower()
+        if port is not None and not (
+            (parsed.scheme.lower() == "https" and port == 443)
+            or (parsed.scheme.lower() == "http" and port == 80)
+        ):
+            host = f"{host}:{port}"
+        normalized_origin = f"{parsed.scheme.lower()}://{host}"
+        if normalized_origin not in origins:
+            origins.append(normalized_origin)
+
+    return origins
+
+
 # ---------------------------------------------------------------- MediaPipe Singletons
 _mp_hands = None
 _mp_face_mesh = None
@@ -101,12 +153,14 @@ def _get_mediapipe_processors() -> Tuple[Any, Any]:
 # ---------------------------------------------------------------- Pydantic Schemas
 class TopKPrediction(BaseModel):
     """Mỗi mục dự đoán trong danh sách gợi ý xác suất cao nhất."""
+
     letter: str
     confidence: float
 
 
 class PredictResponse(BaseModel):
     """Hợp đồng JSON phản hồi từ endpoint POST /predict (US-006)."""
+
     status: Literal["ok", "no_hand", "no_face"]
     detected: bool
     letter: Optional[str] = None
@@ -185,8 +239,9 @@ def extract_landmarks_from_image(
     return None, has_hand, has_face
 
 
-
-def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:
+def predict_from_landmarks(
+    landmarks: List[float], model: Any, top_k: int = 3
+) -> Dict[str, Any]:
     """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
 
     Tuân thủ:
@@ -272,6 +327,13 @@ def create_app() -> FastAPI:
         description="Dịch vụ nhận diện ngôn ngữ ký hiệu tiếng Việt từ webcam",
         lifespan=lifespan,
     )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_configured_cors_origins(),
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+        allow_credentials=False,
+    )
 
     # Khởi tạo trạng thái mặc định
     app.state.model = None
@@ -291,9 +353,7 @@ def create_app() -> FastAPI:
         - 200 OK: Mô hình đã nạp xong và sẵn sàng nhận dự đoán.
         - 503 Service Unavailable: Mô hình chưa nạp hoặc nạp thất bại.
         """
-        is_model_loaded = (
-            hasattr(app.state, "model") and app.state.model is not None
-        )
+        is_model_loaded = hasattr(app.state, "model") and app.state.model is not None
 
         if is_model_loaded:
             return {
@@ -333,8 +393,13 @@ def create_app() -> FastAPI:
     )
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
-        top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
-        flip: bool = Query(False, description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)"),
+        top_k: int = Query(
+            3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"
+        ),
+        flip: bool = Query(
+            False,
+            description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)",
+        ),
     ) -> PredictResponse:
         """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
         # BR-011: Kiểm tra trạng thái nạp của model
@@ -346,7 +411,9 @@ def create_app() -> FastAPI:
 
         content = await file.read()
         try:
-            landmarks, has_hand, has_face = extract_landmarks_from_image(content, flip=flip)
+            landmarks, has_hand, has_face = extract_landmarks_from_image(
+                content, flip=flip
+            )
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -356,12 +423,18 @@ def create_app() -> FastAPI:
         if landmarks is None:
             if not has_hand:
                 result_status = "no_hand"
-                message = "Không phát hiện bàn tay. Vui lòng đưa bàn tay vào khung hình."
+                message = (
+                    "Không phát hiện bàn tay. Vui lòng đưa bàn tay vào khung hình."
+                )
             elif not has_face:
                 result_status = "no_face"
-                message = "Không phát hiện khuôn mặt. Vui lòng đưa khuôn mặt vào khung hình."
+                message = (
+                    "Không phát hiện khuôn mặt. Vui lòng đưa khuôn mặt vào khung hình."
+                )
             else:
-                logger.error("MediaPipe returned incomplete landmark vector despite both detections")
+                logger.error(
+                    "MediaPipe returned incomplete landmark vector despite both detections"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Không thể dựng đủ landmark cho ảnh này.",
@@ -396,7 +469,9 @@ def create_app() -> FastAPI:
                 model_version=getattr(app.state, "model_version", "v1.0") or "v1.0",
             )
 
-        inference_result = predict_from_landmarks(landmarks, app.state.model, top_k=top_k)
+        inference_result = predict_from_landmarks(
+            landmarks, app.state.model, top_k=top_k
+        )
 
         return PredictResponse(
             status="ok",
@@ -414,4 +489,3 @@ def create_app() -> FastAPI:
 
 # Instance ứng dụng mặc định cho ASGI runner (uvicorn src.vsl.service:app)
 app = create_app()
-
