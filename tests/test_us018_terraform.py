@@ -49,8 +49,8 @@ def test_tsk_031_uses_azure_blob_backend_and_documents_state_locking():
     assert "staging.tfstate" in readme
     assert "production.tfstate" in readme
     assert "lease" in readme.lower()
-    assert "terraform init" in readme
-    assert "terraform plan" in readme
+    assert "terraform -chdir=infra init" in readme
+    assert "terraform -chdir=infra plan" in readme
 
 
 def test_azure_state_bootstrap_is_private_versioned_and_protected():
@@ -64,6 +64,7 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert readme.is_file(), f"Missing Azure bootstrap instructions: {readme}"
 
     config = main.read_text(encoding="utf-8")
+    provider = (bootstrap / "provider.tf").read_text(encoding="utf-8")
     variable_config = variables.read_text(encoding="utf-8")
     instructions = readme.read_text(encoding="utf-8")
 
@@ -73,8 +74,10 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'allow_nested_items_to_be_public\s*=\s*false', config)
     assert re.search(r'https_traffic_only_enabled\s*=\s*true', config)
     assert re.search(r'min_tls_version\s*=\s*"TLS1_2"', config)
-    assert re.search(r'versioning\s*\{\s*enabled\s*=\s*true\s*\}', config, re.DOTALL)
+    assert re.search(r'shared_access_key_enabled\s*=\s*false', config)
+    assert re.search(r'versioning_enabled\s*=\s*true', config)
     assert len(re.findall(r'prevent_destroy\s*=\s*true', config)) >= 2
+    assert re.search(r'storage_use_azuread\s*=\s*true', provider)
     for variable in (
         "subscription_id",
         "resource_group_name",
@@ -83,15 +86,16 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
         "container_name",
     ):
         assert re.search(rf'variable\s+"{variable}"', variable_config)
-    assert "terraform plan" in instructions
+    assert "terraform -chdir=infra/bootstrap-azure plan" in instructions
     assert "terraform apply" in instructions
-    assert "local state" in instructions.lower()
+    assert "state is local" in instructions.lower()
 
 
 def test_terraform_configuration_no_longer_declares_google_cloud_resources():
     terraform_files = [
         path
-        for path in INFRA.rglob("*.tf")
+        for pattern in ("*.tf", "*.hcl")
+        for path in INFRA.rglob(pattern)
         if ".terraform" not in path.parts
     ]
 
@@ -99,5 +103,6 @@ def test_terraform_configuration_no_longer_declares_google_cloud_resources():
     for path in terraform_files:
         content = path.read_text(encoding="utf-8")
         assert 'hashicorp/google' not in content, path
+        assert 'registry.terraform.io/hashicorp/google' not in content, path
         assert 'backend "gcs"' not in content, path
         assert 'google_storage_bucket' not in content, path
