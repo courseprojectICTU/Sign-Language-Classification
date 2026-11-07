@@ -27,3 +27,13 @@ variable "environment" {
     error_message = "environment must be staging or production."
   }
 }
+
+variable "acr_name" {
+  description = "Azure Container Registry name for this environment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{5,50}$", var.acr_name))
+    error_message = "acr_name must contain 5-50 lowercase letters or digits."
+  }
+}

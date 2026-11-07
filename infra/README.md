@@ -1,8 +1,30 @@
 # Terraform infrastructure
 
-The root module uses the AzureRM provider. Application resources are added by
-later user stories. Existing Azure resources are not imported or changed by
-US-018.
+The root module uses the AzureRM provider. The existing staging Azure Container
+Registry is managed by Terraform under US-019; application resources are added
+by later user stories. US-018 did not import or change Azure application
+resources.
+
+## Adopt the existing staging registry
+
+The staging registry `vslacr3795` already exists. Initialize the root module
+with the Azure Blob backend first, then import the existing registry into the
+staging state before planning:
+
+```powershell
+terraform -chdir=infra import azurerm_container_registry.vsl `
+  "/subscriptions/<subscription-id>/resourceGroups/rg-vsl-staging/providers/Microsoft.ContainerRegistry/registries/vslacr3795"
+terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+```
+
+The import command writes Terraform state but does not modify the Azure
+registry. Review the plan and stop if it proposes replacing or destroying the
+registry. Do not run import or apply without explicit approval.
+
+The registry cleanup task runs `acr purge` on a daily schedule for `vsl-api`.
+`acr purge` is a preview feature; verify its dry-run output and review task logs
+before enabling cleanup. It retains up to the three newest eligible tags per
+repository after a purge and is not an instantaneous image-count limit.
 
 ## Azure Blob remote state
 
