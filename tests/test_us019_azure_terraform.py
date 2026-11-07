@@ -102,6 +102,7 @@ def test_tsk_033_limits_deployment_roles_to_registry_and_container_app():
 def test_tsk_034_creates_github_federation_without_service_principal_password():
     versions = _read("versions.tf")
     identity = _read("identity.tf")
+    outputs = _read("outputs.tf")
     staging = _read("environments/staging.tfvars")
     sources = _terraform_sources()
 
@@ -126,6 +127,12 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
         'github_oidc_subject = '
         '"repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop"'
     ) in staging
+    for output_name in (
+        "github_oidc_client_id",
+        "github_oidc_tenant_id",
+        "github_oidc_subscription_id",
+    ):
+        assert re.search(rf'output\s+"{output_name}"\s*\{{', outputs)
     assert "azuread_service_principal_password" not in sources
     assert not re.search(r'resource\s+"azuread_application_password"', sources)
 
