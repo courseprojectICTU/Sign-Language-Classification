@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-06** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-07** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -30,25 +30,26 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile và benchmark harness US-013). Đã có Dockerfile, .dockerignore; hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Chưa có CI/CD workflow tự động.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử cấu hình Terraform US-018). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Nhánh `feature/US-018` hiện có scaffold Terraform AzureRM và Azure Blob backend; bootstrap state chưa được apply. Chưa có CI/CD workflow tự động.
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-11-06) |
+| Mục | Giá trị (đối chiếu 2026-11-07) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-008`, `feature/US-010`, `feature/US-013`, `feature/US-014` (đang checkout), `feature/US-015`, `feature/US-016` |
-| `develop` | `150214f` Merge pull request #20 from courseprojectICTU/feature/US-014 (đồng bộ `origin/develop`) |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016`, `feature/US-018` (đang checkout) |
+| `develop` | `780b7aa` (đồng bộ `origin/develop`) |
 | `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
 | `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
+| `feature/US-018` | `ecb4485` — Terraform AzureRM + Azure Blob backend; remote branch đã bị xóa, local branch chưa push |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | **Clean**, đang ở nhánh `develop` |
+| Trạng thái working tree | Tracked files sạch sau commit; Terraform cache và `infra/bootstrap/terraform.tfstate` cũ được giữ local/ignored, không được ghi đè hoặc commit |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -85,6 +86,12 @@ requirements.txt                                  deps đã pin, THUẦN ASCII (
 requirements-dev.txt                              pytest (dev-only)
 Dockerfile                                        Dockerfile Linux chạy uvicorn tại cổng 8080 (US-010)
 .dockerignore                                     loại trừ context nặng cho build container (US-010)
+infra/versions.tf                                 ghim Terraform và AzureRM provider
+infra/provider.tf                                 cấu hình AzureRM theo subscription
+infra/backend.tf                                  Azure Blob remote backend
+infra/environments/{staging,production}.tfvars   biến theo môi trường; production cần điền giá trị đã xác minh
+infra/bootstrap-azure/                            bootstrap Storage Account + private Blob container
+infra/README.md                                   hướng dẫn bootstrap và init/plan với Azure Blob state
 HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
 AGENTS.md                                         file này (bộ nhớ dự án)
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
@@ -115,6 +122,7 @@ docs/api/US-013.md                                hợp đồng CLI và báo cá
 docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
+docs/api/US-018.md                                hợp đồng Terraform CLI và Azure Blob backend (ANALYSIS_READY)
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
 docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
 src/vsl/__init__.py                               re-export heatmap, labels, config
@@ -134,7 +142,7 @@ tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 
 tests/test_predict.py                             tests API US-006/US-007 (detection, logging, pipeline)
 tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
 tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash model/CSV, confidence tolerance 0.0001
-tests/test_us018_terraform.py                     kiểm tra provider, môi trường, GCS backend và bootstrap bucket
+tests/test_us018_terraform.py                     kiểm tra AzureRM provider, môi trường, Blob backend và bootstrap state
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/_generate_service_reference.py              lệnh tương thích cũ, chuyển tiếp sang exporter trực tiếp (US-016)
 tests/_export_us016_from_notebook.py               xuất trực tiếp dự đoán notebook và SHA model/CSV (US-016)
@@ -281,6 +289,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | ĐANG CHỜ BOOTSTRAP/NGHIỆM THU | AzureRM provider, Blob backend, staging/production tfvars và bootstrap cấu hình đã hoàn thành; 4 test US-018, full suite 77/77, `terraform fmt` và `validate` PASS; chưa chạy remote init/plan hoặc apply |
 
 ---
 
@@ -288,5 +297,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-014 đã được thẩm định và hợp nhất thành công vào `develop` qua PR #20.
-3. Bắt đầu thực hiện US tiếp theo (US-017 hoặc US-026) theo đúng quy trình.
+2. US-018 đang chờ chủ dự án cung cấp tên Storage Account duy nhất và thông tin production đã xác minh.
+3. Chỉ sau khi chủ dự án cấp quyền và cho phép rõ ràng mới chạy `terraform apply` trong `infra/bootstrap-azure`; sau đó chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`.
+4. Không push hoặc tạo PR nếu chưa có quyết định của chủ dự án.
