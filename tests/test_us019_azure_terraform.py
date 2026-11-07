@@ -36,6 +36,7 @@ def _role_assignment_body(source, name):
 
 def test_tsk_032_adopts_existing_registry_and_configures_three_tag_cleanup():
     registry = _read("registry.tf")
+    readme = _read("README.md")
     staging = _read("environments/staging.tfvars")
 
     assert re.search(
@@ -44,12 +45,11 @@ def test_tsk_032_adopts_existing_registry_and_configures_three_tag_cleanup():
     )
     assert "acr_name" in registry
     assert re.search(r'\bacr_name\s*=\s*"vslacr3795"', staging)
-    assert re.search(
-        r'import\s*\{[^}]*to\s*=\s*azurerm_container_registry\.vsl',
-        registry,
-        re.DOTALL,
-    )
+    assert re.search(r'\bsku\s*=\s*"Basic"', registry)
+    assert re.search(r"\badmin_enabled\s*=\s*true", registry)
     assert "prevent_destroy = true" in registry
+    assert "terraform -chdir=infra import" in readme
+    assert "azurerm_container_registry.vsl" in readme
 
     assert re.search(
         r'resource\s+"azurerm_container_registry_task"\s+"cleanup"\s*\{',
