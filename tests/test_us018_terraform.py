@@ -47,6 +47,7 @@ def test_tsk_031_uses_azure_blob_backend_and_documents_state_locking():
     assert re.search(r'^\s*\.terraform/?\s*$', gitignore, re.MULTILINE)
     assert re.search(r'^\s*\*\.tfstate\*?\s*$', gitignore, re.MULTILINE)
     assert "use_azuread_auth=true" in readme
+    assert "use_cli=true" in readme
     assert "staging.tfstate" in readme
     assert "production.tfstate" in readme
     assert "lease" in readme.lower()

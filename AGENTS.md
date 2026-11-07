@@ -30,7 +30,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử cấu hình Terraform US-018). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Nhánh `feature/US-018` hiện có scaffold Terraform AzureRM và Azure Blob backend; bootstrap state chưa được apply. Chưa có CI/CD workflow tự động.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử cấu hình Terraform US-018). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Nhánh `feature/US-018` đang thiết lập Terraform AzureRM và Azure Blob remote state; Storage Account cùng private container `tfstate` đã được tạo trên Azure staging. Chưa có CI/CD workflow tự động.
 
 ---
 
@@ -46,10 +46,10 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
 | `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
-| `feature/US-018` | `ecb4485` — Terraform AzureRM + Azure Blob backend; remote branch đã bị xóa, local branch chưa push |
+| `feature/US-018` | Terraform AzureRM + Azure Blob backend; branch local |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | Tracked files sạch sau commit; Terraform cache và `infra/bootstrap/terraform.tfstate` cũ được giữ local/ignored, không được ghi đè hoặc commit |
+| Trạng thái working tree | Đang có thay đổi tài liệu và bootstrap US-018; Terraform cache cùng bootstrap local state được giữ local/ignored, không được ghi đè hoặc commit |
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -289,7 +289,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
-| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | BLOCKED — THIẾU QUYỀN GÁN ROLE | Azure CLI 2.92.0 xác nhận subscription Enabled, `Microsoft.Storage` Registered, RG `rg-vsl-staging` ở `eastasia`, tên `vslstate2026` khả dụng. Terraform bootstrap plan thành công: 3 tài nguyên thêm (Storage Account, Blob Data Contributor role assignment, private container), 0 đổi, 0 xoá. Identity hiện đăng nhập chỉ có Contributor tại RG, không có quyền đăng ký Resource Provider trước đây hoặc `roleAssignments/write`; không thể apply role assignment an toàn. Chưa chạy apply/remote init, không tạo tài nguyên. Cần admin cấp `User Access Administrator` (hoặc Owner) cho identity Terraform ở RG/phạm vi phù hợp; sau đó apply bootstrap, chờ RBAC propagation và nghiệm thu backend init/plan. Test US-018 4/4, full suite 77/77; fmt và validate đều PASS. Không lưu/gửi secret trong chat. |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
 
 ---
 
@@ -297,6 +297,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-018 đã xác minh `Microsoft.Storage` Registered, tên `vslstate2026` khả dụng và plan bootstrap chỉ thêm 3 tài nguyên. Vẫn bị chặn vì identity hiện chỉ có Contributor tại Resource Group, thiếu quyền gán role `Storage Blob Data Contributor`; cần admin cấp `User Access Administrator` (hoặc Owner) trước khi apply.
-3. Sau khi xác minh identity có quyền và `terraform plan` đúng phạm vi, chỉ chạy `terraform apply` trong `infra/bootstrap-azure` theo phê duyệt đã có; chờ RBAC propagation rồi chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`. Không gửi Client Secret trong chat hoặc repository.
+2. US-018 bootstrap đã tạo Storage Account và private container `tfstate` trên Azure staging. Xác nhận root Terraform init/plan thành công với Azure AD/CLI authentication và state key riêng của staging; production chưa cấu hình bằng giá trị xác thực.
+3. Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials.
 4. Không push hoặc tạo PR nếu chưa có quyết định của chủ dự án.

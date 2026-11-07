@@ -20,7 +20,8 @@ terraform -chdir=infra init `
   -backend-config="storage_account_name=<state-storage-account>" `
   -backend-config="container_name=<state-container>" `
   -backend-config="key=sign-language-classification/staging.tfstate" `
-  -backend-config="use_azuread_auth=true"
+  -backend-config="use_azuread_auth=true" `
+  -backend-config="use_cli=true"
 terraform -chdir=infra plan -var-file="environments/staging.tfvars"
 ```
 
