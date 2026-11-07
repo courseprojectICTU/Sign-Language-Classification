@@ -11,19 +11,20 @@ Bao phủ:
 
 from pathlib import Path
 from typing import List, Tuple
-import pytest
+
 import pandas as pd
+import pytest
 
 from src.vsl.config import get_data_dir
 from src.vsl.labels import VIETNAMESE_ALPHABET
 from src.vsl.landmarks import (
-    FACE_KEYPOINTS,
-    NUM_HAND_LANDMARKS,
-    NUM_FACE_KEYPOINTS,
-    HAND_COORDS_COUNT,
     FACE_COORDS_COUNT,
-    TOTAL_LANDMARK_COORDS,
+    FACE_KEYPOINTS,
+    HAND_COORDS_COUNT,
     LANDMARK_COLUMN_NAMES,
+    NUM_FACE_KEYPOINTS,
+    NUM_HAND_LANDMARKS,
+    TOTAL_LANDMARK_COORDS,
     build_expected_landmark_columns,
     validate_landmark_columns,
 )
@@ -41,9 +42,9 @@ def test_ac_015_01_csv_header_has_exact_93_columns():
     df = pd.read_csv(sample_csv)
     columns = list(df.columns)
 
-    assert len(columns) == TOTAL_LANDMARK_COORDS == 93, (
-        f"Số lượng cột thực tế ({len(columns)}) khác 93 quy định tại BR-001."
-    )
+    assert (
+        len(columns) == TOTAL_LANDMARK_COORDS == 93
+    ), f"Số lượng cột thực tế ({len(columns)}) khác 93 quy định tại BR-001."
 
 
 def test_ac_015_01_csv_header_order_hand_first_face_second():
@@ -67,9 +68,15 @@ def test_ac_015_01_csv_header_order_hand_first_face_second():
         actual_x = hand_cols[i * 3]
         actual_y = hand_cols[i * 3 + 1]
         actual_z = hand_cols[i * 3 + 2]
-        assert actual_x == expected_x, f"Lệch toạ độ hand x tại điểm {i}: {actual_x} != {expected_x}"
-        assert actual_y == expected_y, f"Lệch toạ độ hand y tại điểm {i}: {actual_y} != {expected_y}"
-        assert actual_z == expected_z, f"Lệch toạ độ hand z tại điểm {i}: {actual_z} != {expected_z}"
+        assert (
+            actual_x == expected_x
+        ), f"Lệch toạ độ hand x tại điểm {i}: {actual_x} != {expected_x}"
+        assert (
+            actual_y == expected_y
+        ), f"Lệch toạ độ hand y tại điểm {i}: {actual_y} != {expected_y}"
+        assert (
+            actual_z == expected_z
+        ), f"Lệch toạ độ hand z tại điểm {i}: {actual_z} != {expected_z}"
 
     # 2. 30 cột sau bắt buộc là face_{x,y,z}_{idx} theo thứ tự FACE_KEYPOINTS
     for i, idx in enumerate(FACE_KEYPOINTS):
@@ -79,9 +86,15 @@ def test_ac_015_01_csv_header_order_hand_first_face_second():
         actual_x = face_cols[i * 3]
         actual_y = face_cols[i * 3 + 1]
         actual_z = face_cols[i * 3 + 2]
-        assert actual_x == expected_x, f"Lệch toạ độ face x tại điểm index {idx}: {actual_x} != {expected_x}"
-        assert actual_y == expected_y, f"Lệch toạ độ face y tại điểm index {idx}: {actual_y} != {expected_y}"
-        assert actual_z == expected_z, f"Lệch toạ độ face z tại điểm index {idx}: {actual_z} != {expected_z}"
+        assert (
+            actual_x == expected_x
+        ), f"Lệch toạ độ face x tại điểm index {idx}: {actual_x} != {expected_x}"
+        assert (
+            actual_y == expected_y
+        ), f"Lệch toạ độ face y tại điểm index {idx}: {actual_y} != {expected_y}"
+        assert (
+            actual_z == expected_z
+        ), f"Lệch toạ độ face z tại điểm index {idx}: {actual_z} != {expected_z}"
 
 
 def test_ac_015_01_dataset_samples_match_exact_contract():
@@ -102,12 +115,10 @@ def test_ac_015_01_dataset_samples_match_exact_contract():
         columns = tuple(df.columns)
 
         is_valid, reason = validate_landmark_columns(columns)
-        assert is_valid, (
-            f"File {first_csv} vi phạm hợp đồng dữ liệu BR-001: {reason}"
-        )
-        assert columns == expected_columns, (
-            f"Header file {first_csv} không khớp hoàn toàn với LANDMARK_COLUMN_NAMES."
-        )
+        assert is_valid, f"File {first_csv} vi phạm hợp đồng dữ liệu BR-001: {reason}"
+        assert (
+            columns == expected_columns
+        ), f"Header file {first_csv} không khớp hoàn toàn với LANDMARK_COLUMN_NAMES."
 
 
 # -----------------------------------------------------------------------------
@@ -117,9 +128,18 @@ def test_ac_015_02_face_keypoints_immutable_tuple():
     """TSK-025 & AC-015-02: FACE_KEYPOINTS phải là tuple bất biến đúng 10 số cố định."""
     assert isinstance(FACE_KEYPOINTS, tuple), "FACE_KEYPOINTS bắt buộc phải là kiểu tuple bất biến."
     assert len(FACE_KEYPOINTS) == NUM_FACE_KEYPOINTS == 10
-    assert FACE_KEYPOINTS == (10, 152, 234, 454, 33, 263, 1, 61, 291, 199), (
-        f"Thứ tự FACE_KEYPOINTS bị sai: {FACE_KEYPOINTS}"
-    )
+    assert FACE_KEYPOINTS == (
+        10,
+        152,
+        234,
+        454,
+        33,
+        263,
+        1,
+        61,
+        291,
+        199,
+    ), f"Thứ tự FACE_KEYPOINTS bị sai: {FACE_KEYPOINTS}"
 
 
 def test_ac_015_02_detects_swapped_face_indices_with_clear_error():
@@ -136,14 +156,16 @@ def test_ac_015_02_detects_swapped_face_indices_with_clear_error():
     )
 
     is_valid, reason = validate_landmark_columns(corrupted_columns)
-    assert not is_valid, "Hàm validate_landmark_columns phải trả về False khi toạ độ mặt bị tráo đổi."
+    assert (
+        not is_valid
+    ), "Hàm validate_landmark_columns phải trả về False khi toạ độ mặt bị tráo đổi."
     assert reason is not None
-    assert "face_x_152" in reason or "face_x_10" in reason, (
-        f"Thông báo lỗi phải chỉ rõ tên cột bị sai lệch: {reason}"
-    )
-    assert f"cột thứ {idx_10_x}" in reason or f"index {idx_10_x}" in reason or str(idx_10_x) in reason, (
-        f"Thông báo lỗi phải chỉ ra vị trí cột bị sai: {reason}"
-    )
+    assert (
+        "face_x_152" in reason or "face_x_10" in reason
+    ), f"Thông báo lỗi phải chỉ rõ tên cột bị sai lệch: {reason}"
+    assert (
+        f"cột thứ {idx_10_x}" in reason or f"index {idx_10_x}" in reason or str(idx_10_x) in reason
+    ), f"Thông báo lỗi phải chỉ ra vị trí cột bị sai: {reason}"
 
 
 def test_ac_015_02_detects_hand_face_swapped_or_wrong_column_count():
@@ -170,7 +192,8 @@ def test_ac_015_02_detects_hand_face_swapped_or_wrong_column_count():
 def test_ac_015_02_service_extract_landmarks_parity_with_contract():
     """AC-015-02: Hàm extract_landmarks_from_image trong service phải dùng đúng FACE_KEYPOINTS từ module hợp đồng."""
     from src.vsl import service
+
     assert hasattr(service, "FACE_KEYPOINTS"), "service.py phải sử dụng hằng số FACE_KEYPOINTS."
-    assert service.FACE_KEYPOINTS == FACE_KEYPOINTS, (
-        "service.FACE_KEYPOINTS không trùng khớp với FACE_KEYPOINTS trong src.vsl.landmarks."
-    )
+    assert (
+        service.FACE_KEYPOINTS == FACE_KEYPOINTS
+    ), "service.FACE_KEYPOINTS không trùng khớp với FACE_KEYPOINTS trong src.vsl.landmarks."

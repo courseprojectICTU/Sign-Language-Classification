@@ -13,6 +13,7 @@ import subprocess
 from typing import Any, Dict, List, Literal, Optional, Tuple
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -273,6 +274,30 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    allowed_origins_env = os.getenv("VSL_ALLOWED_ORIGINS", "")
+    if allowed_origins_env.strip():
+        allowed_origins = [
+            origin.strip()
+            for origin in allowed_origins_env.split(",")
+            if origin.strip()
+        ]
+    else:
+        allowed_origins = [
+            "https://vsl-frontend.pages.dev",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?vsl-frontend\.pages\.dev$",
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
     # Khởi tạo trạng thái mặc định
     app.state.model = None
     app.state.model_version = _resolve_model_version()
@@ -414,4 +439,3 @@ def create_app() -> FastAPI:
 
 # Instance ứng dụng mặc định cho ASGI runner (uvicorn src.vsl.service:app)
 app = create_app()
-

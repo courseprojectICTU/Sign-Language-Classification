@@ -6,13 +6,13 @@ Nguồn chân lý duy nhất (Single Source of Truth) định nghĩa:
 - LANDMARK_COLUMN_NAMES: Tên 93 cột chuẩn trong dataset và pipeline suy luận.
 """
 
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 # -----------------------------------------------------------------------------
 # Hằng số cấu hình hợp đồng landmark (BR-001)
 # -----------------------------------------------------------------------------
 # 10 điểm mốc MediaPipe FaceMesh cố định: trán, cằm, viền mặt, mắt, mũi, miệng
-FACE_KEYPOINTS: Tuple[int, ...] = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)
+FACE_KEYPOINTS: tuple[int, ...] = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)
 
 NUM_HAND_LANDMARKS: int = 21
 NUM_FACE_KEYPOINTS: int = len(FACE_KEYPOINTS)  # 10
@@ -22,7 +22,7 @@ FACE_COORDS_COUNT: int = NUM_FACE_KEYPOINTS * 3  # 30
 TOTAL_LANDMARK_COORDS: int = HAND_COORDS_COUNT + FACE_COORDS_COUNT  # 93
 
 
-def build_expected_landmark_columns() -> Tuple[str, ...]:
+def build_expected_landmark_columns() -> tuple[str, ...]:
     """Dựng tuple 93 tên cột theo đúng thứ tự quy định trong hợp đồng dữ liệu BR-001.
 
     Thứ tự:
@@ -45,10 +45,10 @@ def build_expected_landmark_columns() -> Tuple[str, ...]:
     return tuple(cols)
 
 
-LANDMARK_COLUMN_NAMES: Tuple[str, ...] = build_expected_landmark_columns()
+LANDMARK_COLUMN_NAMES: tuple[str, ...] = build_expected_landmark_columns()
 
 
-def validate_landmark_columns(columns: Sequence[str]) -> Tuple[bool, Optional[str]]:
+def validate_landmark_columns(columns: Sequence[str]) -> tuple[bool, str | None]:
     """Kiểm tra danh sách tên cột có tuân thủ đúng hợp đồng 93 cột BR-001 hay không.
 
     Tham số:
