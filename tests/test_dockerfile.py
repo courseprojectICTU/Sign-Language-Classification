@@ -153,9 +153,7 @@ def test_runtime_requirements_are_pinned_and_minimal() -> None:
     ]
     full_requirements = {
         line.split("==", maxsplit=1)[0]: line
-        for line in (PROJECT_ROOT / "requirements.txt")
-        .read_text(encoding="ascii")
-        .splitlines()
+        for line in (PROJECT_ROOT / "requirements.txt").read_text(encoding="ascii").splitlines()
         if "==" in line
     }
 
