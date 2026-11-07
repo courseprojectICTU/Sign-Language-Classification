@@ -10,8 +10,10 @@ the Resource Group and assign roles (`Owner` or `User Access Administrator`)
 at the Storage Account scope. Bootstrap grants the authenticated identity
 `Storage Blob Data Contributor` on the Storage Account so it can create the
 private container and subsequently access remote state. Azure role propagation
-can take several minutes. The storage account name must be globally unique and
-contain only 3-24 lowercase letters and digits.
+can take several minutes. The AzureRM provider is configured not to register
+providers automatically; an administrator must register `Microsoft.Storage`
+for the subscription before bootstrap. The storage account name must be
+globally unique and contain only 3-24 lowercase letters and digits.
 
 From the repository root, initialize the bootstrap configuration:
 
