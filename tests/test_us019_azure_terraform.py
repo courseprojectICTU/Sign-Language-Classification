@@ -116,9 +116,12 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
         r'resource\s+"azuread_application_federated_identity_credential"\s+"github_develop"\s*\{',
         identity,
     )
-    assert 'issuer   = "https://token.actions.githubusercontent.com"' in identity
+    assert re.search(
+        r'issuer\s*=\s*"https://token\.actions\.githubusercontent\.com"',
+        identity,
+    )
     assert '"api://AzureADTokenExchange"' in identity
-    assert "subject  = var.github_oidc_subject" in identity
+    assert re.search(r"subject\s*=\s*var\.github_oidc_subject", identity)
     assert (
         'github_oidc_subject = '
         '"repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop"'
