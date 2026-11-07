@@ -152,3 +152,25 @@ def test_terraform_and_workflow_do_not_use_static_ci_credentials():
         "secrets.",
     ):
         assert forbidden not in workflow
+
+
+def test_ci_documentation_recommends_oidc_not_static_secret_creation():
+    handover = (
+        ROOT / "docs" / "infrastructure" / "HO-SO-BAN-GIAO-HA-TANG.md"
+    ).read_text(encoding="utf-8")
+    ci_plan = (
+        ROOT / "docs" / "planning" / "KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md"
+    ).read_text(encoding="utf-8")
+    migration_plan = (
+        ROOT / "docs" / "planning" / "KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md"
+    ).read_text(encoding="utf-8")
+
+    assert "az ad sp create-for-rbac" not in handover
+    assert "Cấu Hình GitHub Actions bằng Azure OIDC" in handover
+    assert "Actions Variables" in handover
+    assert "`clientSecret`, service-account key JSON hoặc ACR" in ci_plan
+    assert "GitHub OIDC Federated Identity Credential" in ci_plan
+    assert (
+        "Azure Service Principal + GitHub OIDC Federated Identity Credential"
+        in migration_plan
+    )
