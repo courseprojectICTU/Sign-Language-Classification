@@ -45,6 +45,7 @@ class ApiStub:
     received: threading.Event = field(default_factory=threading.Event)
     release: threading.Event = field(default_factory=threading.Event)
     hold_response: bool = False
+    status_code: int = 200
     response: dict[str, object] = field(default_factory=lambda: SUCCESS_RESPONSE.copy())
     request_method: str = ""
     request_content_type: str = ""
@@ -91,7 +92,7 @@ def test_site() -> Iterator[TestSite]:
                 return
 
             body = json.dumps(api.response, ensure_ascii=False).encode("utf-8")
-            self.send_response(200)
+            self.send_response(api.status_code)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -197,6 +198,85 @@ def test_ac_022_02_keeps_loading_and_page_visible_until_cold_start_finishes(
     result = page.get_by_role("region", name="Kết quả dự đoán")
     result.get_by_text("đ", exact=True).wait_for()
     assert "95%" in result.inner_text()
+
+
+@pytest.mark.parametrize(
+    ("status_code", "response_body", "expected_region", "expected_message"),
+    [
+        (
+            200,
+            {
+                "status": "no_hand",
+                "detected": False,
+                "message": "Không phát hiện bàn tay.",
+            },
+            "Kết quả dự đoán",
+            "Không phát hiện bàn tay.",
+        ),
+        (
+            200,
+            {
+                "status": "no_face",
+                "detected": False,
+                "message": "Không phát hiện khuôn mặt.",
+            },
+            "Kết quả dự đoán",
+            "Không phát hiện khuôn mặt.",
+        ),
+        (400, {"detail": "Tệp ảnh không hợp lệ."}, "alert", "Tệp ảnh không hợp lệ."),
+        (
+            503,
+            {"detail": "Mô hình chưa sẵn sàng."},
+            "alert",
+            "Mô hình chưa sẵn sàng.",
+        ),
+    ],
+)
+def test_tsk_040_displays_api_business_and_http_errors(
+    page: Page,
+    test_site: LocalSite,
+    status_code: int,
+    response_body: dict[str, object],
+    expected_region: str,
+    expected_message: str,
+) -> None:
+    _open_site(page, test_site)
+    test_site.api.status_code = status_code
+    test_site.api.response = response_body
+    page.get_by_label("Chọn ảnh").set_input_files(
+        {
+            "name": "ban-tay.jpg",
+            "mimeType": "image/jpeg",
+            "buffer": _jpeg_bytes(),
+        }
+    )
+    page.get_by_role("button", name="Dự đoán").click()
+
+    if expected_region == "alert":
+        expect(page.get_by_role("alert")).to_contain_text(expected_message)
+    else:
+        expect(
+            page.get_by_role("region", name=expected_region)
+        ).to_contain_text(expected_message)
+
+
+def test_tsk_040_displays_network_error_message(
+    page: Page, test_site: LocalSite
+) -> None:
+    _open_site(page, test_site)
+    page.route("**/predict", lambda route: route.abort())
+    page.get_by_label("Chọn ảnh").set_input_files(
+        {
+            "name": "ban-tay.jpg",
+            "mimeType": "image/jpeg",
+            "buffer": _jpeg_bytes(),
+        }
+    )
+    page.get_by_role("button", name="Dự đoán").click()
+
+    expect(page.get_by_role("alert")).to_contain_text(
+        "Không thể kết nối đến dịch vụ."
+    )
 
 
 def test_tsk_039_camera_capture_creates_preview(
