@@ -291,6 +291,11 @@ py -3.12 -m pytest tests -v
 | 2026-10-26 | **US-004** | `feature/US-004` | `docs/api/US-004.md` (`ANALYSIS_READY`, đã duyệt) | TSK-007 | AC-004-01 — **21/21 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 | 2026-10-26 | **US-005** | `feature/US-005` | `docs/api/US-005.md` (`ANALYSIS_READY`, đã duyệt) | TSK-008 | AC-005-01, AC-005-02 — **24/24 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
 | 2026-10-26 | **US-006** | `feature/US-006` | `docs/api/US-006.md` (`ANALYSIS_READY`, đã duyệt) | TSK-009, TSK-010, TSK-011 | AC-006-01, AC-006-02 — **32/32 test** | ✅ **PASS** (chủ dự án xác nhận 2026-10-26) |
+| 2026-11-04 | **US-007** | `feature/US-007` | `docs/api/US-007.md` (`ANALYSIS_READY`, đã duyệt) | TSK-012 | AC-007-01, AC-007-02, BR-008 — **48/48 test toàn repo** | ✅ **PASS** (chủ dự án xác nhận 2026-11-04) |
+| 2026-11-04 | **US-008** | `feature/US-008` | `docs/api/US-008.md` (`ANALYSIS_READY`, đã duyệt) | TSK-013 | AC-008-01, BR-009 — **51/51 test toàn repo; test US-008 3/3** | ✅ **PASS** (chủ dự án xác nhận 2026-11-04) |
+| 2026-11-05 | **US-010** | `feature/US-010` | `docs/api/US-010.md` (`ANALYSIS_READY`, đã duyệt) | TSK-015, TSK-016 | AC-010-01, BR-005, BR-009, BR-011, BR-025 — **54/54 test toàn repo; docker run /health 200** | ✅ **PASS** (chủ dự án xác nhận 2026-11-05) |
+| 2026-11-02 | **US-013** | `feature/US-013` | `docs/api/US-013.md` (`ANALYSIS_READY`) | TSK-021 — harness benchmark và unit tests | AC-013-01 — **BLOCKED, 0/5 staging measurements**; 10 unit tests pass | ⛔ Chưa có Cloud Run staging URL/credentials/CLI; báo cáo `docs/reports/US-013.md` |
+| 2026-11-02 | **US-014** | `feature/US-014` (dựa trên `feature/US-013`) | Hợp đồng `create_heatmap` cập nhật tại `docs/api/US-001.md` | TSK-022, TSK-023 | AC-014-01, AC-014-02 — **58/58 test toàn repo; NumPy-only 9/9 (<30s)** | ⏳ Chờ Chủ dự án xác nhận nghiệm thu |
 
 
 
