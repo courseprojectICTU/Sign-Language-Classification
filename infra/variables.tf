@@ -42,3 +42,16 @@ variable "container_app_name" {
   description = "Container App receiving deployment updates."
   type        = string
 }
+
+variable "github_oidc_subject" {
+  description = "Exact GitHub Actions subject trusted by the Azure federated credential."
+  type        = string
+
+  validation {
+    condition = startswith(
+      var.github_oidc_subject,
+      "repo:courseprojectICTU/Sign-Language-Classification:"
+    )
+    error_message = "github_oidc_subject must belong to the configured GitHub repository."
+  }
+}
