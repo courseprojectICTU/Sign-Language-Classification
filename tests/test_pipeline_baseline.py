@@ -30,9 +30,11 @@ def test_toan_pipeline_dung_23_23_ky_tu(model):
 
     wrong = []
     for letter in ALPHABET:
-        vector = pd.read_csv(
-            ROOT / "data" / "anphabet" / letter / "1.csv"
-        ).values.flatten().astype(np.float64)
+        vector = (
+            pd.read_csv(ROOT / "data" / "anphabet" / letter / "1.csv")
+            .values.flatten()
+            .astype(np.float64)
+        )
         heatmap = create_heatmap(vector)
         batch = preprocess_input(np.expand_dims(heatmap, axis=0))
         prediction = model(batch, training=False).numpy()[0]

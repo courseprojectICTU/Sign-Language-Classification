@@ -10,8 +10,29 @@ Quy tac:
 from typing import Tuple
 
 VIETNAMESE_ALPHABET: Tuple[str, ...] = (
-    "a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
-    "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"
+    "a",
+    "b",
+    "c",
+    "d",
+    "đ",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
 )
 
 NUM_CLASSES: int = len(VIETNAMESE_ALPHABET)

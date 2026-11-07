@@ -4,8 +4,9 @@ Acceptance Criteria:
 - AC-010-01: Container build and runtime constraints (BR-005, BR-009, BR-011, BR-025).
 """
 
-from pathlib import Path
 import re
+from pathlib import Path
+
 import pytest
 
 from src.vsl.config import PROJECT_ROOT
@@ -18,7 +19,11 @@ def test_ac_010_01_dockerignore_exists_and_excludes_heavy_artifacts() -> None:
     """Verify that .dockerignore exists and excludes heavy local directories and dev artifacts."""
     assert DOCKERIGNORE_PATH.is_file(), ".dockerignore phải tồn tại ở thư mục gốc dự án"
     content = DOCKERIGNORE_PATH.read_text(encoding="utf-8")
-    lines = [line.strip() for line in content.splitlines() if line.strip() and not line.strip().startswith("#")]
+    lines = [
+        line.strip()
+        for line in content.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
 
     required_exclusions = [
         ".git",
@@ -40,9 +45,9 @@ def test_ac_010_01_dockerfile_exists_and_has_required_directives() -> None:
     content = DOCKERFILE_PATH.read_text(encoding="utf-8")
 
     # Base image: python:3.12-slim
-    assert re.search(r"FROM\s+.*python:3\.12-slim", content, re.IGNORECASE), (
-        "Dockerfile phải sử dụng base image python:3.12-slim theo BR-005"
-    )
+    assert re.search(
+        r"FROM\s+.*python:3\.12-slim", content, re.IGNORECASE
+    ), "Dockerfile phải sử dụng base image python:3.12-slim theo BR-005"
 
     # System dependencies: libgl1, libglib2.0-0, curl
     assert "libgl1" in content, "Dockerfile phải cài đặt libgl1 cho OpenCV / MediaPipe"
@@ -51,9 +56,9 @@ def test_ac_010_01_dockerfile_exists_and_has_required_directives() -> None:
 
     # Python dependencies
     assert "requirements.txt" in content, "Dockerfile phải sao chép và cài đặt requirements.txt"
-    assert re.search(r"pip\s+install.*-r\s+requirements\.txt", content), (
-        "Dockerfile phải chạy pip install cho requirements.txt"
-    )
+    assert re.search(
+        r"pip\s+install.*-r\s+requirements\.txt", content
+    ), "Dockerfile phải chạy pip install cho requirements.txt"
 
     # Build argument for commit tracing (BR-009)
     assert "ARG GIT_SHA" in content, "Dockerfile phải khai báo ARG GIT_SHA theo BR-009"
@@ -91,7 +96,6 @@ def test_ac_010_01_layer_caching_order_requirements_before_src() -> None:
 
     assert req_copy_idx != -1, "Phải có lệnh COPY requirements.txt"
     assert src_copy_idx != -1, "Phải có lệnh COPY src/"
-    assert req_copy_idx < src_copy_idx, (
-        "Để tối ưu Docker layer cache (BR-025), COPY requirements.txt phải đứng trước COPY src/"
-    )
-
+    assert (
+        req_copy_idx < src_copy_idx
+    ), "Để tối ưu Docker layer cache (BR-025), COPY requirements.txt phải đứng trước COPY src/"

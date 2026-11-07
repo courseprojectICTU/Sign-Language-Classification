@@ -8,14 +8,21 @@ import json
 import os
 import pathlib
 import re
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "src" / "vsl" / "config.py"
 
 SKIP_DIRS = {
-    ".git", ".venv", "__pycache__", ".pytest_cache",
-    ".jupyter-config", ".jupyter-data", ".jupyter-runtime", ".ipynb_checkpoints",
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".jupyter-config",
+    ".jupyter-data",
+    ".jupyter-runtime",
+    ".ipynb_checkpoints",
 }
 
 # Các phần mở rộng mã nguồn và script thực thi
@@ -36,7 +43,7 @@ def _iter_source_files():
 # ---------------------------------------------------------------- AC-003-01
 def test_ac_003_01_khong_con_duong_dan_tuyet_doi_d_trong_ma_nguon():
     """AC-003-01: Quét toàn bộ repository, không còn chuỗi D:\\ hoặc D:/ trong mã nguồn."""
-    d_drive_pattern = re.compile(r'[dD]:[\\/]')
+    d_drive_pattern = re.compile(r"[dD]:[\\/]")
     violations = []
 
     for path in _iter_source_files():
@@ -49,13 +56,17 @@ def test_ac_003_01_khong_con_duong_dan_tuyet_doi_d_trong_ma_nguon():
                     cell_source = "".join(cell.get("source", []))
                     for line_no, line in enumerate(cell_source.splitlines(), 1):
                         if d_drive_pattern.search(line):
-                            violations.append(f"{rel_path} (cell {cell_idx}, line {line_no}): {line.strip()}")
+                            violations.append(
+                                f"{rel_path} (cell {cell_idx}, line {line_no}): {line.strip()}"
+                            )
                     # Kiểm tra outputs của cell (nếu có lưu print cũ)
                     for out in cell.get("outputs", []):
                         out_text = "".join(out.get("text", []))
                         for line_no, line in enumerate(out_text.splitlines(), 1):
                             if d_drive_pattern.search(line):
-                                violations.append(f"{rel_path} (output cell {cell_idx}, line {line_no}): {line.strip()}")
+                                violations.append(
+                                    f"{rel_path} (output cell {cell_idx}, line {line_no}): {line.strip()}"
+                                )
             else:
                 lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
                 for line_no, line in enumerate(lines, 1):
@@ -77,12 +88,12 @@ def test_ac_003_02_config_module_ton_tai_va_fallback_mac_dinh():
     assert MODULE_PATH.exists(), f"Module cấu hình chưa tồn tại: {MODULE_PATH}"
 
     from src.vsl.config import (
-        PROJECT_ROOT,
-        MODEL_PATH,
-        DATA_DIR,
         BASE_PATH,
-        get_model_path,
+        DATA_DIR,
+        MODEL_PATH,
+        PROJECT_ROOT,
         get_data_dir,
+        get_model_path,
     )
 
     # PROJECT_ROOT phải trỏ đúng gốc repo
@@ -113,17 +124,17 @@ def test_ac_003_02_doc_duong_dan_tu_bien_moi_truong(monkeypatch):
     monkeypatch.setenv("VSL_MODEL_PATH", custom_model_path)
     monkeypatch.setenv("VSL_DATA_DIR", custom_data_dir)
 
-    from src.vsl.config import get_model_path, get_data_dir
+    from src.vsl.config import get_data_dir, get_model_path
 
     resolved_model = get_model_path()
     resolved_data = get_data_dir()
 
-    assert resolved_model == pathlib.Path(custom_model_path), (
-        f"get_model_path() không đọc đúng VSL_MODEL_PATH: {resolved_model}"
-    )
-    assert resolved_data == pathlib.Path(custom_data_dir), (
-        f"get_data_dir() không đọc đúng VSL_DATA_DIR: {resolved_data}"
-    )
+    assert resolved_model == pathlib.Path(
+        custom_model_path
+    ), f"get_model_path() không đọc đúng VSL_MODEL_PATH: {resolved_model}"
+    assert resolved_data == pathlib.Path(
+        custom_data_dir
+    ), f"get_data_dir() không đọc đúng VSL_DATA_DIR: {resolved_data}"
 
 
 def test_ac_003_02_re_export_qua_src_vsl():
@@ -132,5 +143,12 @@ def test_ac_003_02_re_export_qua_src_vsl():
 
     import src.vsl
 
-    for symbol in ("PROJECT_ROOT", "MODEL_PATH", "DATA_DIR", "BASE_PATH", "get_model_path", "get_data_dir"):
+    for symbol in (
+        "PROJECT_ROOT",
+        "MODEL_PATH",
+        "DATA_DIR",
+        "BASE_PATH",
+        "get_model_path",
+        "get_data_dir",
+    ):
         assert hasattr(src.vsl, symbol), f"src.vsl thiếu export '{symbol}'"
