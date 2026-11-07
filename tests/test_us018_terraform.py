@@ -78,6 +78,14 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'versioning_enabled\s*=\s*true', config)
     assert len(re.findall(r'prevent_destroy\s*=\s*true', config)) >= 2
     assert re.search(r'storage_use_azuread\s*=\s*true', provider)
+    assert re.search(r'data\s+"azurerm_client_config"\s+"current"', config)
+    assert re.search(r'resource\s+"azurerm_role_assignment"\s+"terraform_state_blob_data"', config)
+    assert re.search(r'role_definition_name\s*=\s*"Storage Blob Data Contributor"', config)
+    assert re.search(r'principal_id\s*=\s*data\.azurerm_client_config\.current\.object_id', config)
+    assert re.search(
+        r'depends_on\s*=\s*\[azurerm_role_assignment\.terraform_state_blob_data\]',
+        config,
+    )
     for variable in (
         "subscription_id",
         "resource_group_name",
@@ -89,6 +97,7 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert "terraform -chdir=infra/bootstrap-azure plan" in instructions
     assert "terraform apply" in instructions
     assert "state is local" in instructions.lower()
+    assert "User Access Administrator" in instructions or "Owner" in instructions
 
 
 def test_terraform_configuration_no_longer_declares_google_cloud_resources():
