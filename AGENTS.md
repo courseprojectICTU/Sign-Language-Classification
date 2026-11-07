@@ -289,7 +289,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
-| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | ĐANG CHỜ BOOTSTRAP/NGHIỆM THU | AzureRM provider, Blob backend, staging/production tfvars và bootstrap cấu hình đã hoàn thành; 4 test US-018, full suite 77/77, `terraform fmt` và `validate` PASS; chưa chạy remote init/plan hoặc apply |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | ĐANG CHỜ BOOTSTRAP/NGHIỆM THU | AzureRM provider, Blob backend, staging/production tfvars và bootstrap có role assignment Blob Data cho identity hiện tại; 4 test US-018, full suite 77/77, `terraform fmt` và `validate` PASS; chưa chạy remote init/plan hoặc apply |
 
 ---
 
@@ -297,6 +297,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-018 đang chờ chủ dự án cung cấp tên Storage Account duy nhất và thông tin production đã xác minh.
-3. Chỉ sau khi chủ dự án cấp quyền và cho phép rõ ràng mới chạy `terraform apply` trong `infra/bootstrap-azure`; sau đó chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`.
+2. US-018 đang chờ tên Storage Account duy nhất, credential Service Principal đã được rotate sau khi lộ trong chat, và identity có `Owner`/`User Access Administrator` để gán role.
+3. Chỉ sau khi chủ dự án cấp quyền và cho phép rõ ràng mới chạy `terraform apply` trong `infra/bootstrap-azure`; sau đó chờ RBAC propagation và chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`.
 4. Không push hoặc tạo PR nếu chưa có quyết định của chủ dự án.

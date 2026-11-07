@@ -83,8 +83,9 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'role_definition_name\s*=\s*"Storage Blob Data Contributor"', config)
     assert re.search(r'principal_id\s*=\s*data\.azurerm_client_config\.current\.object_id', config)
     assert re.search(
-        r'depends_on\s*=\s*\[azurerm_role_assignment\.terraform_state_blob_data\]',
+        r'depends_on\s*=\s*\[[^\]]*azurerm_role_assignment\.terraform_state_blob_data[^\]]*\]',
         config,
+        re.DOTALL,
     )
     for variable in (
         "subscription_id",
