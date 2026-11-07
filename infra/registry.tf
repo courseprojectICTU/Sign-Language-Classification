@@ -42,7 +42,7 @@ resource "azurerm_container_registry_task" "cleanup" {
     task_content = <<-YAML
       version: v1.1.0
       steps:
-        - cmd: acr purge --filter 'vsl-api:.*' --ago 0d --keep 3
+        - cmd: mcr.microsoft.com/acr/acr-cli:0.19 acr purge --filter 'vsl-api:.*' --ago 0d --keep 3
     YAML
   }
 
