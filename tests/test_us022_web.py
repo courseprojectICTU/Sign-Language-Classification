@@ -208,7 +208,7 @@ def test_tsk_039_camera_capture_creates_preview(
     page.locator("video").wait_for(state="visible")
     page.get_by_role("button", name="Chụp ảnh").click()
 
-    assert page.get_by_role("img", name="Ảnh xem trước").is_visible()
+    expect(page.get_by_role("img", name="Ảnh xem trước")).to_be_visible()
 
 
 def test_tsk_039_preview_stays_hidden_until_an_image_is_selected(
