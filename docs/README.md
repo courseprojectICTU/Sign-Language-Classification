@@ -62,4 +62,4 @@ docs/
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
 - [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
-
+- [US-019_PR_Description_Cap_Nhat.md](reports/US-019_PR_Description_Cap_Nhat.md): Báo cáo thay đổi, test evidence và trạng thái nghiệm thu PR US-019.
