@@ -19,6 +19,7 @@ from playwright.sync_api import (
     BrowserContext,
     BrowserType,
     Page,
+    expect,
     sync_playwright,
 )
 
@@ -216,9 +217,11 @@ def test_tsk_042_renders_supported_letters_and_fits_small_viewport(
     _open_site(page, test_site)
     page.set_viewport_size({"width": 375, "height": 812})
 
-    letters = page.get_by_role(
+    letters_locator = page.get_by_role(
         "list", name="23 ký tự được hỗ trợ"
-    ).get_by_role("listitem").all_text_contents()
+    ).get_by_role("listitem")
+    expect(letters_locator).to_have_count(23)
+    letters = letters_locator.all_text_contents()
 
     assert letters == list(VIETNAMESE_ALPHABET)
     assert page.evaluate(
