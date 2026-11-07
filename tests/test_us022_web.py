@@ -14,7 +14,13 @@ from typing import Iterator
 import cv2
 import numpy as np
 import pytest
-from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+from playwright.sync_api import (
+    Browser,
+    BrowserContext,
+    BrowserType,
+    Page,
+    sync_playwright,
+)
 
 from src.vsl.labels import VIETNAMESE_ALPHABET
 
@@ -219,3 +225,48 @@ def test_tsk_042_renders_supported_letters_and_fits_small_viewport(
         "() => document.documentElement.scrollWidth <= window.innerWidth"
     )
     assert page.get_by_text("đ", exact=True).is_visible()
+
+
+@pytest.mark.parametrize("browser_name", ["chromium", "edge", "firefox"])
+def test_tsk_041_browser_matrix_and_mobile_layout(
+    browser_name: str, test_site: LocalSite
+) -> None:
+    with sync_playwright() as playwright:
+        browser_type: BrowserType
+        channel = None
+        if browser_name == "edge":
+            browser_type = playwright.chromium
+            channel = "msedge"
+        elif browser_name == "firefox":
+            browser_type = playwright.firefox
+        else:
+            browser_type = playwright.chromium
+
+        browser: Browser = browser_type.launch(channel=channel)
+        context = browser.new_context(viewport={"width": 1280, "height": 800})
+        page = context.new_page()
+        config = json.dumps({"apiBaseUrl": test_site.url})
+        page.add_init_script(f"window.VSL_CONFIG = {config};")
+
+        try:
+            _open_site(page, test_site)
+            assert page.get_by_role(
+                "heading", name="Nhận diện ký hiệu bàn tay"
+            ).is_visible()
+            page.get_by_label("Chọn ảnh").set_input_files(
+                {
+                    "name": "ban-tay.jpg",
+                    "mimeType": "image/jpeg",
+                    "buffer": _jpeg_bytes(),
+                }
+            )
+            assert page.get_by_role("img", name="Ảnh xem trước").is_visible()
+
+            page.set_viewport_size({"width": 375, "height": 812})
+            assert page.get_by_role("button", name="Dự đoán").is_visible()
+            assert page.evaluate(
+                "() => document.documentElement.scrollWidth <= window.innerWidth"
+            )
+        finally:
+            context.close()
+            browser.close()
