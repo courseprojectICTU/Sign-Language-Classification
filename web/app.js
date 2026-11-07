@@ -12,6 +12,12 @@
   const cameraMessage = document.querySelector("#camera-message");
   const captureCanvas = document.querySelector("#capture-canvas");
   const predictButton = document.querySelector("#predict-button");
+  const loadingStatus = document.querySelector("#loading-status");
+  const errorMessage = document.querySelector("#error-message");
+  const resultRegion = document.querySelector("#result-region");
+  const resultLetter = document.querySelector("#result-letter");
+  const resultConfidence = document.querySelector("#result-confidence");
+  const resultMessage = document.querySelector("#result-message");
 
   if (
     !(fileInput instanceof HTMLInputElement) ||
@@ -24,24 +30,34 @@
     !(cameraVideo instanceof HTMLVideoElement) ||
     !(cameraMessage instanceof HTMLElement) ||
     !(captureCanvas instanceof HTMLCanvasElement) ||
-    !(predictButton instanceof HTMLButtonElement)
+    !(predictButton instanceof HTMLButtonElement) ||
+    !(loadingStatus instanceof HTMLElement) ||
+    !(errorMessage instanceof HTMLElement) ||
+    !(resultRegion instanceof HTMLElement) ||
+    !(resultLetter instanceof HTMLElement) ||
+    !(resultConfidence instanceof HTMLElement) ||
+    !(resultMessage instanceof HTMLElement)
   ) {
-    throw new Error("Required image capture controls are missing from the page.");
+    throw new Error("Required image or prediction controls are missing from the page.");
   }
 
   let cameraStream = null;
   let previewUrl = null;
+  let selectedImage = null;
 
   function showPreview(file) {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
 
+    selectedImage = file;
     previewUrl = URL.createObjectURL(file);
     imagePreview.src = previewUrl;
     imagePreview.hidden = false;
     previewPlaceholder.hidden = true;
     predictButton.disabled = false;
+    errorMessage.hidden = true;
+    resultRegion.hidden = true;
   }
 
   function showCameraMessage(message) {
@@ -60,6 +76,83 @@
     cameraVideo.srcObject = null;
     cameraPanel.hidden = true;
     captureButton.disabled = true;
+  }
+
+  async function requestPrediction(file) {
+    const apiBaseUrl = window.VSL_CONFIG?.apiBaseUrl;
+    if (typeof apiBaseUrl !== "string" || apiBaseUrl.trim() === "") {
+      throw new Error("Địa chỉ dịch vụ dự đoán chưa được cấu hình.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(
+      `${apiBaseUrl.replace(/\/+$/, "")}/predict`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    let payload;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      console.error("Prediction API returned invalid JSON:", error);
+      throw new Error("Dịch vụ trả về phản hồi không hợp lệ. Vui lòng thử lại.");
+    }
+
+    if (!response.ok) {
+      const detail =
+        typeof payload.detail === "string"
+          ? payload.detail
+          : `Dịch vụ chưa thể xử lý ảnh (HTTP ${response.status}).`;
+      throw new Error(detail);
+    }
+
+    return payload;
+  }
+
+  function displayPrediction(payload) {
+    if (
+      payload.status === "ok" &&
+      payload.detected === true &&
+      typeof payload.letter === "string" &&
+      typeof payload.confidence === "number" &&
+      Number.isFinite(payload.confidence) &&
+      payload.confidence >= 0 &&
+      payload.confidence <= 1
+    ) {
+      resultLetter.textContent = payload.letter;
+      resultLetter.hidden = false;
+      resultConfidence.textContent = `Độ tin cậy: ${(
+        payload.confidence * 100
+      ).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%`;
+      resultConfidence.hidden = false;
+      resultMessage.hidden = true;
+      resultRegion.hidden = false;
+      return;
+    }
+
+    if (
+      payload.detected === false &&
+      (payload.status === "no_hand" || payload.status === "no_face")
+    ) {
+      resultLetter.textContent = "";
+      resultLetter.hidden = true;
+      resultConfidence.textContent = "";
+      resultConfidence.hidden = true;
+      resultMessage.textContent =
+        typeof payload.message === "string"
+          ? payload.message
+          : "Không thể nhận diện ảnh. Vui lòng thử ảnh khác.";
+      resultMessage.hidden = false;
+      resultRegion.hidden = false;
+      return;
+    }
+
+    throw new Error("Dịch vụ trả về dữ liệu dự đoán không hợp lệ.");
   }
 
   fileInput.addEventListener("change", () => {
@@ -127,6 +220,34 @@
       showPreview(new File([blob], "capture.jpg", { type: "image/jpeg" }));
       cameraMessage.hidden = true;
     }, "image/jpeg");
+  });
+
+  predictButton.addEventListener("click", async () => {
+    if (!selectedImage) {
+      return;
+    }
+
+    predictButton.disabled = true;
+    loadingStatus.hidden = false;
+    errorMessage.hidden = true;
+    resultRegion.hidden = true;
+
+    try {
+      const payload = await requestPrediction(selectedImage);
+      displayPrediction(payload);
+    } catch (error) {
+      console.error("Image prediction failed:", error);
+      errorMessage.textContent =
+        error instanceof TypeError
+          ? "Không thể kết nối đến dịch vụ. Vui lòng kiểm tra kết nối và thử lại."
+          : error instanceof Error
+            ? error.message
+            : "Không thể dự đoán ảnh. Vui lòng thử lại.";
+      errorMessage.hidden = false;
+    } finally {
+      loadingStatus.hidden = true;
+      predictButton.disabled = selectedImage === null;
+    }
   });
 
   window.addEventListener("pagehide", () => {
