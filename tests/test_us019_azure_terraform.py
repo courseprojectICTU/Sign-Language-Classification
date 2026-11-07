@@ -55,7 +55,16 @@ def test_tsk_032_adopts_existing_registry_and_configures_three_tag_cleanup():
         r'resource\s+"azurerm_container_registry_task"\s+"cleanup"\s*\{',
         registry,
     )
-    for required in ("timer_trigger", "schedule", "acr purge", "--filter", "vsl-api", "--ago 0d", "--keep 3"):
+    for required in (
+        "timer_trigger",
+        "schedule",
+        "mcr.microsoft.com/acr/acr-cli:0.19",
+        "acr purge",
+        "--filter",
+        "vsl-api",
+        "--ago 0d",
+        "--keep 3",
+    ):
         assert required in registry
     assert re.search(
         r'resource\s+"azurerm_user_assigned_identity"\s+"registry_cleanup"\s*\{',
