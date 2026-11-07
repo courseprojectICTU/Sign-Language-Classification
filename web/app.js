@@ -18,6 +18,8 @@
   const resultLetter = document.querySelector("#result-letter");
   const resultConfidence = document.querySelector("#result-confidence");
   const resultMessage = document.querySelector("#result-message");
+  const supportedLettersList = document.querySelector("#supported-letters");
+  const supportedError = document.querySelector("#supported-error");
 
   if (
     !(fileInput instanceof HTMLInputElement) ||
@@ -36,7 +38,9 @@
     !(resultRegion instanceof HTMLElement) ||
     !(resultLetter instanceof HTMLElement) ||
     !(resultConfidence instanceof HTMLElement) ||
-    !(resultMessage instanceof HTMLElement)
+    !(resultMessage instanceof HTMLElement) ||
+    !(supportedLettersList instanceof HTMLUListElement) ||
+    !(supportedError instanceof HTMLElement)
   ) {
     throw new Error("Required image or prediction controls are missing from the page.");
   }
@@ -76,6 +80,7 @@
     cameraVideo.srcObject = null;
     cameraPanel.hidden = true;
     captureButton.disabled = true;
+    openCameraButton.disabled = false;
   }
 
   async function requestPrediction(file) {
@@ -112,6 +117,30 @@
     }
 
     return payload;
+  }
+
+  async function loadSupportedLetters() {
+    const response = await fetch("labels.json");
+    if (!response.ok) {
+      throw new Error(`Could not load label list (HTTP ${response.status}).`);
+    }
+
+    const labels = await response.json();
+    if (
+      !Array.isArray(labels) ||
+      labels.length === 0 ||
+      !labels.every((label) => typeof label === "string" && label.length > 0) ||
+      new Set(labels).size !== labels.length
+    ) {
+      throw new Error("The generated label list is invalid.");
+    }
+
+    const items = labels.map((label) => {
+      const item = document.createElement("li");
+      item.textContent = label;
+      return item;
+    });
+    supportedLettersList.replaceChildren(...items);
   }
 
   function displayPrediction(payload) {
@@ -174,6 +203,7 @@
       return;
     }
 
+    openCameraButton.disabled = true;
     try {
       cameraStream = await navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -248,6 +278,13 @@
       loadingStatus.hidden = true;
       predictButton.disabled = selectedImage === null;
     }
+  });
+
+  loadSupportedLetters().catch((error) => {
+    console.error("Unable to load supported letters:", error);
+    supportedError.textContent =
+      "Không tải được danh sách ký tự. Vui lòng tải lại trang.";
+    supportedError.hidden = false;
   });
 
   window.addEventListener("pagehide", () => {
