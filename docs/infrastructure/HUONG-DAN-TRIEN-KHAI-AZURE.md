@@ -2,6 +2,13 @@
 
 Tài liệu hướng dẫn quy trình đóng gói và triển khai dịch vụ nhận diện ngôn ngữ ký hiệu (`vsl-api`) lên nền tảng Microsoft Azure Container Apps.
 
+> **Trạng thái vận hành:** Đây là hướng dẫn triển khai thủ công, không phải workflow CI/CD.
+> Các resource, URL, quota, revision mode và cấu hình replica trong tài liệu chưa được
+> xác minh trực tiếp trong phiên cập nhật US-035. Kiểm tra lại Azure trước khi chạy lệnh;
+> không giả định staging hoặc production đang khỏe. Không commit ACR password, service
+> principal secret hay token; ưu tiên danh tính được quản lý và quyền tối thiểu.
+> Dùng [runbook](../RUNBOOK.md) để smoke test, xử lý lỗi và rollback an toàn.
+
 ---
 
 ## 1. Kiến Trúc Triển Khai
