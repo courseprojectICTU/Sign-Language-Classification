@@ -8,7 +8,7 @@
 
 | Story | Status | Branch / evidence | Remaining limitation |
 |---|---|---|---|
-| US-038 — Reproducible, optimized Docker build | **Implemented and pushed; runtime build unverified** | `feature/US-038`, commit `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` | Branch already contains a mixed historical changeset. New commit only changes US-038 files. Docker daemon is unavailable locally; full Ruff/Black baseline failures currently block the dependent hosted Docker job. |
+| US-038 — Reproducible, optimized Docker build | **Implemented and pushed; runtime build unverified** | `feature/US-038`, latest commit `ca2428409f6a6ae3b3dd21678ad6c69685d82509` | Branch already contains a mixed historical changeset. US-038 commits only change Docker-related files. Docker daemon is unavailable locally; full Ruff/Black baseline failures currently block the dependent hosted Docker job. |
 | US-026 — Pull-request CI | **Implemented on separate branch** | `feature/US-026`, `6ad9e9dfd38d915dc4fc99d36dd5540ffa2e765d` | Docker Engine was unavailable locally, and a GitHub Actions run was not verified. Workflow does not push or deploy. |
 | US-017 — Deployment smoke test | **Script and tests implemented; live check incomplete** | `feature/US-017`, `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | No verified sample image or revision-specific deployment URL was available. No staging/production smoke test is claimed. |
 | US-025 — CORS and network errors | **Backend CORS implemented; frontend portion unavailable** | `feature/US-025`, `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Repository contains no frontend, and no deployed Cloudflare Pages origin was verified. JavaScript network/cold-start/business-error UX is not implemented. |
@@ -23,9 +23,10 @@ merged into another branch or into `main`. Features remain unavailable from
 
 ### US-038
 
-- Implemented in commit `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` on
-  `feature/US-038`; the branch was pushed after the previous remote ref was
-  found absent.
+- Implemented in `feature/US-038` (implementation commit
+  `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4`, formatting follow-up
+  `ca2428409f6a6ae3b3dd21678ad6c69685d82509`); the branch was pushed after the
+  previous remote ref was found absent.
 - Replaced the single-stage Dockerfile with a two-stage build using a verified
   Python 3.12.7 slim-bookworm manifest digest and explicit `linux/amd64`,
   BuildKit pip cache, a pinned runtime dependency manifest, and non-root runtime
@@ -35,7 +36,7 @@ merged into another branch or into `main`. Features remain unavailable from
   suite **70 passed**; updated workflow YAML parsed; Docker Hub manifest
   reported the configured digest and an amd64 image entry.
 - Limitation: Docker daemon is unavailable locally. Branch-wide Ruff currently
-  has 11 findings and Black reports 13 unformatted files; because `docker-build`
+  has 11 findings and Black reports 12 unformatted files; because `docker-build`
   depends on the quality job, the hosted workflow will not reach build until
   those pre-existing checks are resolved. No actual image size/build duration
   has yet been recorded.
@@ -170,7 +171,7 @@ merged into another branch or into `main`. Features remain unavailable from
 
 | Branch | Commit | Push |
 |---|---|---|
-| `feature/US-038` | `8e0ed60e3e29863e5f6fe6d778640d1d04ba4df4` | Pushed; branch contains pre-existing mixed changes |
+| `feature/US-038` | `ca2428409f6a6ae3b3dd21678ad6c69685d82509` | Pushed; branch contains pre-existing mixed changes |
 | `feature/US-026` | `6ad9e9dfd38d915dc4fc99d36dd5540ffa2e765d` | Pushed |
 | `feature/US-017` | `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | Pushed |
 | `feature/US-025` | `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Pushed |
