@@ -289,7 +289,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
-| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | ĐANG CHỜ BOOTSTRAP/NGHIỆM THU | AzureRM provider, Blob backend, staging/production tfvars và bootstrap có role assignment Blob Data cho identity hiện tại; 4 test US-018, full suite 77/77, `terraform fmt` và `validate` PASS; chưa chạy remote init/plan hoặc apply |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | BLOCKED — THIẾU QUYỀN AZURE | Cấu hình AzureRM/Blob backend và bootstrap Storage Account đã validate; bootstrap cấp Blob Data Contributor cho identity chạy Terraform. Azure CLI 2.92.0 xác nhận staging subscription Enabled, RG `rg-vsl-staging` ở `eastasia`, nhưng `Microsoft.Storage` là `NotRegistered`; identity đang đăng nhập chỉ có Contributor tại RG, không có quyền đăng ký provider ở subscription hoặc gán role. Vì vậy không kiểm tra được availability tên `vslstate2026`, Terraform plan bị chặn, chưa chạy apply/remote init. Test US-018 4/4, full suite 77/77; fmt và validate đều PASS. Cần admin đăng ký Microsoft.Storage và cấp identity quyền Owner/User Access Administrator ở phạm vi cần thiết, hoặc cung cấp identity đã được cấp quyền qua Azure CLI/ARM env an toàn; không gửi secret trong chat. |
 
 ---
 
@@ -297,6 +297,6 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-018 đang chờ tên Storage Account duy nhất, credential Service Principal đã được rotate sau khi lộ trong chat, và identity có `Owner`/`User Access Administrator` để gán role.
-3. Chỉ sau khi chủ dự án cấp quyền và cho phép rõ ràng mới chạy `terraform apply` trong `infra/bootstrap-azure`; sau đó chờ RBAC propagation và chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`.
+2. US-018 bị chặn do identity Azure CLI hiện tại chỉ có Contributor tại Resource Group; `Microsoft.Storage` chưa đăng ký và thiếu quyền gán role. Cần admin đăng ký provider, cấp role phù hợp, rồi mới kiểm tra availability tên Storage Account.
+3. Sau khi xác minh identity có quyền và `terraform plan` đúng phạm vi, chỉ chạy `terraform apply` trong `infra/bootstrap-azure` theo phê duyệt đã có; chờ RBAC propagation rồi chạy init/plan với Azure Blob backend để nghiệm thu `AC-018-01`. Không gửi Client Secret trong chat hoặc repository.
 4. Không push hoặc tạo PR nếu chưa có quyết định của chủ dự án.
