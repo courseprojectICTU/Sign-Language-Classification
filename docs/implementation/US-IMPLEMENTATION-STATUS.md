@@ -13,7 +13,7 @@
 | US-017 — Deployment smoke test | **Script and tests implemented; live check incomplete** | `feature/US-017`, `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | No verified sample image or revision-specific deployment URL was available. No staging/production smoke test is claimed. |
 | US-025 — CORS and network errors | **Backend CORS implemented; frontend portion unavailable** | `feature/US-025`, `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Repository contains no frontend, and no deployed Cloudflare Pages origin was verified. JavaScript network/cold-start/business-error UX is not implemented. |
 | US-031 — ACA traffic rollback | **Guarded manual tool implemented; rehearsal/integration blocked** | `feature/US-031`, `fed99c758d8f76577a941c818f84b45ab4869d74` | Azure CLI was unavailable; production revision count/mode and permissions were not verified. No traffic was changed. Automatic rollback requires US-029, which is outside this scope and absent. |
-| US-035 — README and runbook | **Documentation updated on this branch** | `feature/US-035`, based on `780b7aa` | Documentation describes the ACA architecture and explicitly distinguishes branch-only features from deployed behavior. No docs test suite exists. |
+| US-035 — README and runbook | **Documentation updated and pushed** | `feature/US-035`, implementation commit `eff563818512fec5ea6712f0b1b158ecfd7e6353` | Documentation describes the ACA architecture and explicitly distinguishes branch-only features from deployed behavior. No docs test suite exists. |
 
 These are separate branches from `develop`; none of the feature branches was
 merged into another branch or into `main`. Features remain unavailable from
@@ -163,7 +163,7 @@ merged into another branch or into `main`. Features remain unavailable from
 | `feature/US-017` | `bf929b842e132e8c3bca3344c6ade65e2df5c9dc` | Pushed |
 | `feature/US-025` | `562736c0f4e2ab43dd29dd9f417b6d88e1116ea2` | Pushed |
 | `feature/US-031` | `fed99c758d8f76577a941c818f84b45ab4869d74` | Pushed |
-| `feature/US-035` | Documentation changes are in progress; commit recorded in final Git handoff | Not pushed yet |
+| `feature/US-035` | `eff563818512fec5ea6712f0b1b158ecfd7e6353` (documentation implementation) | Pushed; handoff ledger finalized in this branch |
 
 No changes were pushed to `main`. The PR links for pushed feature branches are
 available by opening:
@@ -172,3 +172,4 @@ available by opening:
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-017`
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-025`
 - `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-031`
+- `https://github.com/courseprojectICTU/Sign-Language-Classification/pull/new/feature/US-035`
