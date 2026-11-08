@@ -22,7 +22,7 @@ Dịch vụ Staging hiện đã hoạt động tại:
 | Nền tảng Container Serverless | Google Cloud Run | Azure Container Apps (ACA) / Azure App Service | Hoạt động liên tục, cấu hình 1.0 vCPU, 2.0 GiB RAM, cổng 8080 |
 | Kho lưu trữ Image | Google Artifact Registry | Azure Container Registry (ACR) | Tên kho hiện tại: `vslacr3795.azurecr.io` |
 | Công cụ dòng lệnh quản trị | `gcloud` CLI | Azure CLI (`az`) | Đã cài đặt phiên bản 2.92.0 |
-| Cơ chế xác thực CI/CD | Workload Identity Federation (WIF) / Service Account Key | Azure Service Principal (`az ad sp create-for-rbac`) | Tích hợp vào GitHub Secrets |
+| Cơ chế xác thực CI/CD | Workload Identity Federation (WIF) / Service Account Key | Azure Service Principal + GitHub OIDC Federated Identity Credential | Keyless; lưu các identifier không nhạy cảm trong GitHub Actions Variables |
 | Thu thập Log và Giám sát | Google Cloud Logging | Azure Monitor / Log Analytics Workspace | Workspace hiện tại: `workspace-rgvslstaging8lF4` |
 | Quản lý ngân sách | Google Cloud Billing Budget | Azure Cost Management / Microsoft Azure Sponsorships | Kiểm tra số dư qua cổng quản lý tài trợ |
 
@@ -106,4 +106,3 @@ Danh mục file đã lưu trữ:
 1. Không còn tồn tại các thông tin yêu cầu tài khoản Google Cloud trong các tài liệu chỉ dẫn vận hành.
 2. Toàn bộ tài liệu tuân thủ chuẩn văn phong kỹ thuật gãy gọn, mạch lạc, tuyệt đối không chứa icon/emoji.
 3. Bộ kiểm thử tự động của dự án (64/64 tests) tiếp tục duy trì trạng thái PASSED sau mỗi lần cập nhật tài liệu.
-

@@ -92,13 +92,9 @@ def test_notebook_and_service_match_23_samples_and_hashes(model, reference):
         notebook_confidence = float(notebook_probabilities[notebook_index])
 
         if notebook_letter != expected_letter:
-            notebook_mismatches.append(
-                (expected["sample"], expected_letter, notebook_letter)
-            )
+            notebook_mismatches.append((expected["sample"], expected_letter, notebook_letter))
         if notebook_letter != expected["letter"]:
-            notebook_mismatches.append(
-                (expected["sample"], expected["letter"], notebook_letter)
-            )
+            notebook_mismatches.append((expected["sample"], expected["letter"], notebook_letter))
         if abs(notebook_confidence - expected["confidence"]) > CONFIDENCE_TOLERANCE:
             confidence_mismatches.append(
                 (
@@ -126,14 +122,11 @@ def test_notebook_and_service_match_23_samples_and_hashes(model, reference):
             )
 
     assert not notebook_mismatches, (
-        f"Direct notebook replay did not predict all 23 labeled samples: "
-        f"{notebook_mismatches}"
+        f"Direct notebook replay did not predict all 23 labeled samples: " f"{notebook_mismatches}"
     )
     assert not service_mismatches, (
-        f"Service predictions differ from direct notebook inference: "
-        f"{service_mismatches}"
+        f"Service predictions differ from direct notebook inference: " f"{service_mismatches}"
     )
     assert not confidence_mismatches, (
-        f"Confidence differences exceeded {CONFIDENCE_TOLERANCE}: "
-        f"{confidence_mismatches}"
+        f"Confidence differences exceeded {CONFIDENCE_TOLERANCE}: " f"{confidence_mismatches}"
     )

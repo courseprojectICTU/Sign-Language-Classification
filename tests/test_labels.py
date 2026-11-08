@@ -6,19 +6,47 @@ File nay duoc viet TRUOC khi tao src/vsl/labels.py (TDD) — luc dau phai DO (FA
 
 import json
 import pathlib
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "src" / "vsl" / "labels.py"
 
 EXPECTED_ALPHABET = (
-    "a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n",
-    "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"
+    "a",
+    "b",
+    "c",
+    "d",
+    "đ",
+    "e",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
 )
 
 SKIP_DIRS = {
-    ".git", ".venv", "__pycache__", ".pytest_cache",
-    ".jupyter-config", ".jupyter-data", ".jupyter-runtime", ".ipynb_checkpoints",
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".jupyter-config",
+    ".jupyter-data",
+    ".jupyter-runtime",
+    ".ipynb_checkpoints",
 }
 
 
@@ -36,29 +64,27 @@ def test_ac_002_01_labels_module_ton_tai_va_dung_23_ky_tu():
     """AC-002-01: Module src/vsl/labels.py ton tai, dinh nghia dung 23 ky tu."""
     assert MODULE_PATH.exists(), f"Module chua ton tai: {MODULE_PATH}"
 
-    from src.vsl.labels import VIETNAMESE_ALPHABET, NUM_CLASSES
+    from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 
     # Kiem tra kieu tuple (bat bien)
-    assert isinstance(VIETNAMESE_ALPHABET, tuple), (
-        f"VIETNAMESE_ALPHABET phai la tuple bat bien, nhan duoc: {type(VIETNAMESE_ALPHABET)}"
-    )
+    assert isinstance(
+        VIETNAMESE_ALPHABET, tuple
+    ), f"VIETNAMESE_ALPHABET phai la tuple bat bien, nhan duoc: {type(VIETNAMESE_ALPHABET)}"
 
     # Kiem tra so luong
-    assert len(VIETNAMESE_ALPHABET) == 23, (
-        f"Do dai phai la 23, thuc te: {len(VIETNAMESE_ALPHABET)}"
-    )
+    assert len(VIETNAMESE_ALPHABET) == 23, f"Do dai phai la 23, thuc te: {len(VIETNAMESE_ALPHABET)}"
 
     # Kiem tra ky tu d va cac ky tu ngoai le
     assert "đ" in VIETNAMESE_ALPHABET, "VIETNAMESE_ALPHABET phai chua ky tu 'đ'"
     for invalid_char in ("f", "j", "w", "z"):
-        assert invalid_char not in VIETNAMESE_ALPHABET, (
-            f"VIETNAMESE_ALPHABET khong duoc chua ky tu '{invalid_char}'"
-        )
+        assert (
+            invalid_char not in VIETNAMESE_ALPHABET
+        ), f"VIETNAMESE_ALPHABET khong duoc chua ky tu '{invalid_char}'"
 
     # Kiem tra thu tu chinh xac tung ky tu
-    assert VIETNAMESE_ALPHABET == EXPECTED_ALPHABET, (
-        f"Thu tu nhan khong khop voi BR-003.\nNhan: {VIETNAMESE_ALPHABET}\nKy vong: {EXPECTED_ALPHABET}"
-    )
+    assert (
+        VIETNAMESE_ALPHABET == EXPECTED_ALPHABET
+    ), f"Thu tu nhan khong khop voi BR-003.\nNhan: {VIETNAMESE_ALPHABET}\nKy vong: {EXPECTED_ALPHABET}"
 
     # Kiem tra NUM_CLASSES suy ra tu do dai
     assert NUM_CLASSES == 23, f"NUM_CLASSES phai bang 23, thuc te: {NUM_CLASSES}"
@@ -72,7 +98,8 @@ def test_ac_002_01_re_export_qua_vsl_package():
     assert hasattr(vsl, "VIETNAMESE_ALPHABET"), "src.vsl phai re-export VIETNAMESE_ALPHABET"
     assert hasattr(vsl, "NUM_CLASSES"), "src.vsl phai re-export NUM_CLASSES"
 
-    from src.vsl import VIETNAMESE_ALPHABET, NUM_CLASSES
+    from src.vsl import NUM_CLASSES, VIETNAMESE_ALPHABET
+
     assert VIETNAMESE_ALPHABET == EXPECTED_ALPHABET
     assert NUM_CLASSES == 23
 

@@ -25,6 +25,10 @@ Bắt buộc khi US tạo mới hoặc thay đổi **hợp đồng mà bên ngo�
 Nếu US **không** rơi vào nhóm bắt buộc, vẫn phải ghi rõ trong báo cáo:
 `API docs: N/A — lý do: ...` và được chủ dự án xác nhận.
 
+US không tạo public API nhưng cần ghi nhận hợp đồng test/lifecycle vẫn có thể có
+`US-0XX.md` theo đủ 17 mục; nêu rõ `API docs: N/A` cho public API và lý do
+trong tài liệu. Ví dụ: [`US-012.md`](US-012.md) và [`US-016.md`](US-016.md).
+
 ---
 
 ## 2. Quy ước đặt tên
@@ -108,3 +112,21 @@ Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test
 2. **Một bản duy nhất.** Sửa API phải sửa chính file docs, không viết docs thứ hai.
 3. **Không bịa.** Thiếu bằng chứng → ghi `UNKNOWN` hoặc `CẦN XÁC NHẬN`.
 4. **Không giấu thay đổi.** Nếu thiết kế API buộc đổi hành vi cũ, ghi rõ ở mục 5 và 15.
+
+
+---
+
+## 8. Danh mục tài liệu API đã ban hành
+
+| File | Mã US | Tiêu đề | Trạng thái |
+|---|---|---|---|
+| [`US-001.md`](US-001.md) | US-001 | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `ANALYSIS_READY` (PASS) |
+| [`US-002.md`](US-002.md) | US-002 | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `ANALYSIS_READY` (PASS) |
+| [`US-003.md`](US-003.md) | US-003 | Loại bỏ đường dẫn tuyệt đối hard-code | `ANALYSIS_READY` (PASS) |
+| [`US-004.md`](US-004.md) | US-004 | Chuẩn hoá `requirements.txt` cho Linux container | `ANALYSIS_READY` (PASS) |
+| [`US-005.md`](US-005.md) | US-005 | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `ANALYSIS_READY` (PASS) |
+| [`US-006.md`](US-006.md) | US-006 | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python | `ANALYSIS_READY` (PASS) |
+| [`US-015.md`](US-015.md) | US-015 | Hợp đồng dữ liệu 93 toạ độ landmark | `ANALYSIS_READY` (PASS) |
+| [`US-017.md`](US-017.md) | US-017 | Smoke test tự động sau triển khai & endpoint `/version` | `ANALYSIS_READY` (PASS) |
+| [`US-025.md`](US-025.md) | US-025 | Cấu hình CORS và xử lý 3 trạng thái lỗi mạng | `ANALYSIS_READY` (PASS) |
+| [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |

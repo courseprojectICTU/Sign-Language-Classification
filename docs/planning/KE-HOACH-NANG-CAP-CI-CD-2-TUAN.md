@@ -115,7 +115,7 @@ Theo chính sách của gói Azure for Students, một số khu vực địa lý
 
 1. Tạo quy trình CI tự động: Tự động chạy ruff, kiểm tra định dạng và thực thi toàn bộ test suite trên mỗi Pull Request.
 2. Tạo quy trình CD tự động: Khi Pull Request được hợp nhất vào develop hoặc main, tự động đóng gói image Docker, đẩy lên Azure Container Registry và cập nhật Azure Container Apps.
-3. Quản lý bí mật xác thực: Sử dụng Service Principal hoặc GitHub OIDC tích hợp vào GitHub Secrets, không hard-code thông tin nhạy cảm.
+3. Xác thực keyless: Dùng Azure Service Principal với GitHub OIDC Federated Identity Credential; không lưu client secret hoặc ACR credentials trong GitHub Secrets.
 4. Cơ chế chuyển đổi phiên bản và rollback: Khai thác tính năng Revision của Azure Container Apps để kiểm tra phiên bản mới trước khi chuyển toàn bộ lưu lượng truy cập.
 5. Tự động triển khai giao diện web: Thiết lập workflow triển khai giao diện tĩnh lên Cloudflare Pages.
 
@@ -284,11 +284,19 @@ Khi code được hợp nhất vào nhánh chính:
 5. Chạy smoke test kiểm tra endpoint /health của Revision mới.
 6. Chuyển lưu lượng truy cập sang Revision mới khi kiểm tra thành công.
 
-### 9.3. Quản lý bí mật xác thực trên GitHub Actions
+### 9.3. Xác thực GitHub Actions bằng Azure OIDC
 
-Để GitHub Actions có quyền đẩy image và cập nhật Container Apps, cấu hình các thông tin bí mật trong GitHub Secrets:
-- AZURE_CREDENTIALS: Thông tin xác thực của Service Principal (gồm clientId, clientSecret, subscriptionId, tenantId).
-- ACR_USERNAME và ACR_PASSWORD: Thông tin truy cập Azure Container Registry.
+GitHub Actions xác thực Azure bằng OpenID Connect và Federated Identity
+Credential, không dùng `clientSecret`, service-account key JSON hoặc ACR
+username/password. Job cần `permissions: id-token: write`; Federated Identity
+Credential giới hạn issuer `https://token.actions.githubusercontent.com`,
+audience `api://AzureADTokenExchange` và subject theo repository/ref được duyệt.
+
+Các identifier không nhạy cảm `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` và
+`AZURE_SUBSCRIPTION_ID` được lấy từ Terraform outputs và cấu hình trong GitHub
+Actions Variables. Cấp `AcrPush` chỉ trên ACR và quyền cập nhật chỉ trên
+Container App đích. Sau khi xác minh OIDC, xóa các GitHub Secrets cũ nếu còn và
+không còn được workflow khác sử dụng.
 
 ---
 
