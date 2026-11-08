@@ -1,4 +1,5 @@
 """NumPy-only unit tests for the create_heatmap numerical contract (US-014)."""
+
 import numpy as np
 import pytest
 
