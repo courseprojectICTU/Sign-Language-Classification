@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import logging
 import os
 import subprocess
+from time import perf_counter
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from urllib.parse import urlsplit
 import cv2
@@ -301,15 +302,25 @@ def preprocess_heatmap(heatmap_batch: np.ndarray) -> np.ndarray:
 async def lifespan(app: FastAPI):
     """Quản lý vòng đời ứng dụng — nạp mô hình một lần duy nhất lúc khởi động (BR-011)."""
     model_path = get_model_path()
+    load_started = perf_counter()
     try:
         from keras.models import load_model
 
         logger.info("Đang nạp mô hình từ: %s", model_path)
         app.state.model = load_model(str(model_path))
+        load_duration_ms = (perf_counter() - load_started) * 1000
         app.state.model_version = _resolve_model_version()
-        logger.info("Nạp mô hình thành công vào app.state.")
+        logger.info(
+            "Nạp mô hình thành công vào app.state. duration_ms=%.3f",
+            load_duration_ms,
+        )
     except Exception as exc:
-        logger.error("Lỗi khi nạp mô hình lúc khởi động: %s", exc)
+        load_duration_ms = (perf_counter() - load_started) * 1000
+        logger.error(
+            "Lỗi khi nạp mô hình lúc khởi động. duration_ms=%.3f: %s",
+            load_duration_ms,
+            exc,
+        )
         app.state.model = None
         app.state.model_version = None
 

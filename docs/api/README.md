@@ -25,6 +25,10 @@ Bắt buộc khi US tạo mới hoặc thay đổi **hợp đồng mà bên ngo�
 Nếu US **không** rơi vào nhóm bắt buộc, vẫn phải ghi rõ trong báo cáo:
 `API docs: N/A — lý do: ...` và được chủ dự án xác nhận.
 
+US không tạo public API nhưng cần ghi nhận hợp đồng test/lifecycle vẫn có thể có
+`US-0XX.md` theo đủ 17 mục; nêu rõ `API docs: N/A` cho public API và lý do
+trong tài liệu. Ví dụ: [`US-012.md`](US-012.md) và [`US-016.md`](US-016.md).
+
 ---
 
 ## 2. Quy ước đặt tên

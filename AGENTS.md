@@ -1,7 +1,9 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-07** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+
+**Cập nhật lần cuối: 2026-11-08** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -36,12 +38,22 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 
 ## 2. Git — trạng thái thực tế
 
+
+| Mục | Giá trị (đối chiếu 2026-11-08) |
+|---|---|
+| Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
+| `origin/HEAD` | → `origin/develop` |
+| Nhánh local | `develop`, `feature/US-007`, `feature/US-012` (đang checkout), `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019`, `feature/US-022`, `feature/US-038`, `backup/develop-before-rollback` |
+| `develop` | `780b7aa` — đồng bộ với `origin/develop` |
+| `feature/US-012` | `f0f293c` — đã nghiệm thu PASS trong phiên 2026-11-08; chưa push/PR |
+
 | Mục | Giá trị (đối chiếu 2026-11-07) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
 | Nhánh local | `backup/develop-before-rollback`, `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019` (đang checkout), `feature/US-038` |
 | `develop` | `780b7aa` (đồng bộ `origin/develop`) |
+
 | `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
 | `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
@@ -50,7 +62,10 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; code đã commit; ACR staging đã import vào remote state, apply bị chặn bởi quyền Entra và provider registration |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
+
+| Trạng thái working tree | Đang ở `feature/US-012`; có các thư mục untracked `infra/` và `web/` không thuộc US-012, đã giữ nguyên |
 | Trạng thái working tree | US-019 code đã commit; ACR staging đã import vào Terraform remote state. Chưa tạo resource US-019; Terraform cache và bootstrap local state được giữ local/ignored, không được ghi đè hoặc commit |
+
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
 
@@ -123,10 +138,12 @@ docs/api/US-006.md                                hợp đồng API của US-006
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
 docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
 docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
+docs/api/US-012.md                                hợp đồng test/lifecycle model (N/A public API)
 docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
 docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
 docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
+docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
 docs/api/US-018.md                                hợp đồng Terraform CLI và Azure Blob backend (ANALYSIS_READY)
 docs/api/US-019.md                                hợp đồng ACR, RBAC và GitHub OIDC (local implementation PASS)
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
@@ -154,6 +171,7 @@ tests/_generate_service_reference.py              lệnh tương thích cũ, chu
 tests/_export_us016_from_notebook.py               xuất trực tiếp dự đoán notebook và SHA model/CSV (US-016)
 tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
 tests/test_cold_start_benchmark.py                 unit test harness benchmark US-013
+tests/test_us012_model_lifecycle.py                 kiểm thử nạp model một lần, readiness và log duration (US-012)
 tests/test_version.py                             test US-008 (AC-008-01: 3 test)
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
@@ -291,6 +309,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
 | **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
+| **US-012** | Nạp model một lần ngoài request handler | `feature/US-012` | PASS (2026-11-08) | BR-011; log duration khi load thành công/thất bại; AC-012-01, TSK-019/020; 75/75 test toàn repo; báo cáo tại `docs/reports/US-012-BAO-CAO-THUC-HIEN.md`; chưa push/PR |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng; hợp đồng API và báo cáo benchmark đã hợp nhất tại docs/api/US-013.md |
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
