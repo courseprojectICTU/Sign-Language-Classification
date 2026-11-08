@@ -59,15 +59,22 @@ def test_ac_006_01_predict_anh_hop_le_tra_200_va_dung_schema():
 
     # Giả lập pipeline trích xuất landmark trả về 93 toạ độ hợp lệ
     dummy_landmarks = [0.5] * 93
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)), \
-         patch("src.vsl.service.preprocess_heatmap", side_effect=lambda batch: batch):
+    with (
+        patch(
+            "src.vsl.service.extract_landmarks_from_image",
+            return_value=(dummy_landmarks, True, True),
+        ),
+        patch("src.vsl.service.preprocess_heatmap", side_effect=lambda batch: batch),
+    ):
         img_bytes = _create_dummy_image_bytes(200, 200)
         response = client.post(
             "/predict",
             files={"file": ("test.jpg", io.BytesIO(img_bytes), "image/jpeg")},
         )
 
-    assert response.status_code == 200, f"Kỳ vọng 200 OK, thực tế: {response.status_code} - {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Kỳ vọng 200 OK, thực tế: {response.status_code} - {response.text}"
     data = response.json()
 
     assert data.get("status") == "ok"
@@ -102,8 +109,13 @@ def test_ac_006_01_predict_top_k_parameter_tuy_chinh():
     client = TestClient(app, raise_server_exceptions=False)
     dummy_landmarks = [0.5] * 93
 
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(dummy_landmarks, True, True)), \
-         patch("src.vsl.service.preprocess_heatmap", side_effect=lambda batch: batch):
+    with (
+        patch(
+            "src.vsl.service.extract_landmarks_from_image",
+            return_value=(dummy_landmarks, True, True),
+        ),
+        patch("src.vsl.service.preprocess_heatmap", side_effect=lambda batch: batch),
+    ):
         img_bytes = _create_dummy_image_bytes(200, 200)
         response = client.post(
             "/predict?top_k=5",
@@ -156,7 +168,9 @@ def test_predict_tra_trang_thai_cu_the_khi_thieu_landmark(
             files={"file": ("blank.jpg", io.BytesIO(image), "image/jpeg")},
         )
 
-    assert response.status_code == 200, f"Kỳ vọng 200, nhận: {response.status_code} - {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Kỳ vọng 200, nhận: {response.status_code} - {response.text}"
     data = response.json()
     assert data.get("status") == expected_status
     assert data.get("detected") is False, f"detected phải là False: {data}"
@@ -179,9 +193,7 @@ def test_predict_tra_trang_thai_cu_the_khi_thieu_landmark(
     assert f"reason={expected_reason}" in log_message
     timestamp = re.search(r"timestamp=(\S+)", log_message)
     assert timestamp is not None, f"Log thiếu timestamp: {log_message}"
-    parsed_timestamp = datetime.fromisoformat(
-        timestamp.group(1).replace("Z", "+00:00")
-    )
+    parsed_timestamp = datetime.fromisoformat(timestamp.group(1).replace("Z", "+00:00"))
     assert parsed_timestamp.utcoffset() is not None, "Timestamp phải có timezone UTC"
     assert f"has_hand={has_hand}" in log_message
     assert f"has_face={has_face}" in log_message
@@ -222,7 +234,9 @@ def test_predict_model_chua_san_sang_tra_503():
         files={"file": ("test.jpg", io.BytesIO(img_bytes), "image/jpeg")},
     )
 
-    assert response.status_code == 503, f"Kỳ vọng 503 khi model chưa nạp, nhận: {response.status_code}"
+    assert (
+        response.status_code == 503
+    ), f"Kỳ vọng 503 khi model chưa nạp, nhận: {response.status_code}"
     assert "detail" in response.json()
 
 
@@ -270,17 +284,23 @@ def test_flip_parameter_tuy_chinh_lat_guong():
     face_mesh_processor = MagicMock()
     face_mesh_processor.process.return_value = MagicMock(multi_face_landmarks=None)
 
-    with patch(
-        "src.vsl.service._get_mediapipe_processors",
-        return_value=(hands_processor, face_mesh_processor),
-    ), patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip:
+    with (
+        patch(
+            "src.vsl.service._get_mediapipe_processors",
+            return_value=(hands_processor, face_mesh_processor),
+        ),
+        patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip,
+    ):
         extract_landmarks_from_image(img_bytes, flip=False)
         assert mock_flip.call_count == 0, "flip=False không được gọi cv2.flip"
 
-    with patch(
-        "src.vsl.service._get_mediapipe_processors",
-        return_value=(hands_processor, face_mesh_processor),
-    ), patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip:
+    with (
+        patch(
+            "src.vsl.service._get_mediapipe_processors",
+            return_value=(hands_processor, face_mesh_processor),
+        ),
+        patch("src.vsl.service.cv2.flip", wraps=cv2.flip) as mock_flip,
+    ):
         extract_landmarks_from_image(img_bytes, flip=True)
         assert mock_flip.call_count == 1, "flip=True phải gọi cv2.flip 1 lần"
 
@@ -294,37 +314,40 @@ def test_predict_endpoint_flip_parameter_truyen_dung():
     client = TestClient(app, raise_server_exceptions=False)
     dummy_img = _create_dummy_image_bytes(100, 100)
 
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
-        client.post("/predict?flip=true", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
+    with patch(
+        "src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)
+    ) as mock_extract:
+        client.post(
+            "/predict?flip=true", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")}
+        )
         assert mock_extract.call_args.kwargs.get("flip") is True
 
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
-        client.post("/predict?flip=false", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
+    with patch(
+        "src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)
+    ) as mock_extract:
+        client.post(
+            "/predict?flip=false", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")}
+        )
         assert mock_extract.call_args.kwargs.get("flip") is False
 
-    with patch("src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)) as mock_extract:
+    with patch(
+        "src.vsl.service.extract_landmarks_from_image", return_value=(None, False, False)
+    ) as mock_extract:
         client.post("/predict", files={"file": ("test.jpg", io.BytesIO(dummy_img), "image/jpeg")})
         assert mock_extract.call_args.kwargs.get("flip") is False
-
-
-
 
 
 @pytest.mark.parametrize(
     ("has_hand", "has_face"),
     [(False, True), (True, False), (False, False)],
 )
-def test_extract_landmarks_early_return_khi_thieu_detection(
-    has_hand: bool, has_face: bool
-) -> None:
+def test_extract_landmarks_early_return_khi_thieu_detection(has_hand: bool, has_face: bool) -> None:
     """Chỉ dựng vector landmark khi cả hai detector đều tìm thấy dữ liệu."""
     from src.vsl.service import extract_landmarks_from_image
 
     image = _create_dummy_image_bytes(100, 100)
     hands_processor = MagicMock()
-    hands_processor.process.return_value.multi_hand_landmarks = (
-        [MagicMock()] if has_hand else None
-    )
+    hands_processor.process.return_value.multi_hand_landmarks = [MagicMock()] if has_hand else None
     face_mesh_processor = MagicMock()
     face_mesh_processor.process.return_value.multi_face_landmarks = (
         [MagicMock()] if has_face else None

@@ -34,15 +34,13 @@ def _utc_timestamp(value: Optional[str] = None) -> str:
             parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=timezone.utc)
-            return parsed.astimezone(timezone.utc).isoformat(timespec="seconds").replace(
-                "+00:00", "Z"
+            return (
+                parsed.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
             )
         except (OverflowError, ValueError):
             logger.warning("Invalid BUILD_TIME value; using service startup time")
 
-    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
-        "+00:00", "Z"
-    )
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _resolve_git_sha() -> str:
@@ -75,6 +73,7 @@ def _resolve_model_version(configured_version: Optional[str] = None) -> str:
         or DEFAULT_MODEL_VERSION
     )
 
+
 # ---------------------------------------------------------------- MediaPipe Singletons
 _mp_hands = None
 _mp_face_mesh = None
@@ -103,12 +102,14 @@ def _get_mediapipe_processors() -> Tuple[Any, Any]:
 # ---------------------------------------------------------------- Pydantic Schemas
 class TopKPrediction(BaseModel):
     """Mỗi mục dự đoán trong danh sách gợi ý xác suất cao nhất."""
+
     letter: str
     confidence: float
 
 
 class PredictResponse(BaseModel):
     """Hợp đồng JSON phản hồi từ endpoint POST /predict (US-006)."""
+
     status: Literal["ok", "no_hand", "no_face"]
     detected: bool
     letter: Optional[str] = None
@@ -187,7 +188,6 @@ def extract_landmarks_from_image(
     return None, has_hand, has_face
 
 
-
 def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:
     """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
 
@@ -226,8 +226,7 @@ def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -
     # 5. Trích xuất top_k theo xác suất giảm dần
     top_indices = np.argsort(probs)[::-1][:top_k]
     top_k_list = [
-        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])}
-        for i in top_indices
+        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])} for i in top_indices
     ]
 
     return {
@@ -278,9 +277,7 @@ def create_app() -> FastAPI:
     allowed_origins_env = os.getenv("VSL_ALLOWED_ORIGINS", "")
     if allowed_origins_env.strip():
         allowed_origins = [
-            origin.strip()
-            for origin in allowed_origins_env.split(",")
-            if origin.strip()
+            origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
         ]
     else:
         allowed_origins = [
@@ -317,9 +314,7 @@ def create_app() -> FastAPI:
         - 200 OK: Mô hình đã nạp xong và sẵn sàng nhận dự đoán.
         - 503 Service Unavailable: Mô hình chưa nạp hoặc nạp thất bại.
         """
-        is_model_loaded = (
-            hasattr(app.state, "model") and app.state.model is not None
-        )
+        is_model_loaded = hasattr(app.state, "model") and app.state.model is not None
 
         if is_model_loaded:
             return {
@@ -360,7 +355,10 @@ def create_app() -> FastAPI:
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
         top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
-        flip: bool = Query(False, description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)"),
+        flip: bool = Query(
+            False,
+            description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)",
+        ),
     ) -> PredictResponse:
         """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
         # BR-011: Kiểm tra trạng thái nạp của model
@@ -387,7 +385,9 @@ def create_app() -> FastAPI:
                 result_status = "no_face"
                 message = "Không phát hiện khuôn mặt. Vui lòng đưa khuôn mặt vào khung hình."
             else:
-                logger.error("MediaPipe returned incomplete landmark vector despite both detections")
+                logger.error(
+                    "MediaPipe returned incomplete landmark vector despite both detections"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Không thể dựng đủ landmark cho ảnh này.",
@@ -402,8 +402,7 @@ def create_app() -> FastAPI:
 
             timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
             logger.warning(
-                "prediction_skipped timestamp=%s status=%s reason=%s "
-                "has_hand=%s has_face=%s",
+                "prediction_skipped timestamp=%s status=%s reason=%s " "has_hand=%s has_face=%s",
                 timestamp,
                 result_status,
                 reason,
