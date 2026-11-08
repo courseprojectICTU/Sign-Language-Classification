@@ -37,9 +37,7 @@ def create_heatmap(
     if landmark_array.ndim != 1:
         raise ValueError("Landmarks must be a one-dimensional numeric vector.")
     if landmark_array.size % 3 != 0:
-        raise ValueError(
-            f"Landmark data length {landmark_array.size} must be a multiple of 3."
-        )
+        raise ValueError(f"Landmark data length {landmark_array.size} must be a multiple of 3.")
     if not np.issubdtype(landmark_array.dtype, np.number) or np.issubdtype(
         landmark_array.dtype, np.complexfloating
     ):

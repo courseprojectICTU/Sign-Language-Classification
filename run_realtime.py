@@ -1,24 +1,26 @@
 import os
 import sys
 
+import cv2
+import mediapipe as mp
+import numpy as np
+from keras.applications.resnet50 import preprocess_input
+from keras.models import load_model
+from PIL import Image, ImageDraw, ImageFont
+
 # Tu dong nap thu vien tu .venv neu nguoi dung chay bang Python ngoai
 _project_root = os.path.dirname(os.path.abspath(__file__))
-_venv_site = os.path.join(_project_root, '.venv', 'Lib', 'site-packages')
+_venv_site = os.path.join(_project_root, ".venv", "Lib", "site-packages")
+
 if os.path.exists(_venv_site) and _venv_site not in sys.path:
     sys.path.insert(0, _venv_site)
+
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-import cv2
-import numpy as np
-import mediapipe as mp
-from keras.models import load_model
-from keras.applications.resnet50 import preprocess_input
-from PIL import Image, ImageDraw, ImageFont
-
-from src.vsl.heatmap import create_heatmap  # BR-002: ban duy nhat
-from src.vsl.labels import VIETNAMESE_ALPHABET  # BR-003: ban duy nhat
-from src.vsl.config import get_model_path  # BR-004: doc tu env / fallback tuong doi
+from src.vsl.config import get_model_path  # noqa: E402
+from src.vsl.heatmap import create_heatmap  # noqa: E402
+from src.vsl.labels import VIETNAMESE_ALPHABET  # noqa: E402
 
 # Khởi tạo MediaPipe
 mp_hands = mp.solutions.hands.Hands(max_num_hands=1, min_detection_confidence=0.7)

@@ -14,8 +14,7 @@ from scripts.benchmark_cold_start import (
 
 def test_scale_to_zero_receipt_requires_zero_instances() -> None:
     receipt = validate_preflight_receipt(
-        '{"mode":"scale_to_zero","active_instances":0,'
-        '"min_instances":0,"revision":"rev-a"}'
+        '{"mode":"scale_to_zero","active_instances":0,' '"min_instances":0,"revision":"rev-a"}'
     )
 
     assert receipt["mode"] == "scale_to_zero"
@@ -78,7 +77,12 @@ def test_measure_request_records_ttfb_and_total_latency() -> None:
 
 
 def test_benchmark_runs_five_preflights_and_measurements() -> None:
-    receipt = {"mode": "scale_to_zero", "active_instances": 0, "min_instances": 0, "revision": "rev-a"}
+    receipt = {
+        "mode": "scale_to_zero",
+        "active_instances": 0,
+        "min_instances": 0,
+        "revision": "rev-a",
+    }
     measurement = {
         "status_code": 200,
         "ttfb_ms": 100.0,

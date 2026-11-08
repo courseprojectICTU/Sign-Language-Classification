@@ -6,8 +6,8 @@ Thoa man:
 - Fallback mac dinh la duong dan tuong doi tinh tu goc repository (PROJECT_ROOT).
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 # Thu muc goc cua repository (3 cap tren so voi src/vsl/config.py)
 PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
