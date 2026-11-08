@@ -2,6 +2,17 @@ name: CI
 
 on:
   pull_request:
+=======
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
 
 permissions:
   contents: read
@@ -12,6 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source and model
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code (Git LFS)
         uses: actions/checkout@v4
         with:
           lfs: true
@@ -48,6 +65,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source and model
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black pytest httpx
+          pip install -r requirements.txt
+
+      - name: Run Ruff Linter
+        run: |
+          ruff check src tests scripts
+
+      - name: Check code formatting (Black)
+        run: |
+          black --check src tests scripts
+
+      - name: Run Unit & Contract Tests
+        run: |
+          pytest tests/test_config.py \
+                 tests/test_labels.py \
+                 tests/test_heatmap.py \
+                 tests/test_requirements.py \
+                 tests/test_landmark_contract.py \
+                 tests/test_cors_version.py \
+                 tests/test_ops_contract.py \
+                 tests/test_health.py \
+                 tests/test_predict.py -v
+
+  docker-build:
+    name: Optimized Docker Build (No Push)
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code (Git LFS)
         uses: actions/checkout@v4
         with:
           lfs: true
@@ -60,6 +116,18 @@ jobs:
         run: echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
 
       - name: Build image with GitHub Actions cache
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Record build start time
+        run: |
+          echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build Docker Image with GHA Cache (US-038, TSK-073)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -67,7 +135,9 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
+
           tags: vsl-api:ci
+          tags: vsl-api:ci-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -89,4 +159,21 @@ jobs:
             echo "- Duration: ${BUILD_DURATION}s"
             echo "- Image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
             echo "- Platform: linux/amd64"
+            BUILD_TIME=${{ env.BUILD_TIME }}
+
+      - name: Record Image Size & Build Duration (US-038, TSK-074, AC-038-04)
+        run: |
+          BUILD_END=$(date +%s)
+          DURATION=$((BUILD_END - BUILD_START))
+          IMAGE_SIZE=$(docker image inspect vsl-api:ci-test --format='{{.Size}}')
+          SIZE_MIB=$(awk -v bytes="$IMAGE_SIZE" 'BEGIN { printf "%.2f", bytes / 1024 / 1024 }')
+
+          echo "Docker build duration: ${DURATION}s"
+          echo "Docker image size: ${SIZE_MIB} MiB (${IMAGE_SIZE} bytes)"
+          {
+            echo "### Docker build metrics (US-038)"
+            echo "- Duration: ${DURATION}s"
+            echo "- Image size: ${SIZE_MIB} MiB (${IMAGE_SIZE} bytes)"
+            echo "- Platform: linux/amd64"
+            echo "- BuildKit cache: type=gha"
           } >> "$GITHUB_STEP_SUMMARY"

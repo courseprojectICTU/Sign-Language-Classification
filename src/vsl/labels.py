@@ -10,6 +10,9 @@ Quy tac:
 from typing import Tuple
 
 VIETNAMESE_ALPHABET: Tuple[str, ...] = (
+  
+VIETNAMESE_ALPHABET: tuple[str, ...] = (
+
     "a",
     "b",
     "c",
@@ -37,4 +40,4 @@ VIETNAMESE_ALPHABET: Tuple[str, ...] = (
 
 NUM_CLASSES: int = len(VIETNAMESE_ALPHABET)
 
-__all__ = ["VIETNAMESE_ALPHABET", "NUM_CLASSES"]
+__all__ = ["NUM_CLASSES", "VIETNAMESE_ALPHABET"]

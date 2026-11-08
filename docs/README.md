@@ -9,6 +9,9 @@ Tài liệu này cung cấp sơ đồ phân cấp và mục lục tra cứu toà
 ```text
 docs/
 ├── README.md                          # Sơ đồ và mục lục tra cứu toàn bộ tài liệu (tệp này)
+├── RUNBOOK.md                         # Hướng dẫn vận hành và xử lý sự cố Azure Container Apps
+├── implementation/
+│   └── US-IMPLEMENTATION-STATUS.md     # Trạng thái, bằng chứng và bàn giao 6 US được yêu cầu
 ├── architecture/                      # Kiến trúc hệ thống & Quyết định kỹ thuật (ADR)
 │   ├── ADR-001-frontend-hosting.md    # Quyết định chọn Cloudflare Pages cho giao diện tĩnh
 │   └── THONG_TIN_DE_TAI.txt           # Tổng quan thông tin đề tài, mục tiêu và công nghệ
@@ -28,8 +31,9 @@ docs/
 │   ├── README.md                      # Quy ước viết và thẩm định tài liệu API
 │   ├── _TEMPLATE.md                   # Khung chuẩn 17 mục cho tài liệu API
 │   ├── US-013.md                      # Hợp đồng CLI và báo cáo đo lường Cold Start Staging
-│   └── US-001.md ... US-016.md        # Đặc tả chi tiết từng User Story
+│   └── US-001.md ... US-016.md        # Hợp đồng API hoặc test/lifecycle theo từng User Story
 ├── reports/                           # Báo cáo tổng hợp đồ án
+│   ├── US-012-BAO-CAO-THUC-HIEN.md    # Báo cáo thực hiện và nghiệm thu model lifecycle
 │   └── TAI_LIEU_BAO_CAO.doc           # Báo cáo tổng hợp môn học định dạng Word
 └── backup_gcp_docs/                   # Bản sao lưu tài liệu gốc trước khi chuyển đổi hạ tầng
 ```
@@ -37,6 +41,10 @@ docs/
 ---
 
 ## 2. Mục Lục Tra Cứu Theo Nhóm Chức Năng
+
+### 2.0. Hướng dẫn vận hành và bàn giao
+- [RUNBOOK.md](RUNBOOK.md): Chẩn đoán backend, cold start, CI, smoke test, CORS, rollback thủ công ACA và chi phí.
+- [US-IMPLEMENTATION-STATUS.md](implementation/US-IMPLEMENTATION-STATUS.md): Bằng chứng kiểm thử, giới hạn và trạng thái branch của sáu US được yêu cầu.
 
 ### 2.1. Nhóm Kiến Trúc Hệ Thống (`docs/architecture/`)
 - [ADR-001-frontend-hosting.md](architecture/ADR-001-frontend-hosting.md): Phân tích 4 phương án lưu trữ frontend (Firebase, cùng container, Vercel, Cloudflare Pages), lý do lựa chọn Cloudflare Pages kết hợp backend Azure Container Apps.
@@ -58,8 +66,9 @@ docs/
 
 ### 2.5. Nhóm Hợp Đồng API & Báo Cáo Kỹ Thuật (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.
-- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
+- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-012.md` (test/lifecycle nạp model; không đổi public API), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
+- [US-012-BAO-CAO-THUC-HIEN.md](reports/US-012-BAO-CAO-THUC-HIEN.md): Ghi nhận phạm vi, task, bằng chứng kiểm thử, quyết định API docs N/A và nghiệm thu US-012.
 - [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
-
+- [US-019_PR_Description_Cap_Nhat.md](reports/US-019_PR_Description_Cap_Nhat.md): Báo cáo thay đổi, test evidence và trạng thái nghiệm thu PR US-019.
