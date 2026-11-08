@@ -10,9 +10,6 @@ Quy tac:
 from typing import Tuple
 
 VIETNAMESE_ALPHABET: Tuple[str, ...] = (
-  
-VIETNAMESE_ALPHABET: tuple[str, ...] = (
-
     "a",
     "b",
     "c",

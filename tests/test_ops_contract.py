@@ -70,8 +70,12 @@ def test_ac_023_01_warm_up_ping_endpoint_health():
 # -----------------------------------------------------------------------------
 # US-025: CORS và xử lý lỗi mạng
 # -----------------------------------------------------------------------------
-def test_ac_025_01_cors_allowed_origin_and_preflight():
+def test_ac_025_01_cors_allowed_origin_and_preflight(monkeypatch):
     """AC-025-01: Origin Cloudflare Pages được chấp nhận, preflight OPTIONS trả đúng header."""
+    monkeypatch.setenv(
+        "VSL_ALLOWED_ORIGINS",
+        "https://vsl-frontend.pages.dev,https://pr-12.vsl-frontend.pages.dev",
+    )
     if create_app and TestClient:
         app = create_app()
         app.state.model = MagicMock()
@@ -92,7 +96,7 @@ def test_ac_025_01_cors_allowed_origin_and_preflight():
         )
         assert "POST" in opt_resp.headers.get("access-control-allow-methods", "")
 
-        # 2. Origin pages.dev preview subdomain (regex matching)
+        # 2. Preview origin must be explicitly configured.
         preview_resp = client.get(
             "/health",
             headers={"Origin": "https://pr-12.vsl-frontend.pages.dev"},
@@ -105,8 +109,9 @@ def test_ac_025_01_cors_allowed_origin_and_preflight():
     else:
         content = SERVICE_PATH.read_text(encoding="utf-8")
         assert "CORSMiddleware" in content
-        assert "https://vsl-frontend.pages.dev" in content
-        assert "allow_origin_regex" in content
+        assert "_configured_cors_origins" in content
+        assert "VSL_ALLOWED_ORIGINS" in content
+        assert "allow_origin_regex" not in content
         assert "OPTIONS" in content
 
 
@@ -184,17 +189,17 @@ def test_ac_027_01_no_master_branch():
 # US-031: Rollback backend bằng traffic split và diễn tập
 # -----------------------------------------------------------------------------
 def test_ac_031_01_rollback_scripts_exist():
-    """AC-031-01: Script rollback tồn tại ở cả 2 định dạng Bash và Python, hỗ trợ gcloud update-traffic."""
+    """AC-031-01: Rollback uses guarded Azure Container Apps traffic updates."""
     assert ROLLBACK_SH_PATH.is_file(), "Thiếu scripts/rollback.sh"
     assert ROLLBACK_PY_PATH.is_file(), "Thiếu scripts/rollback.py"
 
-    sh_content = ROLLBACK_SH_PATH.read_text(encoding="utf-8")
-    assert "update-traffic" in sh_content
-    assert "--to-revisions" in sh_content
-
     py_content = ROLLBACK_PY_PATH.read_text(encoding="utf-8")
-    assert "update-traffic" in py_content
-    assert "--to-revisions" in py_content
+    assert '"containerapp"' in py_content
+    assert '"traffic"' in py_content
+    assert '"set"' in py_content
+    assert '"--revision-weight"' in py_content
+    assert "--expected-current-revision" in py_content
+    assert "--expected-sha" in py_content
 
 
 def test_ac_031_02_smoke_test_failure_triggers_exit_code():

@@ -3,7 +3,6 @@
 import pathlib
 import re
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 INFRA = ROOT / "infra"
 
@@ -15,11 +14,7 @@ def _read(relative_path):
 
 
 def _terraform_sources():
-    paths = sorted(
-        path
-        for path in INFRA.rglob("*.tf")
-        if ".terraform" not in path.parts
-    )
+    paths = sorted(path for path in INFRA.rglob("*.tf") if ".terraform" not in path.parts)
     assert paths, "No Terraform configuration found"
     return "\n".join(path.read_text(encoding="utf-8") for path in paths)
 
@@ -133,7 +128,7 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
     assert '"api://AzureADTokenExchange"' in identity
     assert re.search(r"subject\s*=\s*var\.github_oidc_subject", identity)
     assert (
-        'github_oidc_subject = '
+        "github_oidc_subject = "
         '"repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop"'
     ) in staging
     for output_name in (

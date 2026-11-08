@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import threading
 from dataclasses import dataclass, field
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-import json
 from pathlib import Path
 from socket import socket
-import threading
 from socketserver import BaseServer
 from typing import Iterator
 
@@ -59,15 +59,13 @@ class LocalSite:
 
 
 def _jpeg_bytes() -> bytes:
-    encoded, buffer = cv2.imencode(
-        ".jpg", np.zeros((16, 16, 3), dtype=np.uint8)
-    )
+    encoded, buffer = cv2.imencode(".jpg", np.zeros((16, 16, 3), dtype=np.uint8))
     assert encoded, "Could not create a JPEG test image"
     return buffer.tobytes()
 
 
 @pytest.fixture
-def test_site() -> Iterator[TestSite]:
+def test_site() -> Iterator[LocalSite]:
     api = ApiStub()
     api.release.set()
 
@@ -255,14 +253,10 @@ def test_tsk_040_displays_api_business_and_http_errors(
     if expected_region == "alert":
         expect(page.get_by_role("alert")).to_contain_text(expected_message)
     else:
-        expect(
-            page.get_by_role("region", name=expected_region)
-        ).to_contain_text(expected_message)
+        expect(page.get_by_role("region", name=expected_region)).to_contain_text(expected_message)
 
 
-def test_tsk_040_displays_network_error_message(
-    page: Page, test_site: LocalSite
-) -> None:
+def test_tsk_040_displays_network_error_message(page: Page, test_site: LocalSite) -> None:
     _open_site(page, test_site)
     page.route("**/predict", lambda route: route.abort())
     page.get_by_label("Chọn ảnh").set_input_files(
@@ -274,14 +268,10 @@ def test_tsk_040_displays_network_error_message(
     )
     page.get_by_role("button", name="Dự đoán").click()
 
-    expect(page.get_by_role("alert")).to_contain_text(
-        "Không thể kết nối đến dịch vụ."
-    )
+    expect(page.get_by_role("alert")).to_contain_text("Không thể kết nối đến dịch vụ.")
 
 
-def test_tsk_039_camera_capture_creates_preview(
-    page: Page, test_site: LocalSite
-) -> None:
+def test_tsk_039_camera_capture_creates_preview(page: Page, test_site: LocalSite) -> None:
     _open_site(page, test_site)
 
     open_camera = page.get_by_role("button", name="Mở camera")
@@ -310,16 +300,12 @@ def test_tsk_042_renders_supported_letters_and_fits_small_viewport(
     _open_site(page, test_site)
     page.set_viewport_size({"width": 375, "height": 812})
 
-    letters_locator = page.get_by_role(
-        "list", name="23 ký tự được hỗ trợ"
-    ).get_by_role("listitem")
+    letters_locator = page.get_by_role("list", name="23 ký tự được hỗ trợ").get_by_role("listitem")
     expect(letters_locator).to_have_count(23)
     letters = letters_locator.all_text_contents()
 
     assert letters == list(VIETNAMESE_ALPHABET)
-    assert page.evaluate(
-        "() => document.documentElement.scrollWidth <= window.innerWidth"
-    )
+    assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth")
     assert page.get_by_text("đ", exact=True).is_visible()
 
 
@@ -327,15 +313,11 @@ def test_tsk_042_generated_label_asset_matches_python_source() -> None:
     labels_path = WEB_ROOT / "labels.json"
 
     assert labels_path.is_file(), "Generated web/labels.json is missing"
-    assert json.loads(labels_path.read_text(encoding="utf-8")) == list(
-        VIETNAMESE_ALPHABET
-    )
+    assert json.loads(labels_path.read_text(encoding="utf-8")) == list(VIETNAMESE_ALPHABET)
 
 
 @pytest.mark.parametrize("browser_name", ["chromium", "edge", "firefox"])
-def test_tsk_041_browser_matrix_and_mobile_layout(
-    browser_name: str, test_site: LocalSite
-) -> None:
+def test_tsk_041_browser_matrix_and_mobile_layout(browser_name: str, test_site: LocalSite) -> None:
     with sync_playwright() as playwright:
         browser_type: BrowserType
         channel = None
@@ -355,9 +337,7 @@ def test_tsk_041_browser_matrix_and_mobile_layout(
 
         try:
             _open_site(page, test_site)
-            assert page.get_by_role(
-                "heading", name="Nhận diện ký hiệu bàn tay"
-            ).is_visible()
+            assert page.get_by_role("heading", name="Nhận diện ký hiệu bàn tay").is_visible()
             page.get_by_label("Chọn ảnh").set_input_files(
                 {
                     "name": "ban-tay.jpg",
@@ -369,9 +349,7 @@ def test_tsk_041_browser_matrix_and_mobile_layout(
 
             page.set_viewport_size({"width": 375, "height": 812})
             assert page.get_by_role("button", name="Dự đoán").is_visible()
-            assert page.evaluate(
-                "() => document.documentElement.scrollWidth <= window.innerWidth"
-            )
+            assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth")
         finally:
             context.close()
             browser.close()

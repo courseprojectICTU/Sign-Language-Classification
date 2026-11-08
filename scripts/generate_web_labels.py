@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-from src.vsl.labels import VIETNAMESE_ALPHABET
 
 OUTPUT_PATH = ROOT / "web" / "labels.json"
 
 
 def generate_web_labels() -> Path:
     """Write the ordered Python label tuple as a UTF-8 JSON asset."""
+    from src.vsl.labels import VIETNAMESE_ALPHABET
+
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     content = json.dumps(
         list(VIETNAMESE_ALPHABET),

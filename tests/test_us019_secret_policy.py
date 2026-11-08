@@ -4,7 +4,6 @@ import pathlib
 import re
 import subprocess
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TEXT_SUFFIXES = {
     "",
@@ -28,9 +27,7 @@ TEXT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
-PRIVATE_KEY_MARKER = re.compile(
-    rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"
-)
+PRIVATE_KEY_MARKER = re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")
 
 
 def _tracked_and_untracked_paths():
@@ -155,12 +152,12 @@ def test_terraform_and_workflow_do_not_use_static_ci_credentials():
 
 
 def test_ci_documentation_recommends_oidc_not_static_secret_creation():
-    handover = (
-        ROOT / "docs" / "infrastructure" / "HO-SO-BAN-GIAO-HA-TANG.md"
-    ).read_text(encoding="utf-8")
-    ci_plan = (
-        ROOT / "docs" / "planning" / "KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md"
-    ).read_text(encoding="utf-8")
+    handover = (ROOT / "docs" / "infrastructure" / "HO-SO-BAN-GIAO-HA-TANG.md").read_text(
+        encoding="utf-8"
+    )
+    ci_plan = (ROOT / "docs" / "planning" / "KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md").read_text(
+        encoding="utf-8"
+    )
     migration_plan = (
         ROOT / "docs" / "planning" / "KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md"
     ).read_text(encoding="utf-8")
@@ -170,7 +167,4 @@ def test_ci_documentation_recommends_oidc_not_static_secret_creation():
     assert "Actions Variables" in handover
     assert "`clientSecret`, service-account key JSON hoặc ACR" in ci_plan
     assert "GitHub OIDC Federated Identity Credential" in ci_plan
-    assert (
-        "Azure Service Principal + GitHub OIDC Federated Identity Credential"
-        in migration_plan
-    )
+    assert "Azure Service Principal + GitHub OIDC Federated Identity Credential" in migration_plan
