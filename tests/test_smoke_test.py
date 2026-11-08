@@ -191,9 +191,7 @@ def test_request_json_rejects_non_200_response(
         def read(self) -> bytes:
             return b'{"ok": true}'
 
-    monkeypatch.setattr(
-        smoke_test.urllib.request, "urlopen", lambda *args, **kwargs: Response()
-    )
+    monkeypatch.setattr(smoke_test.urllib.request, "urlopen", lambda *args, **kwargs: Response())
 
     with pytest.raises(smoke_test.SmokeTestError, match="expected HTTP 200"):
         smoke_test._request_json("https://service.example/health")

@@ -3,7 +3,6 @@
 import pathlib
 import re
 
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 INFRA = ROOT / "infra"
 
@@ -44,8 +43,8 @@ def test_tsk_031_uses_azure_blob_backend_and_documents_state_locking():
     readme = _read("README.md")
 
     assert re.search(r'backend\s+"azurerm"\s*\{', backend)
-    assert re.search(r'^\s*\.terraform/?\s*$', gitignore, re.MULTILINE)
-    assert re.search(r'^\s*\*\.tfstate\*?\s*$', gitignore, re.MULTILINE)
+    assert re.search(r"^\s*\.terraform/?\s*$", gitignore, re.MULTILINE)
+    assert re.search(r"^\s*\*\.tfstate\*?\s*$", gitignore, re.MULTILINE)
     assert "use_azuread_auth=true" in readme
     assert "use_cli=true" in readme
     assert "staging.tfstate" in readme
@@ -73,13 +72,13 @@ def test_azure_state_bootstrap_is_private_versioned_and_protected():
     assert re.search(r'resource\s+"azurerm_storage_account"\s+"terraform_state"\s*\{', config)
     assert re.search(r'resource\s+"azurerm_storage_container"\s+"terraform_state"\s*\{', config)
     assert re.search(r'container_access_type\s*=\s*"private"', config)
-    assert re.search(r'allow_nested_items_to_be_public\s*=\s*false', config)
-    assert re.search(r'https_traffic_only_enabled\s*=\s*true', config)
+    assert re.search(r"allow_nested_items_to_be_public\s*=\s*false", config)
+    assert re.search(r"https_traffic_only_enabled\s*=\s*true", config)
     assert re.search(r'min_tls_version\s*=\s*"TLS1_2"', config)
-    assert re.search(r'shared_access_key_enabled\s*=\s*false', config)
-    assert re.search(r'versioning_enabled\s*=\s*true', config)
-    assert len(re.findall(r'prevent_destroy\s*=\s*true', config)) >= 2
-    assert re.search(r'storage_use_azuread\s*=\s*true', provider)
+    assert re.search(r"shared_access_key_enabled\s*=\s*false", config)
+    assert re.search(r"versioning_enabled\s*=\s*true", config)
+    assert len(re.findall(r"prevent_destroy\s*=\s*true", config)) >= 2
+    assert re.search(r"storage_use_azuread\s*=\s*true", provider)
     assert re.search(r'resource_provider_registrations\s*=\s*"none"', provider)
     assert 'resource "azurerm_role_assignment"' not in config
     for variable in (
@@ -108,7 +107,7 @@ def test_terraform_configuration_no_longer_declares_google_cloud_resources():
     assert terraform_files
     for path in terraform_files:
         content = path.read_text(encoding="utf-8")
-        assert 'hashicorp/google' not in content, path
-        assert 'registry.terraform.io/hashicorp/google' not in content, path
+        assert "hashicorp/google" not in content, path
+        assert "registry.terraform.io/hashicorp/google" not in content, path
         assert 'backend "gcs"' not in content, path
-        assert 'google_storage_bucket' not in content, path
+        assert "google_storage_bucket" not in content, path

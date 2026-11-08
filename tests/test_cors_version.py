@@ -14,8 +14,12 @@ from src.vsl.service import create_app
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     """Tạo TestClient với mock model đã nạp."""
+    monkeypatch.setenv(
+        "VSL_ALLOWED_ORIGINS",
+        "https://vsl-frontend.pages.dev,https://feat-preview.vsl-frontend.pages.dev",
+    )
     app = create_app()
     app.state.model = MagicMock(name="mock_model")
     app.state.model_version = "v1.0"
@@ -31,11 +35,11 @@ def test_cors_allowed_origin_pages(client):
     )
     assert response.status_code == 200
     assert response.headers.get("access-control-allow-origin") == "https://vsl-frontend.pages.dev"
-    assert response.headers.get("access-control-allow-credentials") == "true"
+    assert response.headers.get("access-control-allow-credentials") is None
 
 
 def test_cors_allowed_origin_preview_pages(client):
-    """AC-025-01: Request từ Cloudflare Pages preview URL (regex) được chấp nhận."""
+    """AC-025-01: Exact preview origin được cho phép khi được cấu hình rõ ràng."""
     response = client.get(
         "/health",
         headers={"Origin": "https://feat-preview.vsl-frontend.pages.dev"},

@@ -6,7 +6,6 @@ import pytest
 
 from scripts import rollback
 
-
 REVISION_DATA = [
     {
         "name": "vsl-api--rev1",
@@ -69,8 +68,7 @@ def test_dry_run_selects_previous_revision_without_changing_traffic(
 
     assert selected == "vsl-api--rev1"
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
     assert "Dry run" in capsys.readouterr().out
 
@@ -135,8 +133,7 @@ def test_apply_refuses_target_different_from_detected_previous(
         )
 
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
 
 
@@ -157,8 +154,7 @@ def test_apply_refuses_unconfirmed_current_revision(
         )
 
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
 
 
@@ -172,8 +168,7 @@ def test_rollback_refuses_single_revision_mode(
         rollback.rollback(resource_group="rg-test", app_name="vsl-api")
 
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
 
 
@@ -190,8 +185,7 @@ def test_rollback_refuses_split_or_ambiguous_current_traffic(
         rollback.rollback(resource_group="rg-test", app_name="vsl-api")
 
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
 
 
@@ -221,8 +215,7 @@ def test_rollback_refuses_ambiguous_previous_revision_timestamp(
         rollback.rollback(resource_group="rg-test", app_name="vsl-api")
 
     assert not any(
-        command[:4] == ["containerapp", "ingress", "traffic", "set"]
-        for command in azure.commands
+        command[:4] == ["containerapp", "ingress", "traffic", "set"] for command in azure.commands
     )
 
 
