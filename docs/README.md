@@ -9,6 +9,9 @@ Tài liệu này cung cấp sơ đồ phân cấp và mục lục tra cứu toà
 ```text
 docs/
 ├── README.md                          # Sơ đồ và mục lục tra cứu toàn bộ tài liệu (tệp này)
+├── RUNBOOK.md                         # Hướng dẫn vận hành và xử lý sự cố Azure Container Apps
+├── implementation/
+│   └── US-IMPLEMENTATION-STATUS.md     # Trạng thái, bằng chứng và bàn giao 6 US được yêu cầu
 ├── architecture/                      # Kiến trúc hệ thống & Quyết định kỹ thuật (ADR)
 │   ├── ADR-001-frontend-hosting.md    # Quyết định chọn Cloudflare Pages cho giao diện tĩnh
 │   └── THONG_TIN_DE_TAI.txt           # Tổng quan thông tin đề tài, mục tiêu và công nghệ
@@ -39,6 +42,10 @@ docs/
 
 ## 2. Mục Lục Tra Cứu Theo Nhóm Chức Năng
 
+### 2.0. Hướng dẫn vận hành và bàn giao
+- [RUNBOOK.md](RUNBOOK.md): Chẩn đoán backend, cold start, CI, smoke test, CORS, rollback thủ công ACA và chi phí.
+- [US-IMPLEMENTATION-STATUS.md](implementation/US-IMPLEMENTATION-STATUS.md): Bằng chứng kiểm thử, giới hạn và trạng thái branch của sáu US được yêu cầu.
+
 ### 2.1. Nhóm Kiến Trúc Hệ Thống (`docs/architecture/`)
 - [ADR-001-frontend-hosting.md](architecture/ADR-001-frontend-hosting.md): Phân tích 4 phương án lưu trữ frontend (Firebase, cùng container, Vercel, Cloudflare Pages), lý do lựa chọn Cloudflare Pages kết hợp backend Azure Container Apps.
 - [THONG_TIN_DE_TAI.txt](architecture/THONG_TIN_DE_TAI.txt): Bản tóm tắt đề tài phục vụ môn học Điện toán đám mây.
@@ -64,5 +71,4 @@ docs/
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
 - [US-012-BAO-CAO-THUC-HIEN.md](reports/US-012-BAO-CAO-THUC-HIEN.md): Ghi nhận phạm vi, task, bằng chứng kiểm thử, quyết định API docs N/A và nghiệm thu US-012.
 - [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
-
 - [US-019_PR_Description_Cap_Nhat.md](reports/US-019_PR_Description_Cap_Nhat.md): Báo cáo thay đổi, test evidence và trạng thái nghiệm thu PR US-019.

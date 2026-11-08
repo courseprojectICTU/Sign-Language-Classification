@@ -1,7 +1,9 @@
 # HƯỚNG DẪN CHẠY DỰ ÁN
 
 Sign-Language-Classification-v1.0 — chạy trên Windows và Docker Linux.
-Mọi lệnh dưới đây đã được **kiểm chứng và chạy thử thật 100%**.
+Kiểm tra tình trạng triển khai và các giới hạn hiện tại trong
+[README.md](README.md) và [docs/RUNBOOK.md](docs/RUNBOOK.md); không coi ví dụ
+lệnh là bằng chứng môi trường cloud đang hoạt động.
 
 ---
 
@@ -19,7 +21,7 @@ Dự án cung cấp 2 hình thức sử dụng chính:
 
 ## 1. CÁCH CHẠY BACKEND API BẰNG DOCKER (KHUYẾN NGHỊ)
 
-Dành cho việc đóng gói artifact bất biến, kiểm thử API hoặc chuẩn bị triển khai lên Google Cloud Run.
+Dành cho việc đóng gói artifact, kiểm thử API hoặc chuẩn bị triển khai lên Azure Container Apps.
 
 ### Bước 1: Mở Docker Desktop
 Đảm bảo phần mềm **Docker Desktop** trên máy tính đã được bật và đang ở trạng thái chạy (Engine Running).
@@ -71,7 +73,7 @@ docker rm vsl-service
 Nếu bạn chưa cài Docker hoặc muốn chạy nhanh mã nguồn Python cục bộ:
 
 ```powershell
-& "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
+& ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --host 127.0.0.1 --port 8000
 ```
 Truy cập giao diện Swagger UI tại: **[http://localhost:8000/docs](http://localhost:8000/docs)**.
 
@@ -98,7 +100,7 @@ Mở terminal tại thư mục dự án và gõ:
 
 1. Mở file [run_realtime.ipynb](run_realtime.ipynb) trong IDE.
 2. Nhìn lên **góc trên bên phải** của giao diện Notebook (nút chọn **Kernel**):
-   - Chọn kernel: **Python 3.12 (VSL)** hoặc **Python 3.12.7** (`D:\program\python\python.exe`).
+   - Chọn môi trường **Python 3.12** đã cài các gói trong `requirements.txt`.
    - *(Lưu ý: Không chọn `.venv\Scripts\python.exe` vì launcher stub của Windows có thể gây lỗi nạp DLL)*.
 3. Nhấn **Run All** (hoặc chạy từng cell). Cửa sổ camera sẽ bật lên. Nhấn **`q`** trên camera để dừng.
 
@@ -147,8 +149,8 @@ Trình duyệt tự động mở Jupyter:
 | Triệu chứng | Nguyên nhân | Cách khắc phục |
 |---|---|---|
 | `docker run` báo `port is already allocated` | Cổng 8080 đang bị socket TIME_WAIT hoặc ứng dụng khác chiếm | Đổi sang cổng khác bằng cờ `-p 8088:8080` khi chạy container |
-| `docker compose up` báo `no configuration file provided` | Dự án dùng trực tiếp `Dockerfile` theo chuẩn Cloud Run | Sử dụng lệnh `docker build` và `docker run` |
-| `ImportError: DLL load failed while importing cv2` | Chạy trực tiếp bằng binary `.venv\Scripts\python.exe` bị lỗi Windows DLL launcher | Dùng `.\run_realtime.cmd` hoặc dùng Python gốc `D:\program\python\python.exe` |
+| `docker compose up` báo `no configuration file provided` | Repository không có cấu hình Docker Compose | Sử dụng lệnh `docker build` và `docker run`; cloud target trong tài liệu dự án là Azure Container Apps |
+| `ImportError: DLL load failed while importing cv2` | Môi trường Python/OpenCV trên Windows không nạp được DLL | Cài lại dependencies trong môi trường Python 3.12; với webcam native, thử `.\run_realtime.cmd` |
 | `PermissionError: C:\Users\...\.jupyter\migrated` | Jupyter mặc định ghi cache ngoài thư mục project bị Windows giới hạn quyền | Khởi động bằng `.\run_notebook.cmd` |
 | `Không thể mở camera` / `Không đọc được frame` | Camera không ở index 0 hoặc đang bị app khác chiếm (Zoom/Teams/Camera) | Tắt các app dùng camera, hoặc đổi `cv2.VideoCapture(0)` thành `(1)` |
 | Camera bật nhưng không hiện chữ dự đoán | Chưa đưa đủ cả 1 bàn tay và mặt vào khung hình | Nhìn dòng trạng thái `Dang tim: Tay [X] / Mat [X]`, đưa cả mặt và tay vào vùng sáng rõ |
