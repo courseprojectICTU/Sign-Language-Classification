@@ -1,0 +1,7 @@
+subscription_id     = "REPLACE_WITH_PRODUCTION_SUBSCRIPTION_ID"
+resource_group_name = "REPLACE_WITH_PRODUCTION_RESOURCE_GROUP"
+location            = "REPLACE_WITH_PRODUCTION_AZURE_REGION"
+environment         = "production"
+acr_name            = "REPLACE_WITH_PRODUCTION_ACR_NAME"
+container_app_name  = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_NAME"
+github_oidc_subject = "REPLACE_WITH_PRODUCTION_GITHUB_OIDC_SUBJECT"

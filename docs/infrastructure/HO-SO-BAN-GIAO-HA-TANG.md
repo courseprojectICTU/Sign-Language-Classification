@@ -75,32 +75,33 @@ Tài liệu này tổng hợp toàn bộ thông số kỹ thuật, cấu hình m
 
 ---
 
-## 4. Cấu Hình Secrets Tự Động Hóa CI/CD
+## 4. Cấu Hình GitHub Actions bằng Azure OIDC
 
-Để pipeline GitHub Actions tự động đóng gói và cập nhật bản dựng mới lên Azure Container Apps:
+CI/CD phải đăng nhập Azure bằng GitHub OpenID Connect (OIDC), không tạo hoặc
+lưu `clientSecret`, service-account key JSON hay ACR username/password.
 
-### 4.1. Lệnh tạo Service Principal trên Azure
-Tạo tài khoản tự động hóa có quyền truy cập phạm vi nhóm tài nguyên:
+Terraform US-019 tạo Azure application, Service Principal, Federated Identity
+Credential và role assignments tối thiểu. FIC tin cậy:
 
-```powershell
-az ad sp create-for-rbac `
-  --name "sp-vsl-github-actions" `
-  --role contributor `
-  --scopes /subscriptions/373b1f03-330f-4302-a9e9-aa1fe793bf2e/resourceGroups/rg-vsl-staging `
-  --json-auth
-```
+| Thuộc tính | Giá trị |
+|---|---|
+| Issuer | `https://token.actions.githubusercontent.com` |
+| Audience | `api://AzureADTokenExchange` |
+| Subject | `repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop` |
 
-### 4.2. Danh sách Secrets cấu hình trên GitHub Actions
-Cấu hình các biến sau vào mục Settings -> Secrets and variables -> Actions của kho lưu trữ GitHub:
+Sau khi Terraform provision xong và chủ dự án duyệt thao tác áp dụng, lấy ba
+identifier không nhạy cảm bằng `terraform output -raw github_oidc_client_id`,
+`terraform output -raw github_oidc_tenant_id` và
+`terraform output -raw github_oidc_subscription_id`. Lưu chúng dưới dạng GitHub
+Actions Variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` và
+`AZURE_SUBSCRIPTION_ID`, không phải GitHub Secrets. Chạy workflow
+`.github/workflows/azure-oidc-smoke.yml` thủ công từ nhánh `develop` để xác minh
+đăng nhập.
 
-| Tên Secret | Ý nghĩa | Giá trị mẫu |
-|---|---|---|
-| `AZURE_CREDENTIALS` | Toàn bộ chuỗi JSON trả về từ lệnh tạo Service Principal | `{"clientId": "...", "clientSecret": "...", ...}` |
-| `REGISTRY_SERVER` | Địa chỉ máy chủ kho lưu trữ ACR | `vslacr3795.azurecr.io` |
-| `REGISTRY_USERNAME` | Tên người dùng kho ACR | `vslacr3795` |
-| `REGISTRY_PASSWORD` | Mật khẩu truy cập kho ACR | Lấy từ lệnh: `az acr credential show --name vslacr3795` |
-| `AZURE_RESOURCE_GROUP` | Tên nhóm tài nguyên | `rg-vsl-staging` |
-| `AZURE_APP_NAME` | Tên ứng dụng Container App | `vsl-api` |
+Sau khi OIDC được xác minh, chủ dự án cần xóa thủ công các GitHub Secrets cũ
+`AZURE_CREDENTIALS`, `REGISTRY_USERNAME` và `REGISTRY_PASSWORD` nếu còn tồn tại
+và không còn được workflow khác sử dụng. Không gửi giá trị của chúng trong chat
+hoặc commit vào repository.
 
 ---
 
@@ -112,7 +113,7 @@ Cấu hình các biến sau vào mục Settings -> Secrets and variables -> Acti
 | US-017 | Smoke test tự động sau triển khai | Thực hiện HTTP request kiểm tra endpoint `GET /health` với điều kiện `model_loaded == true`. |
 | US-024 | Triển khai Frontend lên Cloudflare Pages | Cấu hình biến môi trường gọi API: `VITE_API_URL=https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io`. |
 | US-026 | Pipeline CI kiểm thử và build image | Chạy trên runner của GitHub Actions sử dụng Dockerfile chuẩn Linux. |
-| US-029 | CD tự động triển khai revision mới | Sử dụng GitHub Action `azure/container-apps-deploy-action@v1` kết hợp bộ Secrets tại Mục 4. |
+| US-029 | CD tự động triển khai revision mới | Sử dụng GitHub Action `azure/container-apps-deploy-action@v1` với Azure OIDC (Mục 4); push image bằng quyền `AcrPush`, không dùng ACR admin credentials. |
 | US-034 | Cảnh báo Cloud Logging lỗi 5xx | Truy vấn log qua `workspace-rgvslstaging8lF4` hoặc cấu hình Alert rule trên Azure Monitor. |
 
 ---
