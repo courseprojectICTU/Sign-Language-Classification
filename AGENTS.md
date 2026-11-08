@@ -112,6 +112,7 @@ docs/api/US-006.md                                hợp đồng API của US-006
 docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
 docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
 docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
+docs/api/US-012.md                                hợp đồng test/lifecycle model (N/A public API)
 docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
 docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
 docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)

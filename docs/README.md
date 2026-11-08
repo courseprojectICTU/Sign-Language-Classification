@@ -28,7 +28,7 @@ docs/
 │   ├── README.md                      # Quy ước viết và thẩm định tài liệu API
 │   ├── _TEMPLATE.md                   # Khung chuẩn 17 mục cho tài liệu API
 │   ├── US-013.md                      # Hợp đồng CLI và báo cáo đo lường Cold Start Staging
-│   └── US-001.md ... US-016.md        # Đặc tả chi tiết từng User Story
+│   └── US-001.md ... US-016.md        # Hợp đồng API hoặc test/lifecycle theo từng User Story
 ├── reports/                           # Báo cáo tổng hợp đồ án
 │   ├── US-012-BAO-CAO-THUC-HIEN.md    # Báo cáo thực hiện và nghiệm thu model lifecycle
 │   └── TAI_LIEU_BAO_CAO.doc           # Báo cáo tổng hợp môn học định dạng Word
@@ -59,7 +59,7 @@ docs/
 
 ### 2.5. Nhóm Hợp Đồng API & Báo Cáo Kỹ Thuật (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.
-- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
+- Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-012.md` (test/lifecycle nạp model; không đổi public API), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
 - [US-012-BAO-CAO-THUC-HIEN.md](reports/US-012-BAO-CAO-THUC-HIEN.md): Ghi nhận phạm vi, task, bằng chứng kiểm thử, quyết định API docs N/A và nghiệm thu US-012.

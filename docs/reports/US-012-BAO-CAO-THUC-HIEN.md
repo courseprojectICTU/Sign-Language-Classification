@@ -3,7 +3,7 @@
 > **Trạng thái:** PASS — chủ dự án xác nhận nghiệm thu ngày 2026-11-08
 > **Epic:** EPC-03 · **Nhánh:** `feature/US-012`
 > **Business Rule:** BR-011 — Single Model Load per Container
-> **API docs:** N/A — US-012 củng cố lifecycle nội bộ và log vận hành, không thay đổi hợp đồng tiêu thụ của `/health` hoặc `/predict`. Chủ dự án đã duyệt quyết định này trước khi viết test.
+> **Public API:** N/A — US-012 củng cố lifecycle nội bộ và log vận hành, không thay đổi hợp đồng tiêu thụ của `/health` hoặc `/predict`. Tài liệu test/lifecycle 17 mục được lưu tại `docs/api/US-012.md`; chủ dự án đã duyệt phạm vi này trước khi viết test.
 
 ## 1. Mục tiêu và phạm vi
 
