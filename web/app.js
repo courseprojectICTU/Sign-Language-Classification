@@ -1,6 +1,13 @@
 "use strict";
 
 (() => {
+  const apiBaseUrl = window.VSL_CONFIG?.apiBaseUrl;
+  if (typeof apiBaseUrl === "string" && apiBaseUrl.trim() !== "") {
+    try {
+      void fetch(`${apiBaseUrl.replace(/\/+$/, "")}/health`).catch(() => {});
+    } catch {}
+  }
+
   const fileInput = document.querySelector("#image-input");
   const imagePreview = document.querySelector("#image-preview");
   const previewPlaceholder = document.querySelector("#preview-placeholder");

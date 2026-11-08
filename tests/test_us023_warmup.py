@@ -1,9 +1,9 @@
 """Browser acceptance tests for the US-023 page-load health warm-up."""
 
+import threading
 from dataclasses import dataclass, field
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-import threading
 from typing import Iterator
 
 import pytest
@@ -67,9 +67,7 @@ def page(test_site: WarmupSite) -> Iterator[Page]:
         browser: Browser = playwright.chromium.launch()
         context = browser.new_context()
         page = context.new_page()
-        page.add_init_script(
-            f"window.VSL_CONFIG = {{ apiBaseUrl: {test_site.url!r} }};"
-        )
+        page.add_init_script(f"window.VSL_CONFIG = {{ apiBaseUrl: {test_site.url!r} }};")
         try:
             yield page
         finally:
@@ -98,9 +96,9 @@ def test_failed_health_warmup_does_not_block_page_or_show_an_error(
     page.route("**/health", lambda route: route.abort())
     page.on(
         "request",
-        lambda request: health_requests.append(request.method)
-        if request.url.endswith("/health")
-        else None,
+        lambda request: (
+            health_requests.append(request.method) if request.url.endswith("/health") else None
+        ),
     )
 
     response = page.goto(test_site.url, wait_until="load", timeout=5000)
