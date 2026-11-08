@@ -13,6 +13,7 @@ import pathlib
 import re
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -22,8 +23,8 @@ from fastapi.testclient import TestClient
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SERVICE_PATH = ROOT / "src" / "vsl" / "service.py"
 
-from src.vsl.labels import VIETNAMESE_ALPHABET, NUM_CLASSES
 from src.vsl.config import get_model_path
+from src.vsl.labels import NUM_CLASSES, VIETNAMESE_ALPHABET
 
 
 def _create_dummy_image_bytes(width: int = 100, height: int = 100, color: int = 0) -> bytes:
@@ -346,6 +347,7 @@ def test_extract_landmarks_early_return_khi_thieu_detection(
 def test_ac_006_02_pipeline_parity_23_23_ky_tu():
     """AC-006-02: Kiểm tra độ hợp lệ của pipeline service trên toàn bộ 23 mẫu 1.csv khớp 23/23 nhãn."""
     from keras.models import load_model
+
     from src.vsl.service import predict_from_landmarks
 
     model_path = get_model_path()
