@@ -30,6 +30,7 @@ docs/
 │   ├── US-013.md                      # Hợp đồng CLI và báo cáo đo lường Cold Start Staging
 │   └── US-001.md ... US-016.md        # Đặc tả chi tiết từng User Story
 ├── reports/                           # Báo cáo tổng hợp đồ án
+│   ├── US-012-BAO-CAO-THUC-HIEN.md    # Báo cáo thực hiện và nghiệm thu model lifecycle
 │   └── TAI_LIEU_BAO_CAO.doc           # Báo cáo tổng hợp môn học định dạng Word
 └── backup_gcp_docs/                   # Bản sao lưu tài liệu gốc trước khi chuyển đổi hạ tầng
 ```
@@ -61,5 +62,5 @@ docs/
 - Chứa các hợp đồng kỹ thuật chi tiết: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (/health), `US-006.md` (/predict), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (/version), `US-010.md` (đóng gói Dockerfile), `US-013.md` (hợp đồng CLI và báo cáo đo lường cold start staging), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu tham chiếu).
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
+- [US-012-BAO-CAO-THUC-HIEN.md](reports/US-012-BAO-CAO-THUC-HIEN.md): Ghi nhận phạm vi, task, bằng chứng kiểm thử, quyết định API docs N/A và nghiệm thu US-012.
 - [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
-
