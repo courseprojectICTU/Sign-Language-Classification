@@ -44,11 +44,16 @@ def test_ac_010_01_dockerfile_exists_and_has_required_directives() -> None:
     assert DOCKERFILE_PATH.is_file(), "Dockerfile phải tồn tại ở thư mục gốc dự án"
     content = DOCKERFILE_PATH.read_text(encoding="utf-8")
 
+    # Base image: python:3.12-slim
+    assert re.search(
+        r"FROM\s+.*python:3\.12-slim", content, re.IGNORECASE
+
     # Base image: pinned Python 3.12 slim image
     assert re.search(
         r"FROM\s+.*python:3\.12(?:\.\d+)?-slim",
         content,
         re.IGNORECASE,
+
     ), "Dockerfile phải sử dụng base image python:3.12-slim theo BR-005"
 
     # System dependencies: libgl1, libglib2.0-0, curl
@@ -57,6 +62,12 @@ def test_ac_010_01_dockerfile_exists_and_has_required_directives() -> None:
     assert "curl" in content, "Dockerfile phải cài đặt curl phục vụ HEALTHCHECK"
 
     # Python dependencies
+
+    assert "requirements.txt" in content, "Dockerfile phải sao chép và cài đặt requirements.txt"
+    assert re.search(
+        r"pip\s+install.*-r\s+requirements\.txt", content
+    ), "Dockerfile phải chạy pip install cho requirements.txt"
+
     assert (
         "requirements-runtime.txt" in content
     ), "Dockerfile phải cài manifest dependencies tối thiểu cho runtime"
@@ -102,6 +113,9 @@ def test_ac_010_01_layer_caching_order_requirements_before_src() -> None:
     assert src_copy_idx != -1, "Phải có lệnh COPY src/"
     assert (
         req_copy_idx < src_copy_idx
+
+    ), "Để tối ưu Docker layer cache (BR-025), COPY requirements.txt phải đứng trước COPY src/"
+
     ), "COPY runtime requirements phải đứng trước COPY src để tận dụng Docker layer cache"
 
 

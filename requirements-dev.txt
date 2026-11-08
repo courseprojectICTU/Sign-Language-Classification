@@ -2,6 +2,9 @@
 # File nay THUAN ASCII: pip doc requirements bang cp1252 tren Windows.
 
 pytest==9.1.1
+ruff==0.14.4
+black==25.11.0
+numpy==1.26.4
 playwright==1.64.1
 fastapi==0.162.0
 httpx==0.28.1

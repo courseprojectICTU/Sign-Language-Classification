@@ -7,7 +7,12 @@ Quy tac:
 - Chi so trong tuple chinh la nhan lop softmax cua model.
 """
 
+from typing import Tuple
+
+VIETNAMESE_ALPHABET: Tuple[str, ...] = (
+  
 VIETNAMESE_ALPHABET: tuple[str, ...] = (
+
     "a",
     "b",
     "c",

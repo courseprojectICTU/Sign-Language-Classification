@@ -1,3 +1,8 @@
+name: CI
+
+on:
+  pull_request:
+=======
 name: CI Pipeline
 
 on:
@@ -13,6 +18,11 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source and model
   lint-and-test:
     name: Lint & Unit Tests
     runs-on: ubuntu-latest
@@ -23,6 +33,38 @@ jobs:
         with:
           lfs: true
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install test and lint dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run Ruff
+        run: ruff check src tests scripts
+
+      - name: Check formatting with Black
+        run: black --check src tests scripts
+
+      - name: Run NumPy-only heatmap and contract tests
+        run: >-
+          pytest -v
+          tests/test_ci_workflow.py
+          tests/test_config.py
+          tests/test_dockerfile.py
+          tests/test_heatmap.py
+          tests/test_heatmap_contract.py
+          tests/test_labels.py
+          tests/test_requirements.py
+
+  docker-build:
+    name: Build Docker image without pushing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source and model
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -66,6 +108,14 @@ jobs:
         with:
           lfs: true
 
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Record build start time
+        shell: bash
+        run: echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Build image with GitHub Actions cache
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -85,11 +135,30 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
+
+          tags: vsl-api:ci
           tags: vsl-api:ci-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ github.event.pull_request.updated_at }}
+
+      - name: Report build duration and image size
+        shell: bash
+        run: |
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          IMAGE_SIZE_BYTES=$(docker image inspect vsl-api:ci --format='{{.Size}}')
+          IMAGE_SIZE_MB=$((IMAGE_SIZE_BYTES / 1024 / 1024))
+
+          echo "Docker build duration: ${BUILD_DURATION}s"
+          echo "Docker image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+          {
+            echo "### Docker build metrics"
+            echo "- Duration: ${BUILD_DURATION}s"
+            echo "- Image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+            echo "- Platform: linux/amd64"
             BUILD_TIME=${{ env.BUILD_TIME }}
 
       - name: Record Image Size & Build Duration (US-038, TSK-074, AC-038-04)

@@ -5,11 +5,16 @@ Tuân thủ:
 - BR-019: Warm-Up on Page Load (cung cấp endpoint /health nhận ping từ frontend).
 """
 
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 import logging
 import os
 import subprocess
+
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Literal, Optional, Tuple
+
+import cv2
+
 from time import perf_counter
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from urllib.parse import urlsplit
@@ -17,7 +22,9 @@ from urllib.parse import urlsplit
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+
 import numpy as np
+from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from pydantic import BaseModel, Field
 
 from src.vsl.config import PROJECT_ROOT, get_model_path
@@ -37,12 +44,19 @@ def _utc_timestamp(value: Optional[str] = None) -> str:
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=timezone.utc)
             return (
+
+                parsed.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
                 parsed.astimezone(timezone.utc)
                 .isoformat(timespec="seconds")
                 .replace("+00:00", "Z")
+
             )
         except (OverflowError, ValueError):
             logger.warning("Invalid BUILD_TIME value; using service startup time")
+
+
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
     return (
         datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
@@ -125,7 +139,6 @@ def _configured_cors_origins() -> List[str]:
             origins.append(normalized_origin)
 
     return origins
-
 
 # ---------------------------------------------------------------- MediaPipe Singletons
 _mp_hands = None
@@ -240,10 +253,12 @@ def extract_landmarks_from_image(
 
     return None, has_hand, has_face
 
+def predict_from_landmarks(landmarks: List[float], model: Any, top_k: int = 3) -> Dict[str, Any]:
 
 def predict_from_landmarks(
     landmarks: List[float], model: Any, top_k: int = 3
 ) -> Dict[str, Any]:
+
     """Suy luận nhãn ký hiệu từ vector landmark theo chuẩn Caffe và ResNet50 (BR-002, BR-003, BR-006).
 
     Tuân thủ:
@@ -405,9 +420,13 @@ def create_app() -> FastAPI:
     )
     async def predict_endpoint(
         file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
+
+        top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
+
         top_k: int = Query(
             3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"
         ),
+
         flip: bool = Query(
             False,
             description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)",
