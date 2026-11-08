@@ -25,10 +25,7 @@ def notebook_reference():
     assert "run_realtime.ipynb" in payload["source"]
     assert len(samples) == len(VIETNAMESE_ALPHABET) == 23
     assert len(payload["model_sha256"]) == 64
-    assert all(
-        character in "0123456789abcdef"
-        for character in payload["model_sha256"]
-    )
+    assert all(character in "0123456789abcdef" for character in payload["model_sha256"])
     return payload
 
 
@@ -39,10 +36,7 @@ def reference_predictions(notebook_reference):
 
     assert len(references) == len(samples), "Duplicate sample in notebook reference"
     assert set(references) == set(VIETNAMESE_ALPHABET)
-    assert all(
-        references[letter]["sample"] == f"{letter}/1.csv"
-        for letter in VIETNAMESE_ALPHABET
-    )
+    assert all(references[letter]["sample"] == f"{letter}/1.csv" for letter in VIETNAMESE_ALPHABET)
     return references
 
 
@@ -102,14 +96,11 @@ def test_ac_016_01_service_matches_notebook_reference(model, reference_predictio
 
     assert not mismatches, f"Service differs from notebook reference: {mismatches}"
     assert all(
-        reference_predictions[letter]["letter"] == letter
-        for letter in VIETNAMESE_ALPHABET
+        reference_predictions[letter]["letter"] == letter for letter in VIETNAMESE_ALPHABET
     ), "Frozen notebook reference is not 23/23 on the labeled training samples"
 
 
-def test_ac_016_02_reference_detects_sigma_3_regression(
-    model, reference_predictions
-):
+def test_ac_016_02_reference_detects_sigma_3_regression(model, reference_predictions):
     from src.vsl.service import predict_from_landmarks
 
     expected = reference_predictions["a"]

@@ -145,3 +145,25 @@ GÓP Ý PHÁT TRIỂN
 
 Chúng tôi hoan nghênh mọi đóng góp và đề xuất cải tiến cho dự án. Vui lòng gửi pull request hoặc mở issue trên GitHub để chia sẻ ý tưởng hoặc báo lỗi.
 
+
+
+---
+
+## DỊCH VỤ WEB API & CONTAINER HÓA (US-005, US-006, US-038)
+
+Hệ thống cung cấp dịch vụ HTTP API hiệu năng cao xây dựng trên FastAPI, phục vụ suy luận ký hiệu từ ảnh tải lên:
+
+- **Khởi chạy API cục bộ:**
+  ```powershell
+  python -m uvicorn src.vsl.service:app --host 0.0.0.0 --port 8080 --reload
+  ```
+- **Khởi chạy qua Docker:**
+  ```bash
+  docker build --platform linux/amd64 -t vsl-api:latest .
+  docker run -p 8080:8080 vsl-api:latest
+  ```
+- **Kiểm thử khói tự động (Smoke Test - US-017):**
+  ```bash
+  python scripts/smoke_test.py --url http://localhost:8080
+  ```
+- **Tài liệu triển khai & Runbook xử lý sự cố:** Xem chi tiết tại [docs/RUNBOOK.md](docs/RUNBOOK.md).

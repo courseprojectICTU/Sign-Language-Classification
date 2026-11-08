@@ -6,6 +6,7 @@ File này được viết TRƯỚC khi sửa requirements.txt (TDD) — lúc đ�
 
 import pathlib
 import re
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -17,8 +18,7 @@ def _read_requirements_lines():
     lines = REQUIREMENTS_PATH.read_text(encoding="ascii", errors="strict").splitlines()
     # Loại bỏ comment và dòng trống
     clean_lines = [
-        line.strip() for line in lines
-        if line.strip() and not line.strip().startswith("#")
+        line.strip() for line in lines if line.strip() and not line.strip().startswith("#")
     ]
     return clean_lines
 
@@ -45,19 +45,16 @@ def test_ac_004_01_requirements_dung_opencv_headless_khong_dung_gui():
     assert has_headless, "requirements.txt thiếu gói 'opencv-python-headless=='"
 
     # Không được có opencv-python bản desktop
-    has_desktop_gui = any(
-        re.match(r"^opencv-python\s*==", line)
-        for line in clean_lines
-    )
-    assert not has_desktop_gui, (
-        "requirements.txt vẫn còn chứa 'opencv-python' (bản GUI desktop vi phạm container slim)"
-    )
+    has_desktop_gui = any(re.match(r"^opencv-python\s*==", line) for line in clean_lines)
+    assert (
+        not has_desktop_gui
+    ), "requirements.txt vẫn còn chứa 'opencv-python' (bản GUI desktop vi phạm container slim)"
 
     # Không được có opencv-contrib-python
     has_contrib_gui = any(line.startswith("opencv-contrib-python") for line in clean_lines)
-    assert not has_contrib_gui, (
-        "requirements.txt vẫn còn chứa 'opencv-contrib-python' (không cần thiết và chứa thư viện GUI)"
-    )
+    assert (
+        not has_contrib_gui
+    ), "requirements.txt vẫn còn chứa 'opencv-contrib-python' (không cần thiết và chứa thư viện GUI)"
 
 
 def test_br_005_verified_dependency_pins():
@@ -71,9 +68,9 @@ def test_br_005_verified_dependency_pins():
 
     # 1. mediapipe phải thuộc nhánh 0.10.x (từ 1.0.0 đã xóa mp.solutions)
     assert "mediapipe" in req_dict, "Thiếu mediapipe trong requirements.txt"
-    assert req_dict["mediapipe"].startswith("0.10."), (
-        f"mediapipe phải là 0.10.x theo BR-005, thực tế: {req_dict['mediapipe']}"
-    )
+    assert req_dict["mediapipe"].startswith(
+        "0.10."
+    ), f"mediapipe phải là 0.10.x theo BR-005, thực tế: {req_dict['mediapipe']}"
 
     # 2. numpy phải nhỏ hơn 2 (mediapipe 0.10.x yêu cầu numpy<2)
     assert "numpy" in req_dict, "Thiếu numpy trong requirements.txt"
@@ -82,7 +79,9 @@ def test_br_005_verified_dependency_pins():
 
     # 3. tensorflow và keras phải tương thích Python 3.12
     assert "tensorflow" in req_dict, "Thiếu tensorflow trong requirements.txt"
-    assert req_dict["tensorflow"] == "2.19.1", f"tensorflow phải ghim 2.19.1, thực tế: {req_dict['tensorflow']}"
+    assert (
+        req_dict["tensorflow"] == "2.19.1"
+    ), f"tensorflow phải ghim 2.19.1, thực tế: {req_dict['tensorflow']}"
 
     assert "keras" in req_dict, "Thiếu keras trong requirements.txt"
     assert req_dict["keras"] == "3.15.1", f"keras phải ghim 3.15.1, thực tế: {req_dict['keras']}"

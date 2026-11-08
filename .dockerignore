@@ -39,6 +39,7 @@ THONG_TIN_DE_TAI.txt
 
 # Bắt buộc giữ lại requirements.txt cho Docker build
 !requirements.txt
+!README.md
 
 # Training visual assets
 train/training_plot_keras.png

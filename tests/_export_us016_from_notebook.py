@@ -2,8 +2,8 @@
 
 import hashlib
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -44,9 +44,7 @@ def main() -> None:
 
         landmarks = pd.read_csv(csv_path).values.flatten().astype(np.float64)
         if landmarks.shape != (93,):
-            raise ValueError(
-                f"{csv_path}: expected 93 coordinates, got {landmarks.shape}"
-            )
+            raise ValueError(f"{csv_path}: expected 93 coordinates, got {landmarks.shape}")
 
         heatmap = create_heatmap(landmarks)
         model_input = preprocess_input(np.expand_dims(heatmap, axis=0))
@@ -76,9 +74,7 @@ def main() -> None:
             "in run_realtime.ipynb"
         ),
         "model_sha256": _sha256_file(model_path),
-        "interpretation": (
-            "Training-sample validity check only; not real-world accuracy."
-        ),
+        "interpretation": ("Training-sample validity check only; not real-world accuracy."),
         "samples": samples,
     }
 

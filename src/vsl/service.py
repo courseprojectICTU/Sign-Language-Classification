@@ -13,6 +13,7 @@ import subprocess
 from time import perf_counter
 from typing import Any, Dict, List, Literal, Optional, Tuple
 from urllib.parse import urlsplit
+
 import cv2
 from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -280,8 +281,7 @@ def predict_from_landmarks(
     # 5. Trích xuất top_k theo xác suất giảm dần
     top_indices = np.argsort(probs)[::-1][:top_k]
     top_k_list = [
-        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])}
-        for i in top_indices
+        {"letter": VIETNAMESE_ALPHABET[int(i)], "confidence": float(probs[i])} for i in top_indices
     ]
 
     return {
@@ -345,6 +345,7 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type"],
         allow_credentials=False,
     )
+
 
     # Khởi tạo trạng thái mặc định
     app.state.model = None
@@ -460,8 +461,7 @@ def create_app() -> FastAPI:
 
             timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
             logger.warning(
-                "prediction_skipped timestamp=%s status=%s reason=%s "
-                "has_hand=%s has_face=%s",
+                "prediction_skipped timestamp=%s status=%s reason=%s " "has_hand=%s has_face=%s",
                 timestamp,
                 result_status,
                 reason,

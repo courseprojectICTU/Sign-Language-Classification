@@ -1,9 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-
 **Cập nhật lần cuối: 2026-11-08** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
-
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
@@ -38,7 +36,6 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 
 ## 2. Git — trạng thái thực tế
 
-
 | Mục | Giá trị (đối chiếu 2026-11-08) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
@@ -46,14 +43,6 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | Nhánh local | `develop`, `feature/US-007`, `feature/US-012` (đang checkout), `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019`, `feature/US-022`, `feature/US-038`, `backup/develop-before-rollback` |
 | `develop` | `780b7aa` — đồng bộ với `origin/develop` |
 | `feature/US-012` | `f0f293c` — đã nghiệm thu PASS trong phiên 2026-11-08; chưa push/PR |
-
-| Mục | Giá trị (đối chiếu 2026-11-07) |
-|---|---|
-| Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
-| `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `backup/develop-before-rollback`, `develop`, `feature/US-007`, `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019` (đang checkout), `feature/US-038` |
-| `develop` | `780b7aa` (đồng bộ `origin/develop`) |
-
 | `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
 | `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
@@ -62,9 +51,7 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; code đã commit; ACR staging đã import vào remote state, apply bị chặn bởi quyền Entra và provider registration |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-
 | Trạng thái working tree | Đang ở `feature/US-012`; có các thư mục untracked `infra/` và `web/` không thuộc US-012, đã giữ nguyên |
-| Trạng thái working tree | US-019 code đã commit; ACR staging đã import vào Terraform remote state. Chưa tạo resource US-019; Terraform cache và bootstrap local state được giữ local/ignored, không được ghi đè hoặc commit |
 
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
@@ -314,9 +301,10 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
+
+| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | `feature/US-038` | ĐANG TÍCH HỢP | Multi-stage Docker build ghim digest, non-root runtime, Git SHA/build time, healthcheck; CORS cấu hình theo allowlist; đang hợp nhất với develop và chạy kiểm thử |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
 | **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | `feature/US-019` | PASS — LOCAL VALIDATION | Dùng ACR hiện có `vslacr3795`; tác vụ preview `acr purge` chạy hằng ngày, giữ tối đa 3 tag `vsl-api` đủ điều kiện sau mỗi lần chạy (không phải giới hạn tức thời); identity dọn dẹp riêng có `AcrDelete`; principal triển khai GitHub chỉ có `AcrPush` trên ACR và `Container Apps Contributor` trên `vsl-api`; FIC chỉ tin subject nhánh `develop` đã duyệt. Đã có workflow OIDC smoke thủ công và Terraform outputs không nhạy cảm. US-019 tests 8/8, toàn bộ tests 85/85, Terraform fmt/init (`-backend=false`)/validate và `git diff --check` đều PASS. Không chạy cloud plan/import/apply, purge hoặc dispatch workflow; biến production vẫn là placeholder. Chủ repository cần tự xóa GitHub Secrets cũ nếu không còn được workflow khác dùng. |
-
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
