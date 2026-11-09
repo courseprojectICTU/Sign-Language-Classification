@@ -19,7 +19,11 @@ REFERENCE_PATH = ROOT / "tests" / "fixtures" / "notebook_prediction_reference.js
 CONFIDENCE_TOLERANCE = 0.0001
 
 
-def _sha256_file(path: Path) -> str:
+def _sha256_file(path: Path, *, normalize_line_endings: bool = False) -> str:
+    if normalize_line_endings:
+        contents = path.read_bytes().replace(b"\r\n", b"\n")
+        return hashlib.sha256(contents).hexdigest()
+
     digest = hashlib.sha256()
     with path.open("rb") as file:
         for chunk in iter(lambda: file.read(1024 * 1024), b""):
@@ -59,7 +63,7 @@ def _load_sample(letter: str, expected_sha256: str) -> list[float]:
     csv_path = get_data_dir() / letter / "1.csv"
     assert csv_path.is_file(), f"Landmark sample not found: {csv_path}"
 
-    actual_sha256 = _sha256_file(csv_path)
+    actual_sha256 = _sha256_file(csv_path, normalize_line_endings=True)
     assert actual_sha256 == expected_sha256, (
         f"CSV does not match the notebook reference for {letter}/1.csv: "
         f"expected SHA-256 {expected_sha256}, got {actual_sha256}"
