@@ -43,6 +43,9 @@ jobs:
       - name: Check formatting with Black
         run: black --check src tests scripts
 
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps
+
       - name: Run tests
         run: pytest tests -v
 
