@@ -1,8 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-08** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
-từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
+**Cập nhật lần cuối: 2026-11-09** — dữ kiện được đối chiếu với `origin/develop` và trạng thái US-033 trong phiên này. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
@@ -135,6 +134,9 @@ docs/api/US-018.md                                hợp đồng Terraform CLI v�
 docs/api/US-019.md                                hợp đồng ACR, RBAC và GitHub OIDC (local implementation PASS)
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
 docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
+docs/runbook/cost_management.md                  budget, MFA, dịch vụ cấm và xử lý cảnh báo (US-033)
+docs/runbook/billing_security.md                 quy trình billing guardrails và MFA (US-033)
+infra/billing-budget/                             Terraform budget $5 với cảnh báo $1/$5 (chưa apply)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
@@ -301,6 +303,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
 | **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
+| **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | `feature/US-033` | IMPLEMENTED LOCALLY; CLOUD VALIDATION BLOCKED | Terraform budget $5 với cảnh báo $1/$5, email Google Group, runbook MFA/dịch vụ cấm/xử lý alert; chưa apply, chưa test email, chưa xác minh MFA do thiếu quyền Billing/Workspace admin |
 
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | `feature/US-038` | ĐANG TÍCH HỢP | Multi-stage Docker build ghim digest, non-root runtime, Git SHA/build time, healthcheck; CORS cấu hình theo allowlist; đang hợp nhất với develop và chạy kiểm thử |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
