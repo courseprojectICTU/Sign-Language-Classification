@@ -37,6 +37,9 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -r requirements.txt
 
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium firefox
+
       - name: Run Ruff
         run: ruff check src tests scripts
 
