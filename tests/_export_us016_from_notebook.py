@@ -29,6 +29,11 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _sha256_csv_file(path: Path) -> str:
+    content = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(content).hexdigest()
+
+
 def main() -> None:
     model_path = get_model_path()
     if not model_path.is_file():
@@ -64,7 +69,7 @@ def main() -> None:
                 "letter": predicted_letter,
                 "confidence": confidence,
                 "confidence_percent": round(confidence * 100, 2),
-                "csv_sha256": _sha256_file(csv_path),
+                "csv_sha256": _sha256_csv_file(csv_path),
             }
         )
 
