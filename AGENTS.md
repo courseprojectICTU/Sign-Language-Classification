@@ -33,7 +33,7 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version, strict CORS allowlist qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + Dockerfile Linux + 3 notebook + 1 script Python native**.
 Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử Terraform US-018/US-019). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Terraform AzureRM và Azure Blob remote state đã được thiết lập; US-019 bổ sung ACR cleanup, deployment identity least-privilege và GitHub OIDC. Chưa có pipeline CI/CD triển khai tự động; hiện có workflow OIDC smoke test chạy thủ công.
 
-Frontend production hiện cấu hình gọi Azure App Service `https://vsl-vietnam.azurewebsites.net`. Đối chiếu 2026-11-10: App Service `vsl-vietnam` đang chạy image `vslacr3795.azurecr.io/vsl-api:latest`, thiếu `VSL_ALLOWED_ORIGINS` và trả 405 cho CORS preflight; build qua ACR bị chặn bởi `TasksOperationsNotAllowed`. Không khẳng định CORS đã triển khai cho tới khi cập nhật được image có middleware và kiểm tra lại preflight.
+Frontend production hiện cấu hình gọi Azure App Service `https://vsl-vietnam.azurewebsites.net`. Đối chiếu 2026-11-10: App Service `vsl-vietnam` đang chạy image `vslacr3795.azurecr.io/vsl-api:latest`, có `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` nhưng vẫn trả 405 cho CORS preflight; CORS tích hợp App Service cũng không thêm headers trên container hiện tại. Build qua ACR bị chặn bởi `TasksOperationsNotAllowed`, máy local chưa có Docker Desktop/WSL distro. Không khẳng định CORS đã triển khai cho tới khi cập nhật được image có middleware và kiểm tra lại preflight.
 
 ---
 
@@ -309,7 +309,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | `feature/US-038` | ĐANG TÍCH HỢP | Multi-stage Docker build ghim digest, non-root runtime, Git SHA/build time, healthcheck; CORS cấu hình theo allowlist; đang hợp nhất với develop và chạy kiểm thử |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
 | **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | `feature/US-019` | PASS — LOCAL VALIDATION | Dùng ACR hiện có `vslacr3795`; tác vụ preview `acr purge` chạy hằng ngày, giữ tối đa 3 tag `vsl-api` đủ điều kiện sau mỗi lần chạy (không phải giới hạn tức thời); identity dọn dẹp riêng có `AcrDelete`; principal triển khai GitHub chỉ có `AcrPush` trên ACR và `Container Apps Contributor` trên `vsl-api`; FIC chỉ tin subject nhánh `develop` đã duyệt. Đã có workflow OIDC smoke thủ công và Terraform outputs không nhạy cảm. US-019 tests 8/8, toàn bộ tests 85/85, Terraform fmt/init (`-backend=false`)/validate và `git diff --check` đều PASS. Không chạy cloud plan/import/apply, purge hoặc dispatch workflow; biến production vẫn là placeholder. Chủ repository cần tự xóa GitHub Secrets cũ nếu không còn được workflow khác dùng. |
-| **US-024** | Triển khai frontend lên Cloudflare Pages và kết nối API | `bugfix/US-024-cors` | PARTIAL — AC-024-01 chưa được sửa | Frontend gọi App Service `vsl-vietnam`; local CORS tests 8/8. Production image trả preflight 405, thiếu `VSL_ALLOWED_ORIGINS`; `az acr build` bị Azure chặn (`TasksOperationsNotAllowed`), nên chưa thay image/app settings. AC-024-02 vẫn NOT VERIFIED. |
+| **US-024** | Triển khai frontend lên Cloudflare Pages và kết nối API | `bugfix/US-024-cors` | PARTIAL — AC-024-01 chưa được sửa | Frontend gọi App Service `vsl-vietnam`; local CORS tests 8/8. App Setting đúng origin đã có nhưng production preflight vẫn 405; native App Service CORS không phát headers và đã được gỡ. `az acr build` bị Azure chặn (`TasksOperationsNotAllowed`), chưa thay image. AC-024-02 vẫn NOT VERIFIED. |
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
@@ -321,11 +321,12 @@ Entra trả 403 khi tạo App Registration và subscription chưa đăng ký
 Entra phù hợp và đăng ký resource provider. Chủ dự án sẽ push/merge nhánh qua
 quy trình review; GitHub Secrets cũ do chủ repository tự kiểm tra/xóa.
 
-**Cập nhật US-024 (2026-11-10):** Không chỉ đặt `VSL_ALLOWED_ORIGINS` trên App
-Service: image đang chạy chưa xử lý `OPTIONS` bằng CORS middleware. Cần build/
-phát hành image có middleware trước, sau đó cấu hình đúng origin
-`https://sign-language-classification.pages.dev` và kiểm tra `/health` +
-`OPTIONS /predict`. Azure ACR Tasks hiện từ chối build; không đổi image hoặc
+**Cập nhật US-024 (2026-11-10):** App Service đã có `VSL_ALLOWED_ORIGINS` đúng
+origin nhưng image đang chạy chưa xử lý `OPTIONS` bằng CORS middleware. CORS
+tích hợp App Service cũng đã thử bằng origin chính xác, không phát headers trên
+container này, và cấu hình thử đã được gỡ. Cần build/phát hành image có
+middleware rồi kiểm tra `/health` + `OPTIONS /predict`. Azure ACR Tasks từ chối
+build; máy local chưa có Docker Desktop hoặc WSL distro. Không đổi image hoặc
 restart service cho tới khi có build path được Azure cho phép.
 
 Khi bắt đầu phiên làm việc mới:
