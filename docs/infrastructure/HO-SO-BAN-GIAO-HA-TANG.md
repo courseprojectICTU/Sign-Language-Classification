@@ -87,7 +87,7 @@ Credential và role assignments tối thiểu. FIC tin cậy:
 |---|---|
 | Issuer | `https://token.actions.githubusercontent.com` |
 | Audience | `api://AzureADTokenExchange` |
-| Subject | `repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop` |
+| Subject | `repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/develop` |
 
 Sau khi Terraform provision xong và chủ dự án duyệt thao tác áp dụng, lấy ba
 identifier không nhạy cảm bằng `terraform output -raw github_oidc_client_id`,
