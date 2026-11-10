@@ -25,14 +25,13 @@ docs/
 │   ├── QUY-TRINH-REVIEW-PULL-REQUEST.md       # Quy trình 5 bước thẩm định Pull Request
 │   └── QUY-TRINH-REVIEW-PULL-REQUEST.docx     # Bản tài liệu định dạng Word
 ├── infrastructure/                    # Hạ tầng Đám mây, Triển khai & Vận hành
-│   ├── US-021.md                       # Tách staging/production trên Azure Container Apps
 │   ├── HO-SO-BAN-GIAO-HA-TANG.md      # Hồ sơ thông số kỹ thuật hạ tầng Staging Azure
 │   ├── HUONG-DAN-TRIEN-KHAI-AZURE.md  # Hướng dẫn đóng gói và triển khai Azure Container Apps
 │   └── HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md   # Hướng dẫn cấu hình tên miền vsl-vietnam.azurewebsites.net
 ├── api/                               # Hợp đồng giao tiếp API, CLI & Hạ tầng (API Contracts)
 │   ├── README.md                      # Quy ước viết và thẩm định tài liệu API
 │   ├── _TEMPLATE.md                   # Khung chuẩn 17 mục cho tài liệu API
-│   └── US-001.md ... US-038.md        # Hợp đồng API/CLI/hạ tầng hoặc test/lifecycle theo từng User Story
+│   └── US-001.md ... US-038.md        # Hợp đồng API/CLI/hạ tầng hoặc test/lifecycle theo từng User Story, gồm US-021
 ├── reports/                           # Báo cáo tổng hợp đồ án & nghiệm thu
 │   ├── US-012-BAO-CAO-THUC-HIEN.md    # Báo cáo thực hiện và nghiệm thu model lifecycle
 │   ├── US-019_PR_Description_Cap_Nhat.md # Báo cáo cập nhật PR US-019 (ACR, RBAC, OIDC)
@@ -51,6 +50,7 @@ docs/
 ### 2.0. Hướng dẫn vận hành và bàn giao
 - [RUNBOOK.md](RUNBOOK.md): Chẩn đoán backend, cold start, CI, smoke test, CORS, rollback thủ công ACA và chi phí.
 - [US-IMPLEMENTATION-STATUS.md](implementation/US-IMPLEMENTATION-STATUS.md): Trạng thái hợp nhất trên `develop`, bằng chứng kiểm thử và các điểm vận hành còn chờ xử lý.
+- **US-033 — Billing Budget và MFA:** [Runbook bảo mật/billing trên nhánh feature/US-033](https://github.com/courseprojectICTU/Sign-Language-Classification/blob/feature/US-033/docs/runbook/billing_security.md). Đây là hướng dẫn alerts-only; trạng thái tạo budget, gửi cảnh báo thử và xác minh MFA cần được kiểm tra trên GCP.
 
 ### 2.1. Nhóm Kiến Trúc Hệ Thống (`docs/architecture/`)
 - [ADR-001-frontend-hosting.md](architecture/ADR-001-frontend-hosting.md): Phân tích 4 phương án lưu trữ frontend (Firebase, cùng container, Vercel, Cloudflare Pages), lý do lựa chọn Cloudflare Pages kết hợp backend Azure Container Apps.
@@ -66,13 +66,14 @@ docs/
 - [QUY-TRINH-REVIEW-PULL-REQUEST.md](process/QUY-TRINH-REVIEW-PULL-REQUEST.md): Hướng dẫn 5 bước thẩm định Pull Request dành cho người duyệt mã nguồn.
 
 ### 2.4. Nhóm Hạ Tầng & Triển Khai Đám Mây (`docs/infrastructure/`)
-- [US-021.md](infrastructure/US-021.md): Kiến trúc shared ACR và hai môi trường Azure Container Apps độc lập.
 - [HO-SO-BAN-GIAO-HA-TANG.md](infrastructure/HO-SO-BAN-GIAO-HA-TANG.md): Hồ sơ kỹ thuật bàn giao môi trường Staging Azure Container Apps (Resource Group, URL, ACR, cấu hình GitHub OIDC, biến môi trường).
 - [HUONG-DAN-TRIEN-KHAI-AZURE.md](infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md): Hướng dẫn chi tiết từng bước đóng gói Docker image, đẩy lên Azure Container Registry và cấu hình Azure Container Apps.
 - [HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md](infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md): Hướng dẫn cấu hình tên miền dịch vụ `vsl-vietnam.azurewebsites.net`.
 
 ### 2.5. Nhóm Hợp Đồng API, CLI & Hạ tầng (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.
+- [Contract US-011 — xuất model ONNX và kiểm tra parity](https://github.com/courseprojectICTU/Sign-Language-Classification/blob/feature/US-011/docs/api/US-011.md): trạng thái `DRAFT`; chưa có kết quả conversion/parity được xác nhận.
+- [US-021.md](api/US-021.md): Kiến trúc shared ACR và hai môi trường Azure Container Apps độc lập. [CI của PR #43](https://github.com/courseprojectICTU/Sign-Language-Classification/actions/runs/42851723612) đã thành công; Terraform chưa được apply nên chưa xác nhận triển khai Azure.
 - Hợp đồng theo từng User Story: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (`/health`), `US-006.md` (`/predict`), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (`/version`), `US-010.md` (đóng gói Dockerfile), `US-012.md` (test/lifecycle nạp model), `US-013.md` (benchmark cold start staging), `US-014.md` (unit test NumPy heatmap), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu notebook), `US-017.md` (CLI smoke test), `US-018.md` (Terraform Azure Blob state), `US-019.md` (ACR, RBAC & GitHub OIDC), `US-022.md` (web frontend tĩnh), `US-024.md` (Cloudflare Pages), `US-025.md` (CORS allowlist & lỗi mạng), `US-031.md` (CLI rollback ACA), `US-038.md` (tối ưu multi-stage Docker build & CI metrics).
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
