@@ -1,0 +1,130 @@
+name: Publish API image to ACR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: acr-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish linux/amd64 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ACR_NAME: vslacr3795
+      ACR_LOGIN_SERVER: vslacr3795.azurecr.io
+      IMAGE_NAME: vsl-api
+    steps:
+      - name: Require the CORS fix branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/bugfix/US-024-cors" ]]; then
+            echo "::error::Run this workflow with the bugfix/US-024-cors branch selected."
+            exit 1
+          fi
+
+      - name: Check out source and Git LFS model
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Verify the model is a materialized HDF5 file
+        shell: bash
+        run: |
+          git lfs ls-files | grep -F 'train/vsl_cnn_pose_keras.h5'
+          python - <<'PY'
+          from pathlib import Path
+
+          model = Path("train/vsl_cnn_pose_keras.h5")
+          with model.open("rb") as stream:
+              header = stream.read(8)
+          size = model.stat().st_size
+          if header != b"\x89HDF\r\n\x1a\n" or size < 1_000_000:
+              raise SystemExit(
+                  f"Expected a materialized HDF5 model, got {size} bytes "
+                  f"with header {header!r}"
+              )
+          print(f"Verified HDF5 model: {size} bytes")
+          PY
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign in to ACR
+        shell: bash
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Record build time
+        shell: bash
+        run: echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build and push image tagged with the full Git SHA
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ env.BUILD_TIME }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
+          cache-from: type=gha,scope=acr-publish
+          cache-to: type=gha,mode=max,scope=acr-publish
+
+      - name: Verify pushed platform, Git SHA, and digest
+        shell: bash
+        env:
+          EXPECTED_GIT_SHA: ${{ github.sha }}
+          BUILD_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          image_ref="$ACR_LOGIN_SERVER/$IMAGE_NAME:$EXPECTED_GIT_SHA"
+          docker pull --platform linux/amd64 "$image_ref"
+
+          platform="$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image_ref")"
+          if [[ "$platform" != "linux/amd64" ]]; then
+            echo "::error::Expected linux/amd64, found $platform"
+            exit 1
+          fi
+
+          image_sha="$(docker run --platform linux/amd64 --rm --entrypoint python \
+            "$image_ref" -c 'import os; print(os.environ.get("GIT_SHA", ""))')"
+          if [[ "$image_sha" != "$EXPECTED_GIT_SHA" ]]; then
+            echo "::error::Image GIT_SHA ($image_sha) does not match $EXPECTED_GIT_SHA"
+            exit 1
+          fi
+
+          registry_digest="$(az acr repository show \
+            --name "$ACR_NAME" \
+            --image "$IMAGE_NAME:$EXPECTED_GIT_SHA" \
+            --query digest -o tsv)"
+          if [[ "$registry_digest" != "$BUILD_DIGEST" ]]; then
+            echo "::error::Registry digest ($registry_digest) does not match build digest ($BUILD_DIGEST)"
+            exit 1
+          fi
+
+          docker buildx imagetools inspect "$image_ref"
+          {
+            echo "## Published API image"
+            echo "- Image: \`$image_ref\`"
+            echo "- Platform: \`$platform\`"
+            echo "- Git SHA: \`$image_sha\`"
+            echo "- Digest: \`$registry_digest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
