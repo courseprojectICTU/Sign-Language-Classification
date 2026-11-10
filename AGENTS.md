@@ -1,9 +1,10 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-08** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
-từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
-hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
+**Cập nhật lần cuối: 2026-11-10** — các mục được cập nhật trong phiên này đã được
+đối chiếu trực tiếp; các mốc lịch sử khác giữ nguyên ngày ghi tại từng mục. Nếu bạn
+phát hiện file này lệch với thực tế, hãy sửa nó ngay (đọc mục 10.0 trước — file có
+tiếng Việt, `edit` dễ fail).
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
 trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md).
@@ -29,8 +30,10 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 | `docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/architecture/ADR-001-*` | kế hoạch web hóa + CI/CD trên Azure |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version, strict CORS allowlist qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + Dockerfile Linux + 3 notebook + 1 script Python native**.
 Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử Terraform US-018/US-019). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Terraform AzureRM và Azure Blob remote state đã được thiết lập; US-019 bổ sung ACR cleanup, deployment identity least-privilege và GitHub OIDC. Chưa có pipeline CI/CD triển khai tự động; hiện có workflow OIDC smoke test chạy thủ công.
+
+Frontend production hiện cấu hình gọi Azure App Service `https://vsl-vietnam.azurewebsites.net`. Đối chiếu 2026-11-10: App Service `vsl-vietnam` đang chạy image `vslacr3795.azurecr.io/vsl-api:latest`, thiếu `VSL_ALLOWED_ORIGINS` và trả 405 cho CORS preflight; build qua ACR bị chặn bởi `TasksOperationsNotAllowed`. Không khẳng định CORS đã triển khai cho tới khi cập nhật được image có middleware và kiểm tra lại preflight.
 
 ---
 
@@ -40,9 +43,10 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-012` (đang checkout), `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019`, `feature/US-022`, `feature/US-038`, `backup/develop-before-rollback` |
-| `develop` | `780b7aa` — đồng bộ với `origin/develop` |
-| `feature/US-012` | `f0f293c` — đã nghiệm thu PASS trong phiên 2026-11-08; chưa push/PR |
+| Nhánh local | `develop`, `bugfix/US-024-cors` (đang checkout), `feature/US-007`, `feature/US-012`, `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019`, `feature/US-022`, `feature/US-024`, `feature/US-030`, `feature/US-038`, `test/US-022-US-025` (worktree khác), `backup/develop-before-rollback` |
+| `develop` | `bf9f662` — đồng bộ với `origin/develop` |
+| Nhánh phiên này | `bugfix/US-024-cors` — đang checkout để sửa/test CORS US-024 |
+| `feature/US-012` | `77e9284` — branch local sau commit tài liệu; đã nghiệm thu PASS trong phiên 2026-11-08; đang behind `origin/feature/US-012` |
 | `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
 | `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
 | `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
@@ -51,7 +55,7 @@ Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/s
 | `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; code đã commit; ACR staging đã import vào remote state, apply bị chặn bởi quyền Entra và provider registration |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | Đang ở `feature/US-012`; có các thư mục untracked `infra/` và `web/` không thuộc US-012, đã giữ nguyên |
+| Trạng thái working tree | US-024 được xử lý riêng trên `bugfix/US-024-cors`; không gộp thay đổi ngoài phạm vi |
 
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
@@ -305,6 +309,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | `feature/US-038` | ĐANG TÍCH HỢP | Multi-stage Docker build ghim digest, non-root runtime, Git SHA/build time, healthcheck; CORS cấu hình theo allowlist; đang hợp nhất với develop và chạy kiểm thử |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
 | **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | `feature/US-019` | PASS — LOCAL VALIDATION | Dùng ACR hiện có `vslacr3795`; tác vụ preview `acr purge` chạy hằng ngày, giữ tối đa 3 tag `vsl-api` đủ điều kiện sau mỗi lần chạy (không phải giới hạn tức thời); identity dọn dẹp riêng có `AcrDelete`; principal triển khai GitHub chỉ có `AcrPush` trên ACR và `Container Apps Contributor` trên `vsl-api`; FIC chỉ tin subject nhánh `develop` đã duyệt. Đã có workflow OIDC smoke thủ công và Terraform outputs không nhạy cảm. US-019 tests 8/8, toàn bộ tests 85/85, Terraform fmt/init (`-backend=false`)/validate và `git diff --check` đều PASS. Không chạy cloud plan/import/apply, purge hoặc dispatch workflow; biến production vẫn là placeholder. Chủ repository cần tự xóa GitHub Secrets cũ nếu không còn được workflow khác dùng. |
+| **US-024** | Triển khai frontend lên Cloudflare Pages và kết nối API | `bugfix/US-024-cors` | PARTIAL — AC-024-01 chưa được sửa | Frontend gọi App Service `vsl-vietnam`; local CORS tests 8/8. Production image trả preflight 405, thiếu `VSL_ALLOWED_ORIGINS`; `az acr build` bị Azure chặn (`TasksOperationsNotAllowed`), nên chưa thay image/app settings. AC-024-02 vẫn NOT VERIFIED. |
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
@@ -315,6 +320,13 @@ Entra trả 403 khi tạo App Registration và subscription chưa đăng ký
 `Microsoft.ManagedIdentity`. Chỉ tiếp tục apply sau khi Azure admin cấp quyền
 Entra phù hợp và đăng ký resource provider. Chủ dự án sẽ push/merge nhánh qua
 quy trình review; GitHub Secrets cũ do chủ repository tự kiểm tra/xóa.
+
+**Cập nhật US-024 (2026-11-10):** Không chỉ đặt `VSL_ALLOWED_ORIGINS` trên App
+Service: image đang chạy chưa xử lý `OPTIONS` bằng CORS middleware. Cần build/
+phát hành image có middleware trước, sau đó cấu hình đúng origin
+`https://sign-language-classification.pages.dev` và kiểm tra `/health` +
+`OPTIONS /predict`. Azure ACR Tasks hiện từ chối build; không đổi image hoặc
+restart service cho tới khi có build path được Azure cho phép.
 
 Khi bắt đầu phiên làm việc mới:
 1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).

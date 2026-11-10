@@ -77,15 +77,19 @@ az webapp create `
 
 ---
 
-### Bước 3: Cấu hình Cổng kết nối Container (Port 8080)
-Cấu hình biến môi trường chuyển tiếp lưu lượng từ cổng 443 HTTPS vào cổng 8080 của container:
+### Bước 3: Cấu hình cổng container và CORS
+Cấu hình cổng nội bộ 8080 và allowlist chính xác cho frontend Cloudflare Pages. Lệnh lưu Application Settings và khởi động lại ứng dụng:
 
 ```powershell
 az webapp config appsettings set `
   --resource-group $RESOURCE_GROUP `
   --name $APP_NAME `
-  --settings WEBSITES_PORT=8080
+  --settings `
+    WEBSITES_PORT=8080 `
+    VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev
 ```
+
+`VSL_ALLOWED_ORIGINS` chỉ nhận origin đầy đủ (scheme + hostname), không thêm path, wildcard hoặc dấu `/` cuối. Chỉ thêm origin khác khi đã xác minh và có nhu cầu.
 
 ---
 
@@ -122,6 +126,16 @@ Phản hồi chuẩn:
 ```powershell
 curl https://vsl-vietnam.azurewebsites.net/version
 ```
+
+### 4.4. Kiểm tra CORS preflight từ Cloudflare Pages
+```powershell
+curl.exe -i -X OPTIONS "https://vsl-vietnam.azurewebsites.net/predict" `
+  -H "Origin: https://sign-language-classification.pages.dev" `
+  -H "Access-Control-Request-Method: POST" `
+  -H "Access-Control-Request-Headers: content-type"
+```
+
+Kết quả cần có HTTP `200` và `Access-Control-Allow-Origin: https://sign-language-classification.pages.dev`. Nếu trả `405`, image đang chạy chưa có CORS middleware; chỉ thêm Application Setting sẽ chưa đủ, cần triển khai image chứa cấu hình CORS trước.
 
 ---
 

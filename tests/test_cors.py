@@ -34,6 +34,25 @@ def test_configured_origin_can_preflight_and_read_startup_health(
     assert health.headers["access-control-allow-origin"] == origin
 
 
+def test_production_pages_origin_can_preflight(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    origin = "https://sign-language-classification.pages.dev"
+    monkeypatch.setenv("VSL_ALLOWED_ORIGINS", origin)
+    response = _client().options(
+        "/predict",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+    assert "POST" in response.headers["access-control-allow-methods"]
+
+
 def test_unconfigured_origin_is_denied(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
