@@ -48,10 +48,10 @@ variable "github_oidc_subject" {
   type        = string
 
   validation {
-    condition = startswith(
-      var.github_oidc_subject,
-      "repo:courseprojectICTU/Sign-Language-Classification:"
-    )
+    condition = can(regex(
+      "^repo:courseprojectICTU(?:@[0-9]+)?/Sign-Language-Classification(?:@[0-9]+)?:",
+      var.github_oidc_subject
+    ))
     error_message = "github_oidc_subject must belong to the configured GitHub repository."
   }
 }
