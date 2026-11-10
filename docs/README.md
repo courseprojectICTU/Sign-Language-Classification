@@ -25,6 +25,7 @@ docs/
 │   ├── QUY-TRINH-REVIEW-PULL-REQUEST.md       # Quy trình 5 bước thẩm định Pull Request
 │   └── QUY-TRINH-REVIEW-PULL-REQUEST.docx     # Bản tài liệu định dạng Word
 ├── infrastructure/                    # Hạ tầng Đám mây, Triển khai & Vận hành
+│   ├── US-021.md                       # Tách staging/production trên Azure Container Apps
 │   ├── HO-SO-BAN-GIAO-HA-TANG.md      # Hồ sơ thông số kỹ thuật hạ tầng Staging Azure
 │   ├── HUONG-DAN-TRIEN-KHAI-AZURE.md  # Hướng dẫn đóng gói và triển khai Azure Container Apps
 │   └── HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md   # Hướng dẫn cấu hình tên miền vsl-vietnam.azurewebsites.net
@@ -65,6 +66,7 @@ docs/
 - [QUY-TRINH-REVIEW-PULL-REQUEST.md](process/QUY-TRINH-REVIEW-PULL-REQUEST.md): Hướng dẫn 5 bước thẩm định Pull Request dành cho người duyệt mã nguồn.
 
 ### 2.4. Nhóm Hạ Tầng & Triển Khai Đám Mây (`docs/infrastructure/`)
+- [US-021.md](infrastructure/US-021.md): Kiến trúc shared ACR và hai môi trường Azure Container Apps độc lập.
 - [HO-SO-BAN-GIAO-HA-TANG.md](infrastructure/HO-SO-BAN-GIAO-HA-TANG.md): Hồ sơ kỹ thuật bàn giao môi trường Staging Azure Container Apps (Resource Group, URL, ACR, cấu hình GitHub OIDC, biến môi trường).
 - [HUONG-DAN-TRIEN-KHAI-AZURE.md](infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md): Hướng dẫn chi tiết từng bước đóng gói Docker image, đẩy lên Azure Container Registry và cấu hình Azure Container Apps.
 - [HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md](infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md): Hướng dẫn cấu hình tên miền dịch vụ `vsl-vietnam.azurewebsites.net`.

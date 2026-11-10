@@ -3,3 +3,5 @@
 *.backend.hcl
 *.tfplan
 crash.log
+environments/staging/staging.tfvars
+environments/production/production.tfvars

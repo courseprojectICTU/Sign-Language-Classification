@@ -1,0 +1,22 @@
+environment                    = "production"
+subscription_id                = "REPLACE_WITH_PRODUCTION_SUBSCRIPTION_ID"
+registry_subscription_id       = "373b1f03-330f-4302-a9e9-aa1fe793bf2e"
+resource_group_name            = "REPLACE_WITH_PRODUCTION_RESOURCE_GROUP"
+location                       = "REPLACE_WITH_PRODUCTION_AZURE_REGION"
+container_app_environment_name = "cae-vsl-production"
+container_app_name             = "vsl-api-production"
+registry_name                  = "vslacr3795"
+registry_resource_group_name   = "rg-vsl-staging"
+image_repository               = "vsl-api"
+image_tag                      = "REPLACE_WITH_PUBLISHED_IMAGE_TAG"
+cpu                            = 1
+memory                         = "2Gi"
+min_replicas                   = 1
+max_replicas                   = 10
+environment_variables = {
+  LOG_LEVEL           = "WARNING"
+  VSL_ALLOWED_ORIGINS = "https://sign-language-classification.pages.dev"
+}
+tags = {
+  workload = "sign-language-classification"
+}

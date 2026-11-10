@@ -320,6 +320,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-017** | Smoke test tự động sau triển khai | PR `#29` | MERGED (CLI PASS) | `scripts/smoke_test.py`; unit test pass; live deploy/CD chờ US-029 |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | PR `#22` | PASS — STAGING | AzureRM + Blob state `vslstate2026`/`tfstate`; production placeholder |
 | **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | PR `#22` | MERGED — LOCAL PASS | Code/test trên `develop`; apply trên Azure chờ quyền Entra & `Microsoft.ManagedIdentity` |
+| **US-021** | Tách môi trường staging và production trên Azure Container Apps | `feature/US-021` | IN PROGRESS | Local: 18 test liên quan, Ruff/Black, Terraform fmt/validate PASS; CI GitHub chờ PR |
 | **US-022** | Trang web tĩnh tải hoặc chụp ảnh và hiển thị kết quả | PR `#23` | MERGED — PASS | `web/` + `scripts/generate_web_labels.py` + `tests/test_us022_web.py` |
 | **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33` | PARTIAL (Pages UP) | `https://sign-language-classification.pages.dev` HTTP 200; AC-024-01 chờ CORS trên ACA; AC-024-02 chờ đo scale-to-zero |
 | **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | MERGED (Backend PASS) | Strict allowlist `VSL_ALLOWED_ORIGINS`; cần cập nhật revision ACA để bật E2E |

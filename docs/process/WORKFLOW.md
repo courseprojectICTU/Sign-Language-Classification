@@ -3,7 +3,7 @@
 File này là **quy trình bắt buộc** cho mọi User Story trong dự án. Đọc lại file này
 trước khi bắt đầu bất kỳ US nào. Nguồn dữ liệu gốc: `docs/planning/product-backlog-cicd-2-tuan.xlsx`.
 
-Cập nhật lần cuối: 2026-10-19 (bổ sung bước API Documentation + bộ khung `docs/api/`).
+Cập nhật lần cuối: 2026-11-10 (ghi nhận US-021 tách staging/production trên Azure Container Apps).
 
 ---
 
@@ -299,7 +299,6 @@ py -3.12 -m pytest tests -v
 | 2026-11-06 | **US-013** | `feature/US-013` | `docs/api/US-013.md` (`ANALYSIS_READY`, đã duyệt) | TSK-021, TSK-022, TSK-023 | AC-013-01 — **64/64 test toàn repo; Staging Azure Container Apps URL sẵn sàng** | PASS (Harness & Tests) |
 | 2026-11-06 | **US-014** | `feature/US-014` | `docs/api/US-014.md` (`ANALYSIS_READY`, đã duyệt) | TSK-022, TSK-023 | AC-014-01, AC-014-02 — **9/9 unit test thuần NumPy (0.28s); 9/9 test hợp đồng (2.43s)** | PASS (chủ dự án xác nhận 2026-11-06) |
 | 2026-11-08 | **US-012** | `feature/US-012` | `docs/api/US-012.md` — hợp đồng test/lifecycle 17 mục; N/A cho public API | TSK-019, TSK-020 | AC-012-01 — **75/75 test toàn repo; 19/19 test lifecycle + health + predict** | PASS (chủ dự án xác nhận 2026-11-08) |
-
-
+| 2026-11-10 | **US-021** | `feature/US-021` | N/A — IaC, không tạo API công khai | Module Container Apps, ACR dùng chung, state tách riêng | 18 test liên quan, Ruff/Black, Terraform fmt/validate — local PASS; CI GitHub chờ PR | Chưa nghiệm thu |
 
 
