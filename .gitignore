@@ -60,4 +60,7 @@ desktop.ini
 *.toc
 *.synctex.gz
 *.fls
-*.fdb_latexmk
+*.fdb_latexmk
+
+# Local idea notes (do not push to GitHub)
+docs/ideas/
