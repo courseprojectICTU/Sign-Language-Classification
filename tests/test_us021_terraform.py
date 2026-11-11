@@ -96,7 +96,7 @@ def test_ci_formats_and_validates_each_terraform_root() -> None:
 
 
 def test_us021_documentation_describes_isolation_and_shared_registry() -> None:
-    document = _read(ROOT / "docs" / "infrastructure" / "US-021.md")
+    document = _read(ROOT / "docs" / "api" / "US-021.md")
 
     for required in (
         "Azure Container Registry",
