@@ -284,21 +284,24 @@ def test_br_010_corrupt_or_empty_declared_image_returns_400_and_logs(
     )
 
 
-def test_br_010_oversized_upload_stops_reading_early_around_5mb() -> None:
+def test_br_010_oversized_upload_stops_reading_early_around_5mb(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Streaming upload reader must stop shortly after crossing 5 MB rather than buffering 20 MB."""
-    from fastapi import UploadFile
+    from starlette.datastructures import UploadFile as StarletteUploadFile
 
     client, _ = _client_with_mock_model()
+    caplog.set_level(logging.WARNING, logger="vsl.service")
     oversized_jpeg = b"\xff\xd8\xff\xe0" + (b"\x00" * (20 * 1024 * 1024 - 4))
-    original_read = UploadFile.read
+    original_read = StarletteUploadFile.read
     read_sizes: list[int] = []
 
-    async def tracked_read(self: UploadFile, size: int = -1) -> bytes:
+    async def tracked_read(self: StarletteUploadFile, size: int = -1) -> bytes:
         chunk = await original_read(self, size)
         read_sizes.append(len(chunk))
         return chunk
 
-    with patch.object(UploadFile, "read", new=tracked_read):
+    with patch.object(StarletteUploadFile, "read", new=tracked_read):
         response = client.post(
             "/predict",
             files={"file": ("anh_20mb.jpg", io.BytesIO(oversized_jpeg), "image/jpeg")},
@@ -307,3 +310,8 @@ def test_br_010_oversized_upload_stops_reading_early_around_5mb() -> None:
     assert response.status_code == 413
     assert sum(read_sizes) <= MAX_UPLOAD_BYTES + 128 * 1024
     assert len(read_sizes) > 1, "Expected chunked reading instead of a single unbounded read()"
+    _assert_rejection_warning_log(
+        caplog,
+        expected_status=413,
+        expected_reason="payload_too_large",
+    )
