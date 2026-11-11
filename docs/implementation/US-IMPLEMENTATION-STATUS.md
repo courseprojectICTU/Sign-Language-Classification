@@ -13,6 +13,7 @@
 | US-017 — Deployment smoke test | **Merged into `develop` (PR `#29`)** | `4af6c03` (`feature/US-017`), `scripts/smoke_test.py` | Unit tests use HTTP stubs; `/health`, `/version`, and CORS/`POST /predict` (`no_hand`) passed live on 2026-11-11, while `smoke_test.py --image` with a real hand+face sample image and CD wiring (`US-029`) remain pending. |
 | US-025 — CORS and network errors | **Live on staging & merged (PR `#28`)** | `5e96efb` (`feature/US-025`), `src/vsl/service.py` + `tests/test_cors.py` | `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` is live on both App Service `vsl-vietnam` and Standard Container App `vsl-api` (`9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f`); preflight `200`, `POST /predict` `200`, and disallowed-origin `400` were verified on 2026-11-11. |
 | US-031 — ACA traffic rollback | **Merged into `develop` (PR `#27`)** | `61f5e7f` (`feature/US-031`), `scripts/rollback.py` | `vsl-api` on `cae-vsl-staging-std` is now provisioned in `Multiple` revision mode (`vsl-api--lhkogbo`); live rollback rehearsal with a second active revision and automatic CD wiring (`US-029`) remain pending. |
+| US-033 — Azure Billing Budget & Entra ID MFA | **Implemented locally on `feature/US-033`** | `infra/budget.tf`, `docs/RUNBOOK.md` (Section 7), `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` | `terraform validate` and local contract tests pass; awaiting owner `terraform apply` (or Sponsorship Portal alert fallback) and Entra ID MFA verification on Azure Portal (`AC-033-01`). |
 | US-035 — README and runbook | **Merged into `develop` (PR `#24`)** | `3250e29` (`feature/US-035`), unified with post-merge updates | `README.md`, `docs/RUNBOOK.md`, and this status ledger were updated after subsequent merges (`#22`–`#36`) to remove conflict markers and reflect `develop` accurately. |
 
 *(Additional merged stories on `develop` since `780b7aa`: `US-022` static frontend in PR `#23`, `US-018`/`US-019` Azure Terraform & OIDC in PR `#22`, `US-012` model lifecycle in PR `#32`, `US-024` Cloudflare Pages verification in PR `#33`, and bugfix PRs `#34` & `#36`.)*
@@ -44,7 +45,12 @@
 ### US-035
 - `README.md`, `HUONG-DAN-CHAY.md`, `docs/RUNBOOK.md`, `docs/README.md`, and this file document the Azure Container Apps + Cloudflare Pages architecture, local setup, CI checks, cold-start triage, CORS configuration, guarded ACA rollback, and cloud cost checks.
 
+### US-033
+- Added `infra/budget.tf` declaring `azurerm_consumption_budget_subscription.monthly` (`$5 USD/month`, `Actual` notifications at `20%` = `$1` and `100%` = `$5`, `Owner` role + configurable `budget_alert_emails`, gated by `enable_billing_budget`), along with `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py`, and Azure-aligned cost/MFA/prohibited-services guidance consolidated in Section 7 of `docs/RUNBOOK.md`. Removed the earlier GCP `infra/billing-budget/` and `docs/runbook/` files and restored strict no-GCP enforcement in `tests/test_us018_terraform.py`.
+
 ## Remaining environment & delivery gaps
+
+- **Azure Cost Budget & Entra ID MFA (`US-033`):** `terraform validate` and local contract tests pass; pending owner execution of `terraform -chdir=infra plan/apply` (or Azure Sponsorships Portal fallback if `Microsoft.Consumption/budgets` is offer-restricted) and Entra ID MFA verification on Azure Portal (`AC-033-01`).
 
 - **CD Automation (`US-029`):** Not yet present in `develop`; image publishing and ACA deployment remain manual (manual OIDC ACR publish workflow `.github/workflows/acr-publish.yml` is merged on `develop`).
 - **Azure OIDC & Staging Infra (`US-019`):** `Microsoft.ManagedIdentity` is registered and staging Terraform is applied against `vslstate2026` (`vsl-github-actions-staging` has `AcrPush` on `vslacr3795` and `Container Apps Contributor` on recreated `vsl-api`); GitHub OIDC smoke test and ACR publish (`42843489497`) passed. Only `azurerm_container_registry_task.cleanup` remains blocked by Azure for Students (`TasksOperationsNotAllowed`).
