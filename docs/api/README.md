@@ -129,4 +129,5 @@ Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test
 | [`US-015.md`](US-015.md) | US-015 | Hợp đồng dữ liệu 93 toạ độ landmark | `ANALYSIS_READY` (PASS) |
 | [`US-017.md`](US-017.md) | US-017 | Smoke test tự động sau triển khai & endpoint `/version` | `ANALYSIS_READY` (PASS) |
 | [`US-025.md`](US-025.md) | US-025 | Cấu hình CORS và xử lý 3 trạng thái lỗi mạng | `ANALYSIS_READY` (PASS) |
+| [`US-029.md`](US-029.md) | US-029 | CD ACA staging: smoke-test revision rồi chuyển traffic | PR description / API công khai: N/A |
 | [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |
