@@ -58,6 +58,7 @@ def test_ci_playwright_install_has_apt_resilience_and_timeouts() -> None:
     assert "timeout-minutes:" in content
     assert "~/.cache/ms-playwright" in content
     assert 'Acquire::ForceIPv4 "true"' in content
+    assert "/etc/apt/apt-mirrors.txt" in content
     assert "azure.archive.ubuntu.com/ubuntu" in content
     assert "archive.ubuntu.com/ubuntu" in content
     assert "timeout " in content
