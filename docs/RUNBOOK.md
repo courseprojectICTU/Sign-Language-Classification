@@ -1,11 +1,14 @@
 # Operations Runbook
 
-This runbook describes the repository's actual target architecture: FastAPI in
-Azure Container Apps (ACA). It is not a Cloud Run guide. There is no frontend
-source, no deployment workflow in `develop`, and no automatic rollback after a
-failed deployment smoke test. Review
+This runbook describes the repository's actual cloud target architecture: FastAPI
+in **Azure Container Apps (ACA)** paired with the static frontend in `web/`
+(deployed on Cloudflare Pages). It is not a Cloud Run guide. Automated CD
+deployment (`US-029`) and automatic rollback after a failed deployment smoke test
+are not yet implemented in `develop`. Review
 [US implementation status](implementation/US-IMPLEMENTATION-STATUS.md) before
-following branch-only instructions.
+operating cloud resources.
+
+---
 
 ## 1. Before operating a cloud resource
 
@@ -31,6 +34,8 @@ $AppName = "<container-app>"
 $ApiUrl = "https://<container-app-fqdn>"
 ```
 
+---
+
 ## 2. Backend is unavailable or unhealthy
 
 Start with read-only checks:
@@ -50,52 +55,69 @@ curl.exe --include "$ApiUrl/version"
   restarting or changing traffic.
 - If the app is not ready, preserve the current revision and logs for
   diagnosis. Do not delete the app or resource group as a troubleshooting step.
-- The service also has a Docker health check. A passing container check does
-  not replace checking the public endpoint.
+- The container also defines a Docker `HEALTHCHECK`. A passing container check
+  does not replace checking the public endpoint.
 
 For local isolation, run the API or Docker container using the commands in
 [README.md](../README.md). If local succeeds and the cloud endpoint does not,
 investigate ACA ingress, image pull, resource limits, and revision state.
 
-## 3. Cold start is slow
+---
+
+## 3. Khởi động nguội chậm (Cold start is slow)
 
 1. Record the request time, endpoint, response status, and revision SHA.
-2. Check ACA logs and replica/revision state. The infrastructure handoff
-   describes a staging `minReplicas` setting, but that live setting must be
-   verified in Azure; documentation is not runtime evidence.
+2. Check ACA logs and replica/revision state. Note that `docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md`
+   describes `minReplicas = 1` on staging, which avoids scale-to-zero cold starts;
+   verify live replica configuration in Azure rather than assuming from docs.
 3. Distinguish a cold start from a slow request. Do not report a cold-start
    measurement unless the required preflight evidence proves the environment
    was cold.
 4. The `scripts/benchmark_cold_start.py` harness requires an operator-provided
    preflight command and URL. Follow its contract in
    [`docs/api/US-013.md`](api/US-013.md); do not change replica counts or scale
-   production to zero without approval.
+   production to zero without owner approval.
 
-## 4. CI pull request fails
+---
 
-The CI workflow is on `feature/US-026` and becomes active only after that PR is
-merged. It runs Ruff, Black, selected NumPy-only tests, and a Docker build for
-`linux/amd64` without pushing an image.
+## 4. Pipeline CI báo đỏ (CI pull request fails)
 
-After US-026 is available in the checkout, reproduce its checks:
+The pull-request CI workflow (`.github/workflows/ci.yml`, US-026) is active on
+`develop` and runs Ruff, Black `--check`, the full `pytest` suite (including
+Playwright browser tests), and a `linux/amd64` Docker build without pushing.
+
+Reproduce the CI checks locally:
 
 ```powershell
 ruff check src tests scripts
 black --check src tests scripts
-python -m pytest -v tests/test_ci_workflow.py tests/test_config.py tests/test_dockerfile.py tests/test_heatmap.py tests/test_heatmap_contract.py tests/test_labels.py tests/test_requirements.py
+pytest tests -v
 ```
 
-For Docker build failures, verify Docker Engine is running, the Git LFS model
-was downloaded, and `docker buildx` can access the repository context. CI build
-duration/image-size metrics are emitted only when the workflow reaches its
-metrics step. The workflow does not push an image or deploy an app.
+*(On Windows setups where `.venv\Scripts\python.exe` hits the `_ctypes`/`cv2`
+DLL issue, run `pytest` and `black` via `"D:\program\python\python.exe"`, as
+documented in [docs/process/WORKFLOW.md](process/WORKFLOW.md)).*
 
-## 5. Smoke test fails
+For Docker build failures:
 
-The standalone script is on `feature/US-017`; it is not part of `develop` until
-that PR is merged. Once available, supply an image file containing a usable
-hand and face, the exact SHA expected from the target revision, and that
-revision's URL:
+1. Verify Docker Engine is running and Git LFS pulled `train/vsl_cnn_pose_keras.h5`.
+2. Ensure `--platform=linux/amd64` and `requirements-runtime.txt` packages do
+   not introduce missing OS/compiler dependencies into the slim runtime stage.
+3. CI build duration and image-size metrics are emitted to `$GITHUB_STEP_SUMMARY`
+   only when the `docker-build` job completes.
+
+---
+
+## 5. Smoke test thất bại & Hoàn tác thủ công (Smoke test failure & ACA rollback)
+
+`scripts/smoke_test.py` (US-017) and `scripts/rollback.py` (US-031) are
+available on `develop`, though automatic CD wiring (`US-029`) is not yet
+implemented.
+
+### 5.1. Chạy Smoke Test
+
+Supply an image file containing a usable hand and face, the exact expected Git
+SHA of the target revision, and that revision's URL:
 
 ```powershell
 python scripts/smoke_test.py `
@@ -104,55 +126,25 @@ python scripts/smoke_test.py `
   --image "<path-to-valid-image>"
 ```
 
-The script checks `/health`, `/version`, and `/predict`; a failed check exits
+The script checks `/health`, `/version`, and `/predict`; any failed check exits
 non-zero. If it fails:
 
 1. Keep the output and identify which endpoint failed.
 2. Check the same endpoint and revision logs directly.
-3. Check that the supplied SHA belongs to the image and the image is valid.
-4. Do not call the deployment successful or automatically roll back: there is
-   no deployment workflow wired to this smoke test in the requested branches.
-5. If an operator chooses manual rollback, use the guarded procedure below
-   after confirming the target and current revision.
+3. Verify the supplied SHA belongs to the image and the image is valid.
+4. Do not declare the deployment healthy or shift traffic until verified.
+5. If an operator chooses manual rollback, follow the guarded procedure below.
 
-No verified sample image or live production smoke-test evidence is stored in
-this repository.
+### 5.2. Quy trình Rollback thủ công trên Azure Container Apps
 
-## 6. CORS failure in a browser
+`scripts/rollback.py` targets **Azure Container Apps** (not Cloud Run). It
+requires Azure CLI (`az`), approved permissions, ACA `Multiple` revision mode,
+at least two active revisions, and exactly one revision receiving 100% of
+traffic. *(Note: `scripts/rollback.sh` is a legacy Cloud Run artifact retained
+only to satisfy existing file-existence checks in `tests/test_ops_contract.py`;
+do not use it against Azure.)*
 
-The CORS implementation is on `feature/US-025`. Until it is merged and deployed,
-the current backend must not be assumed to have that middleware.
-
-After it is available:
-
-1. Obtain the actual deployed frontend origin from its owner. The repository
-   has no frontend code and does not establish a Cloudflare Pages hostname.
-2. Set `VSL_ALLOWED_ORIGINS` to the exact origin, including scheme and
-   optional port, with no path or trailing slash. Wildcards are rejected.
-3. For an ACA app, configure the environment only after reviewing the target:
-
-   ```powershell
-   $FrontendOrigin = "https://<verified-frontend-host>"
-   az containerapp update --name $AppName --resource-group $ResourceGroup `
-     --set-env-vars "VSL_ALLOWED_ORIGINS=$FrontendOrigin"
-   ```
-
-4. Check the browser preflight request (`OPTIONS`) and response
-   `Access-Control-Allow-Origin`. An unlisted origin should not receive that
-   header. Do not use CORS as a substitute for authentication or authorization.
-
-There is no JavaScript client in this repository to distinguish network
-failures, cold starts, and API business errors; frontend error UX remains
-unimplemented.
-
-## 7. Manual ACA rollback
-
-The rollback script is on `feature/US-031` and is not integrated into a
-deployment pipeline. It is not Cloud Run tooling. It requires the Azure CLI,
-approved Azure permissions, ACA `Multiple` revision mode, at least two active
-revisions, and exactly one revision receiving 100% of traffic.
-
-First inspect the proposed target without changing traffic:
+First inspect the proposed target in read-only dry-run mode:
 
 ```powershell
 python scripts/rollback.py --resource-group $ResourceGroup --app-name $AppName
@@ -172,227 +164,100 @@ python scripts/rollback.py `
   --apply
 ```
 
-The script reads traffic back and verifies `/health` and `/version`. If
-post-change verification fails, traffic may already have changed; stop and
-inspect ACA state manually. The script intentionally does not switch traffic
-back to the unhealthy revision. Do not describe a rollback as rehearsed until
-an approved cloud rehearsal has actually completed and its evidence is
-recorded. Automatic rollback after smoke-test failure requires the separate,
-currently absent US-029 deployment integration.
+The script verifies traffic weights, `/health`, and `/version`. If post-change
+verification fails, stop and inspect ACA state manually. Do not describe a
+rollback as rehearsed until an approved cloud rehearsal has completed and its
+evidence is recorded.
 
-## 8. Cloud cost exceeds expectations
+---
 
-1. Review Azure Cost Management / Cost Analysis for the correct subscription
-   and billing period; verify access before relying on CLI usage output.
-2. Check ACA replica counts, CPU/memory, registry, log ingestion/retention, and
-   other resources in the environment. Compare actual configuration with the
-   approved service budget.
-3. Do not lower minimum replicas, scale to zero, or delete resources solely to
-   reduce cost without assessing availability and obtaining owner approval.
-4. Set an appropriate budget/alert in Azure for the billing account. This
-   repository does not configure or verify cost alerts.
+## 6. CORS failure in a browser
 
-## 9. Environment variables and credentials
+The backend CORS middleware (US-025) is implemented in `src/vsl/service.py`,
+and the static frontend in `web/` is deployed on Cloudflare Pages (`US-024`).
+However, if the live ACA revision has not yet been updated with
+`VSL_ALLOWED_ORIGINS`, browser requests will fail CORS checks.
+
+1. Confirm the exact deployed frontend origin (e.g., `https://sign-language-classification.pages.dev`).
+2. Set `VSL_ALLOWED_ORIGINS` to the exact origin(s), comma-separated, including
+   scheme and optional port, with no path or trailing slash. Wildcards (`*`) are
+   rejected by the service startup parser.
+3. For an ACA app running a revision built from `develop` (with US-025 merged),
+   configure the environment only after reviewing the target:
+
+   ```powershell
+   $FrontendOrigin = "https://sign-language-classification.pages.dev"
+   az containerapp update --name $AppName --resource-group $ResourceGroup `
+     --set-env-vars "VSL_ALLOWED_ORIGINS=$FrontendOrigin"
+   ```
+
+4. Verify preflight (`OPTIONS /predict`) and `GET /health` return
+   `Access-Control-Allow-Origin` for the configured origin while unlisted origins
+   do not receive that header. Do not use CORS as a substitute for authentication.
+
+---
+
+## 7. Vượt ngân sách / Chi phí vượt dự kiến (Cloud cost guardrails, MFA & alert response)
+
+### 7.1. Azure Billing Budget (`$1` / `$5`) và Sponsorship Balance
+
+- Mục tiêu chi phí `0 VNĐ` (`BR-016` Free Tier Guardrails) trên gói **Azure for Students** (`100 USD` credit).
+- Module `infra/budget.tf` khai báo tài nguyên `azurerm_consumption_budget_subscription.monthly` với hạn mức tháng `$5 USD` (`time_grain = "Monthly"`):
+  - Ngưỡng `20%` (`$1 USD`, `Actual`, `GreaterThanOrEqualTo`): cảnh báo sớm đầu tiên.
+  - Ngưỡng `100%` (`$5 USD`, `Actual`, `GreaterThanOrEqualTo`): ngưỡng khẩn cấp.
+  - Người nhận mặc định là vai trò `Owner` của subscription, có thể bổ sung email nhóm qua `TF_VAR_budget_alert_emails` (tuyệt đối không commit email cá nhân vào Git).
+- Vì `infra/provider.tf` dùng `resource_provider_registrations = "none"`, hãy kiểm tra đăng ký provider `Microsoft.Consumption` trước khi `terraform apply`:
+  ```powershell
+  az provider register --namespace Microsoft.Consumption
+  terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+  ```
+- **Lưu ý đặc thù gói Sponsorship / Azure for Students:** Budget chỉ gửi cảnh báo (không tự tắt dịch vụ) và dữ liệu Azure Cost Management có độ trễ cập nhật vài giờ. Ngoài Azure Cost Management trong Azure Portal, luôn đối chiếu số dư credit thực tế tại `https://www.microsoftazuresponsorships.com` (mục **Balance**). Nếu gói tài trợ chặn API `Microsoft.Consumption/budgets` khi `apply`, đặt `-var="enable_billing_budget=false"` và thiết lập cảnh báo tương đương trên Azure Portal / Sponsorships Portal.
+
+### 7.2. Bắt buộc bật MFA trên Microsoft Entra ID
+
+- MFA áp dụng cho **danh tính người dùng tương tác** truy cập Azure Portal / Azure CLI (khác với pipeline CI/CD GitHub Actions đã dùng OIDC không mật khẩu tĩnh theo `US-019`).
+- Chủ dự án / Global Administrator kiểm tra tại **Microsoft Entra ID → Properties → Manage Security defaults** (bật **Security defaults** nếu dùng gói miễn phí) hoặc **Conditional Access** yêu cầu MFA cho toàn bộ thành viên có quyền trên subscription `rg-vsl-staging` / `vslstate2026`.
+- Với tài khoản khách (External/Guest accounts) được mời vào tenant, yêu cầu chủ tài khoản bật xác thực hai lớp (Microsoft Authenticator / passkey / FIDO2) và kiểm tra trạng thái trong **Entra ID → Users → Per-user MFA / Sign-in logs** trước khi cấp quyền IAM.
+- Không lưu mật khẩu, Client Secret hay mã khôi phục MFA trong repository hoặc chat.
+
+### 7.3. Dịch vụ và cấu hình Azure bị cấm / được phép có điều kiện (`BR-016`)
+
+Không tạo hoặc bật các dịch vụ/cấu hình trong nhóm **Bị cấm** nếu chưa có ngoại lệ bằng văn bản từ chủ dự án:
+
+| Nhóm | Dịch vụ / cấu hình | Quy tắc áp dụng |
+|---|---|---|
+| **Bị cấm** | VM có GPU (`NC`/`NV`/`ND`), Azure Machine Learning compute cluster chạy liên tục | Tiêu tốn credit rất nhanh ngay cả khi chạy thời gian ngắn. |
+| **Bị cấm** | AKS (Azure Kubernetes Service), App Service Plan Premium/Isolated, VM chạy 24/7 | Tính phí compute nền liên tục theo giờ. |
+| **Bị cấm** | Azure SQL Database HA/vCore lớn, Cosmos DB provisioned throughput, Azure Cache for Redis chạy thường trực | Chi phí cố định hàng tháng vượt ngân sách demo. |
+| **Bị cấm** | Application Gateway, Azure Front Door, Azure Load Balancer Standard trả phí theo giờ, NAT Gateway | Phát sinh phí cố định theo giờ và lưu lượng ngoài hạn mức demo. |
+| **Bị cấm** | Container Apps đặt `minReplicas > 0` hoặc App Service Always On không được phê duyệt | Trái nguyên tắc scale-to-zero của `BR-016` *(hiện staging `vsl-api` đang tạm giữ `minReplicas = 1` và App Service `vsl-vietnam` để đo đạc/ổn định demo dưới sự duyệt của chủ dự án; cần đưa về `minReplicas = 0` khi chốt chế độ tiết kiệm)*. |
+| **Có điều kiện** | Azure Container Apps (`WorkloadProfiles` Consumption, `cae-vsl-staging-std`), `1.0 vCPU`, `2.0 GiB RAM` | Đặt `minReplicas = 0` (trừ khi chủ dự án duyệt đo kiểm), giới hạn `maxReplicas <= 2`. |
+| **Có điều kiện** | Azure Container Registry (`vslacr3795`, SKU `Basic`) | Bật dọn tag cũ (giữ tối đa 3 tag `vsl-api` mới nhất theo `infra/registry.tf` hoặc dọn thủ công nếu gói Students chặn ACR Task). |
+| **Có điều kiện** | Log Analytics Workspace (`workspace-rgvslstaging8EBp`) & Storage Account (`vslstate2026`) | Giữ mức thu thập/retention mặc định tối thiểu, không bật diagnostic dump dư thừa. |
+| **Miễn phí** | Cloudflare Pages (`https://sign-language-classification.pages.dev`) & GitHub Actions | Nằm trong hạn mức miễn phí hàng tháng. |
+
+### 7.4. Quy trình xử lý khi nhận cảnh báo chi phí `$1` (20%) hoặc chạm `$5` (100%)
+
+1. **Khi chạm `$1` (`20%`):** Người nhận thông báo báo ngay cho chủ dự án; không chờ đến `$5`. Mở **Azure Cost Management → Cost analysis** (nhóm theo *Service name* / *Meter*) và đối chiếu số dư trên `https://www.microsoftazuresponsorships.com`.
+2. Tạm dừng triển khai/thay đổi hạ tầng mới. Kiểm tra các tài nguyên đang hoạt động trong `rg-vsl-staging` và toàn subscription: `minReplicas` / `maxReplicas` của `vsl-api`, trạng thái App Service `vsl-vietnam`, Environment cũ (`cae-vsl-staging`), dung lượng ACR `vslacr3795`, mức ingest Log Analytics và kiểm tra xem có tài nguyên ngoài danh sách cho phép hay không.
+3. Không hạ `minReplicas`, scale về 0 hoặc xóa resource đang phục vụ khi chưa đánh giá tác động và có xác nhận của chủ dự án. Không xóa tài nguyên chứa state (`vslstate2026`).
+4. **Khi chạm `$5` (`100%`) hoặc chi phí tăng bất thường:** Coi là sự cố (*incident*), ngừng mọi pipeline deploy, cô lập/tắt tài nguyên ngoài allow-list sau khi chủ dự án duyệt và ghi nhận nguyên nhân + hành động khắc phục vào nhật ký vận hành.
+
+---
+
+## 8. Environment variables and credentials
 
 | Variable / credential | Use | Availability |
 |---|---|---|
-| `VSL_MODEL_PATH` | Override the model path | Current backend; defaults to repository `train/vsl_cnn_pose_keras.h5` |
-| `VSL_DATA_DIR` | Override the landmark dataset path | Current backend; defaults to repository `data/anphabet` |
+| `VSL_MODEL_PATH` | Override the model path | Current backend; defaults to `train/vsl_cnn_pose_keras.h5` |
+| `VSL_DATA_DIR` | Override the landmark dataset path | Current backend; defaults to `data/anphabet` |
 | `VSL_MODEL_VERSION` | Override model version metadata | Current backend; defaults to `v1.0` |
 | `GIT_SHA` | Identify source revision from `/version` | Docker build metadata; use an immutable commit SHA |
 | `BUILD_TIME` | Build timestamp from `/version` | Docker build metadata; ISO-8601 UTC recommended |
-| `VSL_ALLOWED_ORIGINS` | Exact CORS origin allowlist | US-025 branch only until merged |
-| Azure CLI identity | Read ACA state; write traffic only for approved rollback | Operator-managed; never commit credentials |
+| `VSL_ALLOWED_ORIGINS` | Exact CORS origin allowlist | Current backend (`US-025`); empty by default (default-deny) |
+| Azure CLI / OIDC identity | Read/manage ACA and ACR via Terraform/Actions | Operator-managed or GitHub OIDC (`US-019`); never commit secrets |
 
-There are no GitHub cloud secrets needed by the US-026 pull-request CI because
-it does not push or deploy. Do not add a service-principal secret until an
-approved deployment workflow actually requires one.
-=======
-# SỔ TAY VẬN HÀNH & XỬ LÝ SỰ CỐ (RUNBOOK)
-
-> **Mã Story:** US-035, US-031  
-> **Tuân thủ:** BR-024 (Living Documentation), BR-022 (Rehearsed Rollback), BR-013 (Deploy-Then-Shift)  
-> **Áp dụng cho:** Hệ thống Backend Nhận diện Ngôn ngữ Ký hiệu Tiếng Việt (VSL API)
-
----
-
-## 1. Kiến trúc hệ thống tổng thể
-
-```mermaid
-flowchart TD
-    subgraph Client ["Frontend (Cloudflare Pages)"]
-        UI["Web App (HTML/JS)"]
-        WarmUp["Warm-up ping (/health)"]
-    end
-
-    subgraph CDN ["CDN / Edge Network"]
-        CF_CDN["Cloudflare Global Anycast CDN"]
-    end
-
-    subgraph GCP ["Google Cloud Platform"]
-        CR["Cloud Run Service (vsl-api)\nmin-instances=0, max-instances=3\nCPU: 2 vCPU, RAM: 2 GiB"]
-        subgraph Container ["Docker Container (linux/amd64)"]
-            FastAPI["FastAPI App (uvicorn)\nPort: 8080"]
-            MP["MediaPipe (Hands + FaceMesh)\n93 landmarks"]
-            Heatmap["create_heatmap (224x224x3)"]
-            ResNet["ResNet50 CNN Model\n(Keras .h5, 23 classes)"]
-        end
-    end
-
-    UI --> CF_CDN
-    WarmUp -.->|Pre-warm on load| CR
-    UI -->|POST /predict\nMultipart Image| FastAPI
-    FastAPI --> MP --> Heatmap --> ResNet
-```
-
----
-
-## 2. Hướng dẫn chạy môi trường cục bộ (Local Development)
-
-### 2.1. Chạy trực tiếp bằng Python
-```powershell
-# Kích hoạt môi trường ảo
-.\.venv\Scripts\Activate.ps1
-
-# Cài đặt phụ thuộc
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Khởi chạy dịch vụ API
-python -m uvicorn src.vsl.service:app --host 0.0.0.0 --port 8080 --reload
-```
-
-Kiểm tra API:
-- Health check: `http://localhost:8080/health`
-- Version info: `http://localhost:8080/version`
-- Swagger UI tài liệu: `http://localhost:8080/docs`
-
-### 2.2. Chạy bằng Docker cục bộ
-```bash
-# Build Docker image
-docker build --platform linux/amd64 -t vsl-api:local .
-
-# Khởi chạy container
-docker run -d --name vsl-api-local -p 8080:8080 vsl-api:local
-
-# Chạy Smoke Test xác thực container
-python scripts/smoke_test.py --url http://localhost:8080
-```
-
----
-
-## 3. Hướng dẫn triển khai lên Google Cloud Run
-
-### 3.1. Danh mục Secrets & Biến môi trường cần thiết
-
-| Tên biến / Secret | Môi trường | Mục đích / Giá trị |
-|---|---|---|
-| `GCP_PROJECT_ID` | GitHub Secret / CI | ID dự án Google Cloud Platform |
-| `GCP_SA_KEY` | GitHub Secret / CI | Khóa JSON Service Account có quyền deploy Cloud Run & Artifact Registry |
-| `GAR_REPOSITORY` | GitHub Secret / CI | Tên Google Artifact Registry (ví dụ: `vsl-repo`) |
-| `VSL_ALLOWED_ORIGINS` | Cloud Run Env Var | Danh sách domain frontend được phép truy cập CORS (`https://vsl-frontend.pages.dev`) |
-| `GIT_SHA` | Cloud Run Env Var | Git commit SHA của bản build phục vụ `/version` |
-| `PORT` | Cloud Run Env Var | Cổng dịch vụ lắng nghe (mặc định: `8080`) |
-
-### 3.2. Quy trình triển khai sản phẩm chuẩn (Deploy-Then-Shift - BR-013)
-```bash
-# 1. Đăng nhập Google Cloud SDK
-gcloud auth login
-gcloud config set project $GCP_PROJECT_ID
-
-# 2. Build & Push Image lên Google Artifact Registry
-IMAGE_TAG="asia-southeast1-docker.pkg.dev/${GCP_PROJECT_ID}/vsl-repo/vsl-api:${GIT_SHA}"
-docker build --platform linux/amd64 -t ${IMAGE_TAG} .
-docker push ${IMAGE_TAG}
-
-# 3. Triển khai revision mới với 0% traffic (ngăn người dùng tiếp xúc lỗi)
-gcloud run deploy vsl-api \
-  --image="${IMAGE_TAG}" \
-  --region=asia-southeast1 \
-  --platform=managed \
-  --no-traffic \
-  --set-env-vars="GIT_SHA=${GIT_SHA},VSL_ALLOWED_ORIGINS=https://vsl-frontend.pages.dev" \
-  --memory=2Gi \
-  --cpu=2 \
-  --min-instances=0 \
-  --max-instances=3
-
-# 4. Lấy URL riêng của revision mới và chạy Smoke Test
-REVISION_URL=$(gcloud run revisions describe $(gcloud run revisions list --service=vsl-api --region=asia-southeast1 --format='value(metadata.name)' --limit=1) --region=asia-southeast1 --format='value(status.url)')
-python scripts/smoke_test.py --url "${REVISION_URL}" --expected-sha "${GIT_SHA}"
-
-# 5. Khi Smoke Test PASS 100%, chuyển toàn bộ traffic sang revision mới
-gcloud run services update-traffic vsl-api --region=asia-southeast1 --to-latest
-```
-
----
-
-## 4. Runbook Xử lý sự cố (Incident Response)
-
-### Tình huống 1: Khởi động nguội chậm (Cold Start > 10 giây)
-- **Triệu chứng:** Người dùng lần đầu truy cập phản ánh nút "Dự đoán" quay loading lâu.
-- **Nguyên nhân:** Cloud Run ở chế độ `min-instances=0` giải phóng container khi không có request; container mất thời gian nạp TensorFlow/MediaPipe.
-- **Biện pháp xử lý:**
-  1. Đảm bảo frontend đã bật **Warm-up Ping** (US-023): gọi `GET /health` ngay khi trang tải xong (`window.onload`) để kích hoạt container song song lúc người dùng đang thao tác.
-  2. Bật tính năng **Startup CPU Boost** trên Cloud Run:
-     ```bash
-     gcloud run services update vsl-api --cpu-boost --region=asia-southeast1
-     ```
-  3. Nếu có sự kiện demo quan trọng, tạm thời đặt `min-instances=1` trong vài giờ:
-     ```bash
-     gcloud run services update vsl-api --min-instances=1 --region=asia-southeast1
-     ```
-
-### Tình huống 2: Pipeline CI báo đỏ (Failed Build)
-- **Triệu chứng:** Pull Request bị đánh dấu đỏ ❌, merge button bị khóa (BR-021).
-- **Nguyên nhân thường gặp & Khắc phục:**
-  1. *Lỗi Lint / Black formatting:*
-     Chạy cục bộ: `ruff check --fix .` và `black src tests`.
-  2. *Lỗi Unit test:*
-     Chạy cục bộ: `pytest tests -v` để tra cứu test case thất bại.
-  3. *Lỗi Docker build (Layer Cache hoặc Package build):*
-     Kiểm tra `requirements.txt` có bị thêm thư viện yêu cầu GUI/C++ compiler ngoài danh sách cho phép không. Đảm bảo dùng `--platform linux/amd64`.
-
-### Tình huống 3: Smoke test thất bại & Kích hoạt Rollback khẩn cấp (US-031)
-- **Triệu chứng:** Sau khi deploy revision mới, script `smoke_test.py` trả mã lỗi != 0 (hoặc `/health` trả 503 do lỗi nạp model).
-- **Quy trình hoàn tác tự động / thủ công (Mục tiêu: < 5 phút):**
-  1. Chạy ngay script rollback tự động:
-     ```bash
-     # Trên Linux / Bash:
-     ./scripts/rollback.sh vsl-api asia-southeast1
-     
-     # Hoặc trên Windows / Python:
-     python scripts/rollback.py --service vsl-api --region asia-southeast1
-     ```
-  2. Script sẽ tự động xác định revision ổn định liền trước và chuyển 100% traffic về bản đó.
-  3. Xác thực lại hệ thống:
-     ```bash
-     python scripts/smoke_test.py --url https://<service-url>.run.app
-     ```
-  4. Ghi nhận thời gian và log sự cố vào biên bản diễn tập rollback.
-
-### Tình huống 4: Chi phí tăng đột biến / Vượt ngân sách
-- **Triệu chứng:** Nhận email cảnh báo từ Google Cloud Billing hoặc số lượng container instance tăng vọt do bị spam request.
-- **Biện pháp khống chế khẩn cấp:**
-  1. Khống chế số instance tối đa không vượt quá 3:
-     ```bash
-     gcloud run services update vsl-api --max-instances=3 --region=asia-southeast1
-     ```
-  2. Giới hạn số request đồng thời trên mỗi container:
-     ```bash
-     gcloud run services update vsl-api --concurrency=10 --region=asia-southeast1
-     ```
-  3. Kiểm tra CORS: Đảm bảo không mở wildcard `*`, chỉ chấp nhận đúng origin của frontend để chặn bot bên ngoài gọi trực tiếp.
-
----
-
-## 5. Biên bản diễn tập Rollback (Rehearsal Log - US-031 / BR-022)
-
-- **Mục tiêu quy định:** Hoàn tất chuyển đổi traffic về bản ổn định dưới 300 giây (5 phút).
-- **Kịch bản diễn tập:**
-  1. Production đang phục vụ trên `vsl-api-00001-abc`.
-  2. Triển khai bản thử nghiệm `vsl-api-00002-def` kèm lỗi cố ý.
-  3. Smoke test phát hiện lỗi và trả exit code 1.
-  4. Kích hoạt `scripts/rollback.sh`.
-  5. Traffic chuyển 100% về `vsl-api-00001-abc`.
-  6. Kết quả ghi nhận: Thời gian hoàn tất trung bình: **~12 đến 25 giây** (đạt tiêu chuẩn < 5 phút).
+There are no GitHub cloud secrets needed by the `US-026` pull-request CI because
+it does not push or deploy. Do not commit service-principal secrets or ACR
+passwords; use GitHub Actions OIDC (`US-019`, `.github/workflows/azure-oidc-smoke.yml`)
+when provisioning deployment workflows.

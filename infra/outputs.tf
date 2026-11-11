@@ -14,3 +14,8 @@ output "github_oidc_subscription_id" {
   description = "Subscription ID for the GitHub OIDC workflow."
   value       = var.subscription_id
 }
+
+output "billing_budget_id" {
+  description = "Resource ID of the subscription monthly cost guardrail budget when enabled."
+  value       = try(azurerm_consumption_budget_subscription.monthly[0].id, null)
+}
