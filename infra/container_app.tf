@@ -31,6 +31,10 @@ resource "azurerm_role_assignment" "vsl_api_acr_pull" {
   principal_id                     = azurerm_user_assigned_identity.vsl_api_pull.principal_id
   principal_type                   = "ServicePrincipal"
   skip_service_principal_aad_check = true
+
+  lifecycle {
+    ignore_changes = [skip_service_principal_aad_check]
+  }
 }
 
 resource "azurerm_container_app" "vsl_api" {
