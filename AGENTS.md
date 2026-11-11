@@ -315,7 +315,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-006** | API `/predict` nhận ảnh và chạy MediaPipe server-side | PR `#10` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, 93 landmarks, `flip` |
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
 | **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
-| **US-009** | Giới hạn kích thước (5 MB) và định dạng ảnh đầu vào (`JPEG`/`JPG`/`PNG`) | `feature/US-009` | IMPLEMENTED LOCALLY (CỔNG D) | `src/vsl/service.py` (`415`/`413`/`400`, stream chunk + magic bytes, log WARNING UTC), `tests/test_us009_input_validation.py`; chờ chủ dự án chốt Cổng D |
+| **US-009** | Giới hạn kích thước (5 MB) và định dạng ảnh đầu vào (`JPEG`/`JPG`/`PNG`) | `feature/US-009` | PASS (CỔNG D, 2026-11-11) | `src/vsl/service.py` (`415`/`413`/`400`, stream chunk + magic bytes, log WARNING UTC), `tests/test_us009_input_validation.py`; chủ dự án đã chốt Cổng D, chờ push/PR |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
 | **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | PR `#19` | PASS (Harness & Tests) | `scripts/benchmark_cold_start.py`, `docs/api/US-013.md` |
