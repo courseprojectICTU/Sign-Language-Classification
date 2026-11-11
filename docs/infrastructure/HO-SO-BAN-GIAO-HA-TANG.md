@@ -1,8 +1,10 @@
 # Hồ Sơ Bàn Giao Kỹ Thuật Hạ Tầng Môi Trường Staging
 
 > **Dự án:** Sign-Language-Classification-v1.0 (Nhận diện Bảng chữ cái Ngôn ngữ Ký hiệu tiếng Việt)  
-> **Trạng thái môi trường:** Sẵn sàng hoạt động (Hoạt động 24/24 trên Microsoft Azure)  
-> **Cập nhật lần cuối:** 2026-11-06  
+>
+> **Trạng thái môi trường:** Sẵn sàng hoạt động (Standard ACA + App Service trên Microsoft Azure)
+>
+> **Cập nhật lần cuối:** 2026-11-11
 
 ---
 
@@ -22,22 +24,19 @@ Tài liệu này tổng hợp toàn bộ thông số kỹ thuật, cấu hình m
 | Subscription ID | `373b1f03-330f-4302-a9e9-aa1fe793bf2e` | Định danh gói đăng ký Azure |
 | Tenant ID | `07bbe8bf-0c35-4e0d-bc8a-da3413925cc0` | Định danh tổ chức Azure Active Directory |
 | Kho lưu trữ Image (ACR) | `vslacr3795.azurecr.io` | Azure Container Registry (gói Basic) |
-| Môi trường Container (Env) | `cae-vsl-staging` | Azure Container Apps Managed Environment |
-| Không gian nhật ký (Log Workspace) | `workspace-rgvslstaging8lF4` | Log Analytics Workspace thu thập telemetry và log |
-| Tên ứng dụng Backend | `vsl-api` | Dịch vụ FastAPI phục vụ suy luận |
-| Cấu hình tài nguyên | 1.0 vCPU, 2.0 GiB RAM, Cổng 8080 | Cấu hình hoạt động liên tục (`minReplicas = 1`) |
+| Môi trường Container (Env) | `cae-vsl-staging-std` | Azure Container Apps Standard (`WorkloadProfiles`, Consumption) |
+| Không gian nhật ký (Log Workspace) | `workspace-rgvslstaging8EBp` | Log Analytics Workspace (`9171bce8-f5c8-4fdb-842b-af7c35a59234`) |
+| Tên ứng dụng Backend | `vsl-api` | Dịch vụ FastAPI phục vụ suy luận (`Multiple` revision mode, `id-vsl-api-pull` `AcrPull`) |
+| Cấu hình tài nguyên | 1.0 vCPU, 2.0 GiB RAM, Cổng 8080 | `minReplicas = 1`, `maxReplicas = 2`, `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` |
 
 ---
 
 ## 3. Hợp Đồng Kết Nối Dịch Vụ
 
 ### 3.1. Địa chỉ dịch vụ công khai
-- Base URL chính thức:  
-  `https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io`
-- Tên miền Web App dự phòng:  
-  `https://vsl-vietnam.azurewebsites.net`
-- Giao diện tài liệu Swagger UI:  
-  `https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io/docs`
+- Base URL chính thức (Container Apps Standard): `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`
+- Tên miền Web App dự phòng / endpoint hiện tại của `web/config.js`: `https://vsl-vietnam.azurewebsites.net`
+- Giao diện tài liệu Swagger UI: `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs`
 
 ### 3.2. Đặc tả các Endpoints
 1. **Kiểm tra sức khỏe hệ thống (`GET /health`):**
@@ -51,9 +50,9 @@ Tài liệu này tổng hợp toàn bộ thông số kỹ thuật, cấu hình m
 2. **Kiểm tra thông tin phiên bản (`GET /version`):**
    - Phục vụ: Truy vết mã commit Git SHA và thời gian build image.
    - Mã phản hồi: `HTTP 200 OK`
-   - Cấu trúc dữ liệu:
+   - Cấu trúc dữ liệu tham chiếu (tag `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f`):
      ```json
-     {"model_version":"v1.0","git_sha":"unknown","build_time":"2026-11-05T17:09:06Z"}
+     {"model_version":"v1.0","git_sha":"9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f","build_time":"2026-11-10T15:22:13Z"}
      ```
 
 3. **Nhận diện ký hiệu tay từ ảnh webcam (`POST /predict`):**
@@ -109,12 +108,12 @@ hoặc commit vào repository.
 
 | Mã US | Yêu cầu kỹ thuật | Thành phần hạ tầng cung cấp tương ứng |
 |---|---|---|
-| US-013 | Đo 5 lần thời gian khởi động nguội thực tế | Sử dụng script `scripts/benchmark_cold_start.py` gọi tới endpoint `https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io/health`. |
+| US-013 | Đo 5 lần thời gian khởi động nguội thực tế | Sử dụng script `scripts/benchmark_cold_start.py` gọi tới endpoint `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/health`. |
 | US-017 | Smoke test tự động sau triển khai | Thực hiện HTTP request kiểm tra endpoint `GET /health` với điều kiện `model_loaded == true`. |
-| US-024 | Triển khai Frontend lên Cloudflare Pages | Cấu hình biến môi trường gọi API: `VITE_API_URL=https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io`. |
+| US-024 | Triển khai Frontend lên Cloudflare Pages | Cấu hình API qua `web/config.js` (`https://vsl-vietnam.azurewebsites.net`) hoặc biến môi trường tới `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`. |
 | US-026 | Pipeline CI kiểm thử và build image | Chạy trên runner của GitHub Actions sử dụng Dockerfile chuẩn Linux. |
 | US-029 | CD tự động triển khai revision mới | Sử dụng GitHub Action `azure/container-apps-deploy-action@v1` với Azure OIDC (Mục 4); push image bằng quyền `AcrPush`, không dùng ACR admin credentials. |
-| US-034 | Cảnh báo Cloud Logging lỗi 5xx | Truy vấn log qua `workspace-rgvslstaging8lF4` hoặc cấu hình Alert rule trên Azure Monitor. |
+| US-034 | Cảnh báo Cloud Logging lỗi 5xx | Truy vấn log qua `workspace-rgvslstaging8EBp` hoặc cấu hình Alert rule trên Azure Monitor. |
 
 ---
 
