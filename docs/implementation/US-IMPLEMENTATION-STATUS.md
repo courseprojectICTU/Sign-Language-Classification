@@ -1,8 +1,8 @@
 # Requested User Stories — Implementation and Handoff Status
 
-**Updated:** 2026-11-10
-**Scope:** US-038, US-026, US-017, US-025, US-031, and US-035 (plus related frontend/infra merges on `develop`).
-**Current baseline:** `develop` / `origin/develop` at `3ee7848` (PR `#36`), with post-merge docs cleanup on `chore/cleanup-develop-docs`.
+**Updated:** 2026-11-11
+**Scope:** US-038, US-026, US-017, US-025, US-029, US-031, and US-035 (plus related frontend/infra merges on `develop`).
+**Current baseline:** `develop` / `origin/develop` at `8461a16` (PR `#42`); US-029 changes are still isolated on `feature/US-029`.
 
 ## Summary
 
@@ -29,7 +29,7 @@
 
 ### US-017
 - Added `scripts/smoke_test.py`, `tests/test_smoke_test.py`, and `docs/api/US-017.md`.
-- Requires `--url`, `--expected-sha`, and `--image`; verifies `/health` (`model_loaded=true`), `/version` (`git_sha` match), and `/predict` response schema.
+- Requires `--url` and `--expected-sha`; verifies `/health` (`model_loaded=true`) and `/version` (`git_sha` match). Optional `--image` additionally verifies `/predict`.
 
 ### US-025
 - Added strict origin parsing (`_configured_cors_origins`) and `CORSMiddleware` in `src/vsl/service.py`, plus `tests/test_cors.py` and `tests/test_cors_version.py`.
@@ -46,7 +46,7 @@
 
 ## Remaining environment & delivery gaps
 
-- **CD Automation (`US-029`):** Not yet present in `develop`; image publishing and ACA deployment remain manual.
+- **CD Automation (`US-029`):** Workflow implementation is on `feature/US-029` and is not merged or live-verified. Before first use, apply the main-branch OIDC federation through reviewed Terraform, verify GitHub Actions variables and the actual ACR name, and run a supervised staging deployment.
 - **Azure OIDC Terraform Apply (`US-019`):** Staging ACR `vslacr3795` was imported into Terraform state, while apply awaits Entra permissions and `Microsoft.ManagedIdentity` provider registration (`AGENTS.md`). Note also a registry naming discrepancy to verify on Azure: `infra/environments/staging.tfvars` and `HO-SO-BAN-GIAO-HA-TANG.md` reference `vslacr3795`, whereas `docs/api/US-024.md` recorded live `vsl-api` pulling `vslacr4751.azurecr.io/vsl-api:latest`.
 - **Cloudflare Pages E2E (`US-024`):** `AC-024-01` fails until `vsl-api` runs a CORS-enabled image with `VSL_ALLOWED_ORIGINS`; `AC-024-02` is unverified while ACA keeps `minReplicas=1`.
 - **Live ACA Rollback Rehearsal (`US-031`):** Not yet executed on Azure.

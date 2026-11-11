@@ -27,7 +27,8 @@ docs/
 ├── infrastructure/                    # Hạ tầng Đám mây, Triển khai & Vận hành
 │   ├── HO-SO-BAN-GIAO-HA-TANG.md      # Hồ sơ thông số kỹ thuật hạ tầng Staging Azure
 │   ├── HUONG-DAN-TRIEN-KHAI-AZURE.md  # Hướng dẫn đóng gói và triển khai Azure Container Apps
-│   └── HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md   # Hướng dẫn cấu hình tên miền vsl-vietnam.azurewebsites.net
+│   ├── HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md   # Hướng dẫn cấu hình tên miền vsl-vietnam.azurewebsites.net
+│   └── US-029.md                       # CD staging ACA: smoke-test rồi chuyển traffic
 ├── api/                               # Hợp đồng giao tiếp API, CLI & Hạ tầng (API Contracts)
 │   ├── README.md                      # Quy ước viết và thẩm định tài liệu API
 │   ├── _TEMPLATE.md                   # Khung chuẩn 17 mục cho tài liệu API
@@ -68,6 +69,7 @@ docs/
 - [HO-SO-BAN-GIAO-HA-TANG.md](infrastructure/HO-SO-BAN-GIAO-HA-TANG.md): Hồ sơ kỹ thuật bàn giao môi trường Staging Azure Container Apps (Resource Group, URL, ACR, cấu hình GitHub OIDC, biến môi trường).
 - [HUONG-DAN-TRIEN-KHAI-AZURE.md](infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md): Hướng dẫn chi tiết từng bước đóng gói Docker image, đẩy lên Azure Container Registry và cấu hình Azure Container Apps.
 - [HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md](infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md): Hướng dẫn cấu hình tên miền dịch vụ `vsl-vietnam.azurewebsites.net`.
+- [US-029.md](infrastructure/US-029.md): Pipeline CD dùng OIDC, deploy revision không traffic, kiểm tra `/health` và `/version`, rồi chuyển traffic hoặc khôi phục revision trước.
 
 ### 2.5. Nhóm Hợp Đồng API, CLI & Hạ tầng (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.

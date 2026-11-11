@@ -88,6 +88,7 @@ Credential và role assignments tối thiểu. FIC tin cậy:
 | Issuer | `https://token.actions.githubusercontent.com` |
 | Audience | `api://AzureADTokenExchange` |
 | Subject | `repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/develop` |
+| Subject cho US-029 | `repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/main` (được thêm qua Terraform; phải apply trước khi chạy CD) |
 
 Sau khi Terraform provision xong và chủ dự án duyệt thao tác áp dụng, lấy ba
 identifier không nhạy cảm bằng `terraform output -raw github_oidc_client_id`,
@@ -113,7 +114,7 @@ hoặc commit vào repository.
 | US-017 | Smoke test tự động sau triển khai | Thực hiện HTTP request kiểm tra endpoint `GET /health` với điều kiện `model_loaded == true`. |
 | US-024 | Triển khai Frontend lên Cloudflare Pages | Cấu hình biến môi trường gọi API: `VITE_API_URL=https://vsl-api.wittyground-02475ae2.eastasia.azurecontainerapps.io`. |
 | US-026 | Pipeline CI kiểm thử và build image | Chạy trên runner của GitHub Actions sử dụng Dockerfile chuẩn Linux. |
-| US-029 | CD tự động triển khai revision mới | Sử dụng GitHub Action `azure/container-apps-deploy-action@v1` với Azure OIDC (Mục 4); push image bằng quyền `AcrPush`, không dùng ACR admin credentials. |
+| US-029 | CD tự động triển khai revision mới | `.github/workflows/deploy-backend.yml`: Azure OIDC, push ACR bằng `AcrPush`, ACA revision no-traffic, smoke `/health` + `/version`, rồi chuyển traffic hoặc khôi phục revision trước. |
 | US-034 | Cảnh báo Cloud Logging lỗi 5xx | Truy vấn log qua `workspace-rgvslstaging8lF4` hoặc cấu hình Alert rule trên Azure Monitor. |
 
 ---

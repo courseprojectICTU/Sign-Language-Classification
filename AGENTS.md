@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-10** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-11** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (file có tiếng Việt, lưu ý UTF-8 khi sửa).
 
@@ -30,7 +30,7 @@ Pipeline: ảnh → MediaPipe trích landmark bàn tay + mặt → sinh **heatma
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
 Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038 và kiểm thử Terraform US-018/US-019).
-Hạ tầng staging đang chạy trên Microsoft Azure Container Apps (`vsl-api`), frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). Chưa có pipeline CD tự động triển khai lên Azure (`US-029`); hiện có PR CI (`.github/workflows/ci.yml`, không push) và workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`).
+Hạ tầng staging đang chạy trên Microsoft Azure Container Apps (`vsl-api`), frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). Nhánh `feature/US-029` bổ sung pipeline CD Azure staging với OIDC, candidate revision không traffic, smoke test và traffic rollback; chưa merge hoặc xác minh deploy live. `develop` vẫn chỉ có PR CI (`.github/workflows/ci.yml`) và workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`).
 
 ---
 
@@ -88,6 +88,7 @@ Dockerfile                                        multi-stage Linux build ghim d
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
 .github/workflows/ci.yml                          PR/push CI: Ruff, Black, pytest, Docker build no-push (US-026/US-038)
 .github/workflows/azure-oidc-smoke.yml            workflow_dispatch kiểm tra đăng nhập GitHub OIDC (US-019)
+.github/workflows/deploy-backend.yml              CD main -> Azure staging; candidate smoke test rồi chuyển traffic (US-029, nhánh feature)
 web/index.html                                    giao diện web tĩnh tải/chụp ảnh (US-022)
 web/app.js                                        logic gọi POST /predict, camera capture, hiển thị lỗi (US-022)
 web/styles.css                                    giao diện responsive cho web/ (US-022)
@@ -110,7 +111,7 @@ src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_
 src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
 scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
 scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
-scripts/smoke_test.py                             CLI kiểm tra /health, /version, /predict sau deploy (US-017)
+scripts/smoke_test.py                             CLI kiểm tra /health, /version và tùy chọn /predict sau deploy (US-017/US-029)
 scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
 scripts/rollback.sh                               script Cloud Run cũ giữ lại cho test_ops_contract.py (legacy)
 HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
@@ -324,6 +325,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33` | PARTIAL (Pages UP) | `https://sign-language-classification.pages.dev` HTTP 200; AC-024-01 chờ CORS trên ACA; AC-024-02 chờ đo scale-to-zero |
 | **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | MERGED (Backend PASS) | Strict allowlist `VSL_ALLOWED_ORIGINS`; cần cập nhật revision ACA để bật E2E |
 | **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
+| **US-029** | CD staging ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (local validation; chưa deploy live) | `.github/workflows/deploy-backend.yml`, GitHub OIDC `main`, optional prediction smoke test; cần apply FIC và xác minh GitHub Variables/ACR trước lần chạy đầu |
 | **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py` dry-run/guard; chờ diễn tập live + US-029 |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED | Multi-stage digest, `requirements-runtime.txt`, GHA cache & build metrics |
@@ -336,5 +338,5 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 2. **Xác minh tên ACR staging trước khi apply IaC/CD:** `infra/environments/staging.tfvars` và `HO-SO-BAN-GIAO-HA-TANG.md` ghi `vslacr3795`, trong khi `docs/api/US-024.md` ghi nhận container app `vsl-api` đang chạy image từ `vslacr4751.azurecr.io/vsl-api:latest`. Kiểm tra lại trên Azure bằng `az acr list` và `az containerapp show` để thống nhất.
 3. **US-019 (Terraform apply):** chỉ tiếp tục `terraform apply` sau khi Azure admin cấp quyền Entra phù hợp và đăng ký `Microsoft.ManagedIdentity`.
 4. **US-024 / US-025 trên staging Azure:** sau khi build image mới từ `develop` (đã có CORS middleware và `GIT_SHA`), bật `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` trên `vsl-api` để kiểm tra E2E từ Cloudflare Pages.
-5. **US-029:** triển khai pipeline CD tự động (OIDC + push ACR + deploy ACA + `scripts/smoke_test.py` + `scripts/rollback.py`).
+5. **US-029:** đã tạo workflow trên `feature/US-029`; trước khi chạy lần đầu, review/apply FIC `main` qua Terraform, xác minh GitHub Variables, registry thực tế và chạy thử có giám sát.
 6. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
