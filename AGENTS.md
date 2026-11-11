@@ -144,44 +144,6 @@ docs/backup_gcp_docs/                             bản sao lưu tài liệu g�
 docs/runbook/cost_management.md                   budget, MFA, dịch vụ cấm và xử lý cảnh báo (US-033)
 docs/runbook/billing_security.md                  quy trình billing guardrails và MFA (US-033)
 infra/billing-budget/                             Terraform budget $5 với cảnh báo $1/$5 (chưa apply)
-src/vsl/__init__.py                               re-export heatmap, labels, config
-src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
-src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
-src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
-src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
-src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
-scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
-scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
-scripts/smoke_test.py                             CLI kiểm tra /health, /version, /predict sau deploy (US-017)
-scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
-scripts/rollback.sh                               script Cloud Run cũ giữ lại cho test_ops_contract.py (legacy)
-HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
-README.md                                         tổng quan, chạy cục bộ, CI, Docker, vận hành
-AGENTS.md                                         file này (bộ nhớ dự án)
-docs/README.md                                    sơ đồ và mục lục tra cứu toàn bộ tài liệu dự án
-docs/RUNBOOK.md                                   sổ tay vận hành & xử lý sự cố ACA/CI/CORS/Rollback/Chi phí
-docs/PR_DESCRIPTION_US-038.md                     mô tả tổng hợp PR US-038
-docs/implementation/US-IMPLEMENTATION-STATUS.md   bảng trạng thái và tồn đọng sau merge
-docs/architecture/ADR-001-frontend-hosting.md     ADR chọn Cloudflare Pages kết hợp backend Azure
-docs/architecture/THONG_TIN_DE_TAI.txt            tổng quan đề tài và kiến trúc đám mây
-docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md   kế hoạch 2 tuần / 4 mảng công việc kỹ thuật
-docs/planning/KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md kế hoạch chuyển đổi tài liệu sang Azure
-docs/planning/product-backlog-cicd-2-tuan.xlsx    backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
-docs/process/WORKFLOW.md                          quy trình bắt buộc cho mọi US
-docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md     hướng dẫn 5 bước thẩm định PR cho Reviewer
-docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.docx   bản xuất bản Word (.docx) của quy trình Reviewer
-docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md     hồ sơ bàn giao kỹ thuật hạ tầng Azure
-docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và triển khai Azure Container Apps
-docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
-docs/api/README.md                                quy ước + 9 phase + checklist API docs
-docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
-docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
-docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
-docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
-docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
-docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
-docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
-docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
 tests/run_ops_tests.py                            runner kiểm thử nhóm ops contract
 tests/test_ci_workflow.py                         kiểm thử workflow CI (US-026)
 tests/test_cold_start_benchmark.py                unit test harness benchmark US-013
