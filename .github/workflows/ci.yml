@@ -62,31 +62,57 @@ jobs:
           python -m playwright install chromium firefox
 
           install_playwright() {
-            timeout 180 python -m playwright install --with-deps chromium firefox
+            timeout 90 python -m playwright install --with-deps chromium firefox
           }
 
           switch_apt_mirror() {
             local target_uri="$1"
             sudo pkill -x apt-get || true
-            sleep 2
+            sleep 1
             sudo dpkg --configure -a || true
             if [ -f /etc/apt/apt-mirrors.txt ]; then
               printf '%s\n' "${target_uri}" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
             fi
             sudo find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -exec sed -i -E \
-              "s#https?://[a-z0-9.-]+\.ubuntu\.com/ubuntu/?#${target_uri}#g" {} +
-            sudo apt-get clean
-            sudo apt-get -o DPkg::Lock::Timeout=30 update --fix-missing
+              "s#https?://[^[:space:]]+/ubuntu/?#${target_uri}#g" {} +
+            sudo apt-get clean || true
+            timeout 45 sudo apt-get -o DPkg::Lock::Timeout=30 update --fix-missing || true
           }
 
-          if ! install_playwright; then
-            echo "::warning::Default Ubuntu mirror failed during Playwright install; switching to archive.ubuntu.com..."
-            switch_apt_mirror "http://archive.ubuntu.com/ubuntu/"
-            if ! install_playwright; then
-              echo "::warning::archive.ubuntu.com failed; switching to azure.archive.ubuntu.com..."
-              switch_apt_mirror "http://azure.archive.ubuntu.com/ubuntu/"
-              install_playwright
+          verify_playwright_launch() {
+            python - <<'PY'
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as p:
+              for label, fn in (
+                  ("chromium", lambda: p.chromium.launch()),
+                  ("msedge", lambda: p.chromium.launch(channel="msedge")),
+                  ("firefox", lambda: p.firefox.launch()),
+              ):
+                  browser = fn()
+                  page = browser.new_page()
+                  page.set_content("<h1>ok</h1>")
+                  assert page.text_content("h1") == "ok"
+                  browser.close()
+                  print(f"Verified Playwright browser launch: {label}")
+          PY
+          }
+
+          installed=false
+          for mirror in "" "https://mirrors.edge.kernel.org/ubuntu/" "http://archive.ubuntu.com/ubuntu/" "http://azure.archive.ubuntu.com/ubuntu/"; do
+            if [ -n "${mirror}" ]; then
+              echo "::warning::Retrying Playwright OS deps using Ubuntu mirror: ${mirror}"
+              switch_apt_mirror "${mirror}"
             fi
+            if install_playwright; then
+              installed=true
+              break
+            fi
+          done
+
+          if [ "${installed}" != "true" ]; then
+            echo "::warning::Ubuntu APT mirrors failed for optional --with-deps packages; verifying pre-installed browser runtime libraries directly..."
+            verify_playwright_launch
           fi
 
       - name: Run Ruff
