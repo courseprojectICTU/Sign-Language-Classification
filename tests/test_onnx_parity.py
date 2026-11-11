@@ -161,6 +161,7 @@ def test_ac_011_02_converter_failure_cleans_partial_artifacts_and_preserves_runt
         output_onnx.write_bytes(b"partial-corrupt")
         raise RuntimeError("simulated tf2onnx conversion failure")
 
+    monkeypatch.setattr(export_onnx, "_export_keras_to_saved_model", lambda *args, **kwargs: 0.0)
     monkeypatch.setattr(export_onnx, "_convert_saved_model_to_onnx", fail_convert)
 
     try:
