@@ -80,6 +80,56 @@ resource "azurerm_container_app" "vsl_api" {
       image  = "${azurerm_container_registry.vsl.login_server}/${var.image_repository}:${var.image_tag}"
       cpu    = var.container_cpu
       memory = var.container_memory
+
+      env {
+        name  = "PORT"
+        value = "8080"
+      }
+
+      env {
+        name  = "VSL_MODEL_PATH"
+        value = var.model_path
+      }
+
+      dynamic "env" {
+        for_each = trimspace(var.allowed_origins) != "" ? [trimspace(var.allowed_origins)] : []
+
+        content {
+          name  = "VSL_ALLOWED_ORIGINS"
+          value = env.value
+        }
+      }
+
+      startup_probe {
+        transport               = "HTTP"
+        path                    = "/health"
+        port                    = 8080
+        initial_delay           = 5
+        interval_seconds        = 5
+        timeout                 = 5
+        failure_count_threshold = 24
+      }
+
+      readiness_probe {
+        transport               = "HTTP"
+        path                    = "/health"
+        port                    = 8080
+        initial_delay           = 0
+        interval_seconds        = 10
+        timeout                 = 5
+        failure_count_threshold = 3
+        success_count_threshold = 1
+      }
+
+      liveness_probe {
+        transport               = "HTTP"
+        path                    = "/health"
+        port                    = 8080
+        initial_delay           = 10
+        interval_seconds        = 30
+        timeout                 = 5
+        failure_count_threshold = 3
+      }
     }
   }
 

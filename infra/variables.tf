@@ -209,3 +209,14 @@ variable "allowed_origins" {
   type        = string
   default     = ""
 }
+
+variable "model_path" {
+  description = "Path to the serialized Keras model inside the container image."
+  type        = string
+  default     = "/app/train/vsl_cnn_pose_keras.h5"
+
+  validation {
+    condition     = length(trimspace(var.model_path)) > 0
+    error_message = "model_path must not be empty."
+  }
+}
