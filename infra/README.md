@@ -54,3 +54,27 @@ staging handover.
 
 Do not commit credentials, backend configuration files, Terraform plans, or
 local Terraform state. Do not run `terraform apply` without explicit approval.
+
+## Subscription cost budget (US-033)
+
+`budget.tf` declares `azurerm_consumption_budget_subscription.monthly` for a
+`$5 USD` monthly guardrail with `Actual` spend alerts at `20%` (`$1 USD`) and
+`100%` (`$5 USD`). By default, alerts target subscription `Owner` roles; pass
+team distribution emails via environment variables without committing them:
+
+```powershell
+$env:TF_VAR_budget_alert_emails = '["team-alerts@example.com"]'
+terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+```
+
+Because `provider "azurerm"` sets `resource_provider_registrations = "none"`,
+register `Microsoft.Consumption` once on the subscription if required:
+
+```powershell
+az provider register --namespace Microsoft.Consumption
+```
+
+If an Azure for Students / Sponsorship subscription restricts ARM budget
+creation, set `enable_billing_budget = false` when planning/applying and manage
+cost alerts and balance checks through the Azure Portal / Sponsorships portal as
+documented in `docs/RUNBOOK.md`.
