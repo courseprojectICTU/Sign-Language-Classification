@@ -40,8 +40,8 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| `develop` / `origin/develop` | `4c44d09` (`Merge pull request #44 from courseprojectICTU/docs/sync-group4-azure-staging`) |
-| Nhánh làm việc hiện tại | `feature/US-033` (đã merge `develop` `4c44d09`) |
+| `develop` / `origin/develop` | `b54cbf7` (`Merge pull request #47 from courseprojectICTU/feature/US-022`) |
+| Nhánh làm việc hiện tại | `feature/US-011` (đã merge `develop` `b54cbf7`) |
 | Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
@@ -111,6 +111,7 @@ src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLAS
 src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
 src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
 scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
+scripts/export_onnx.py                            exporter Keras H5 sang ONNX + parity/timing check (US-011)
 scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
 scripts/smoke_test.py                             CLI kiểm tra /health, /version, /predict sau deploy (US-017)
 scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
@@ -154,6 +155,7 @@ tests/test_heatmap.py                             NumPy-only heatmap tests US-01
 tests/test_heatmap_contract.py                    golden/repository contract tests US-001
 tests/test_labels.py                              test US-002 (BR-003)
 tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
+tests/test_onnx_parity.py                         kiểm thử export & parity Keras vs ONNX (US-011)
 tests/test_ops_contract.py                        kiểm thử hợp đồng CI/CD, CORS, rollback, runbook, Docker
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
 tests/test_predict.py                             tests API US-006/US-007
@@ -315,6 +317,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
 | **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
+| **US-011** | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | `feature/US-011` | READY FOR GATE D (2026-11-11) | `scripts/export_onnx.py`, `tests/test_onnx_parity.py` (`6/6` PASS; `max_abs_diff=1.583e-06`, `23/23` argmax, H5 `137MB` -> ONNX `96MB`, `Q1` giữ runtime TF/Keras) |
 | **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | PR `#19` | PASS (Harness & Tests) | `scripts/benchmark_cold_start.py`, `docs/api/US-013.md` |
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | PR `#20` | PASS (2026-11-06) | `tests/test_heatmap.py`, input sai ném `ValueError` |
