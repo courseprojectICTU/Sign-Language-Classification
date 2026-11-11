@@ -27,7 +27,7 @@ Tài liệu này tổng hợp toàn bộ thông số kỹ thuật, cấu hình m
 | Môi trường Container (Env) | `cae-vsl-staging-std` | Azure Container Apps Standard (`WorkloadProfiles`, Consumption) |
 | Không gian nhật ký (Log Workspace) | `workspace-rgvslstaging8EBp` | Log Analytics Workspace (`9171bce8-f5c8-4fdb-842b-af7c35a59234`) |
 | Tên ứng dụng Backend | `vsl-api` | Dịch vụ FastAPI phục vụ suy luận (`Multiple` revision mode, `id-vsl-api-pull` `AcrPull`) |
-| Cấu hình tài nguyên | 1.0 vCPU, 2.0 GiB RAM, Cổng 8080 | `minReplicas = 1`, `maxReplicas = 2`, `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` |
+| Cấu hình tài nguyên | 1.0 vCPU, 2.0 GiB RAM, Cổng 8080 | `minReplicas = 0`, `maxReplicas = 3`, `terminationGracePeriodSeconds = 60`, HTTP probes `/health:8080`, `VSL_MODEL_PATH=/app/train/vsl_cnn_pose_keras.h5`, `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` (quản lý qua Terraform `infra/container_app.tf`, đã nghiệm thu `US-020`) |
 
 ---
 

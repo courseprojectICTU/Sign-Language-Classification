@@ -116,4 +116,7 @@ terraform -chdir=infra plan -var-file="environments/staging.tfvars"
 Verify the plan performs only in-place updates (no destroy/replace of
 `cae-vsl-staging-std` or `vsl-api`) before seeking owner approval for `apply`.
 On staging, `container_min_replicas` must remain `0` (`BR-016`) so idle periods
-scale down to zero replicas and consume zero compute units.
+scale down to zero replicas and consume zero compute units. Because `vsl-api`
+uses `revision_mode = "Multiple"`, deactivate any older pre-US-020 active
+revision that still holds `minReplicas > 0` (`az containerapp revision deactivate`)
+so zero-traffic periods can scale down to `0` replicas.
