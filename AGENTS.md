@@ -30,19 +30,19 @@ Pipeline: ảnh → MediaPipe trích landmark bàn tay + mặt → sinh **heatma
 
 Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
 Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038 và kiểm thử Terraform US-018/US-019).
-Hạ tầng staging đang chạy trên Microsoft Azure Container Apps (`vsl-api`), frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). Nhánh `feature/US-029` bổ sung pipeline CD Azure staging với OIDC, candidate revision không traffic, smoke test và traffic rollback; chưa merge hoặc xác minh deploy live. `develop` vẫn chỉ có PR CI (`.github/workflows/ci.yml`) và workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`).
+Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (`cae-vsl-staging-std` / `vsl-api`, `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`, `Multiple` revision mode) và Azure App Service (`vsl-vietnam`, `https://vsl-vietnam.azurewebsites.net`, đang được `web/config.js` trỏ tới); frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). `develop` chưa có pipeline CD tự động; hiện có PR CI (`.github/workflows/ci.yml`, không push), workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`) và workflow build/push ACR thủ công (`.github/workflows/acr-publish.yml`). Nhánh `feature/US-029` bổ sung CD Azure Container Apps staging; chưa merge hoặc xác minh deploy live.
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-11-10) |
+| Mục | Giá trị (đối chiếu 2026-11-11) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| `develop` / `origin/develop` | `3ee7848` (`Merge pull request #36 from courseprojectICTU/bugfix/ci-test-failures`) |
-| Nhánh làm việc hiện tại | `chore/cleanup-develop-docs` (rẽ từ `develop` `3ee7848`) |
-| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22), `US-022` (PR #23), `US-024` (PR #33), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34` và `#36` |
+| `develop` / `origin/develop` | `8461a16` (`Merge pull request #42 from courseprojectICTU/bugfix/us019-oidc-subject`) |
+| Nhánh làm việc hiện tại | `docs/sync-group4-azure-staging` (rẽ từ `develop` `8461a16`) |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
 | Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
@@ -88,7 +88,8 @@ Dockerfile                                        multi-stage Linux build ghim d
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
 .github/workflows/ci.yml                          PR/push CI: Ruff, Black, pytest, Docker build no-push (US-026/US-038)
 .github/workflows/azure-oidc-smoke.yml            workflow_dispatch kiểm tra đăng nhập GitHub OIDC (US-019)
-.github/workflows/deploy-backend.yml              CD main -> Azure staging; candidate smoke test rồi chuyển traffic (US-029, nhánh feature)
+.github/workflows/deploy-backend.yml              CD main -> Azure Container Apps staging; candidate smoke test rồi chuyển traffic (US-029, nhánh feature)
+.github/workflows/acr-publish.yml                 workflow_dispatch build & push image linux/amd64 qua OIDC lên vslacr3795 (US-024/US-038)
 web/index.html                                    giao diện web tĩnh tải/chụp ảnh (US-022)
 web/app.js                                        logic gọi POST /predict, camera capture, hiển thị lỗi (US-022)
 web/styles.css                                    giao diện responsive cho web/ (US-022)
@@ -320,23 +321,24 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | PR `#12`, PR `#36` | PASS (2026-10-28) | Fixture 23 mẫu có hash model/CSV chuẩn hóa LF |
 | **US-017** | Smoke test tự động sau triển khai | PR `#29` | MERGED (CLI PASS) | `scripts/smoke_test.py`; unit test pass; live deploy/CD chờ US-029 |
 | **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | PR `#22` | PASS — STAGING | AzureRM + Blob state `vslstate2026`/`tfstate`; production placeholder |
-| **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | PR `#22` | MERGED — LOCAL PASS | Code/test trên `develop`; apply trên Azure chờ quyền Entra & `Microsoft.ManagedIdentity` |
+| **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | PR `#22`, PR `#42` | PASS — STAGING APPLIED | Đã đăng ký `Microsoft.ManagedIdentity`, apply `infra/` vào `vslstate2026`, OIDC smoke test & `acr-publish.yml` (`42843489497`) chạy xanh; `azurerm_container_registry_task.cleanup` bị gói Students chặn (`TasksOperationsNotAllowed`) |
 | **US-022** | Trang web tĩnh tải hoặc chụp ảnh và hiển thị kết quả | PR `#23` | MERGED — PASS | `web/` + `scripts/generate_web_labels.py` + `tests/test_us022_web.py` |
-| **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33` | PARTIAL (Pages UP) | `https://sign-language-classification.pages.dev` HTTP 200; AC-024-01 chờ CORS trên ACA; AC-024-02 chờ đo scale-to-zero |
-| **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | MERGED (Backend PASS) | Strict allowlist `VSL_ALLOWED_ORIGINS`; cần cập nhật revision ACA để bật E2E |
+| **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33`, PR `#37`, PR `#41` | PARTIAL (AC-024-01 LIVE OK) | `https://sign-language-classification.pages.dev` HTTP 200; live CORS/`/health`/`/version`/`POST /predict` đã pass trên cả `vsl-vietnam` (`web/config.js`) và `vsl-api` (`9a1c3aa...`); còn AC-024-02 (scale-to-zero `<1s`) và thử ảnh tay+mặt thật |
+| **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | PASS — STAGING LIVE | Strict allowlist `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` đang chạy live trên cả `vsl-vietnam` lẫn Standard ACA `vsl-api` |
 | **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
-| **US-029** | CD staging ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (local validation; chưa deploy live) | `.github/workflows/deploy-backend.yml`, GitHub OIDC `main`, optional prediction smoke test; cần apply FIC và xác minh GitHub Variables/ACR trước lần chạy đầu |
-| **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py` dry-run/guard; chờ diễn tập live + US-029 |
+| **US-029** | CD staging ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (đã kiểm thử cục bộ; chưa merge/deploy live) | `.github/workflows/deploy-backend.yml`, GitHub OIDC `main`, smoke `/health` + `/version`, traffic rollback; cần apply FIC và xác minh GitHub Variables/ACR trước lần chạy đầu |
+| **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
-| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED | Multi-stage digest, `requirements-runtime.txt`, GHA cache & build metrics |
+| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
 
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
 
-1. **Dọn dẹp sau hợp nhất (nhánh `chore/cleanup-develop-docs`):** đã xóa các dấu conflict `=======` sót lại, chuẩn hóa `README.md`, `docs/RUNBOOK.md`, `docs/api/US-017.md`, `docs/api/US-025.md`, `docs/implementation/US-IMPLEMENTATION-STATUS.md`, `docs/README.md`, `AGENTS.md`, và `requirements-dev.txt`.
-2. **Xác minh tên ACR staging trước khi apply IaC/CD:** `infra/environments/staging.tfvars` và `HO-SO-BAN-GIAO-HA-TANG.md` ghi `vslacr3795`, trong khi `docs/api/US-024.md` ghi nhận container app `vsl-api` đang chạy image từ `vslacr4751.azurecr.io/vsl-api:latest`. Kiểm tra lại trên Azure bằng `az acr list` và `az containerapp show` để thống nhất.
-3. **US-019 (Terraform apply):** chỉ tiếp tục `terraform apply` sau khi Azure admin cấp quyền Entra phù hợp và đăng ký `Microsoft.ManagedIdentity`.
-4. **US-024 / US-025 trên staging Azure:** sau khi build image mới từ `develop` (đã có CORS middleware và `GIT_SHA`), bật `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` trên `vsl-api` để kiểm tra E2E từ Cloudflare Pages.
-5. **US-029:** đã tạo workflow trên `feature/US-029`; trước khi chạy lần đầu, review/apply FIC `main` qua Terraform, xác minh GitHub Variables, registry thực tế và chạy thử có giám sát.
-6. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
+1. **Hạ tầng Azure staging sau Nhóm 4 (2026-11-11):**
+   - `vslacr3795.azurecr.io/vsl-api:9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã chạy live trên cả App Service `vsl-vietnam` (`https://vsl-vietnam.azurewebsites.net`, target của `web/config.js`) và Standard ACA `vsl-api` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io` trên `cae-vsl-staging-std`, dùng UAMI `id-vsl-api-pull` với `AcrPull`, `Multiple` revision mode).
+   - Environment Express cũ `cae-vsl-staging` đã tách `vsl-api` ra; chủ dự án có thể xóa dọn khi xác nhận không còn dùng.
+   - `azurerm_role_assignment.deployment_app` đã được khôi phục cho `vsl-api` mới; `azurerm_container_registry_task.cleanup` vẫn bị giới hạn gói Azure for Students (`TasksOperationsNotAllowed`).
+2. **US-024 / US-017 kiểm chứng end-to-end với ảnh thật:** chạy `scripts/smoke_test.py --image <ảnh tay+mặt thật>` và kiểm tra browser trực tiếp trên `https://sign-language-classification.pages.dev`; đo `AC-024-02` nếu chủ dự án duyệt thử scale-to-zero (`minReplicas=0`).
+3. **US-029:** workflow CD Azure Container Apps staging đã được triển khai trên `feature/US-029`; cần merge sau khi review. Trước lần chạy đầu, apply FIC `main` qua Terraform, xác minh GitHub Variables và registry/role `AcrPush`, rồi chạy staging có giám sát. Workflow hiện chỉ deploy ACA `vsl-api`, không deploy App Service `vsl-vietnam`.
+4. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
