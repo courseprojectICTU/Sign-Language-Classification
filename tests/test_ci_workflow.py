@@ -28,6 +28,12 @@ def test_ci_installs_cached_python_dependencies_and_runs_quality_gates() -> None
     assert "pytest" in content
 
 
+def test_ci_installs_playwright_browsers_for_browser_acceptance_tests() -> None:
+    content = _workflow_text()
+
+    assert "python -m playwright install --with-deps chromium firefox" in content
+
+
 def test_ci_builds_without_pushing_and_uses_github_actions_cache() -> None:
     content = _workflow_text()
 

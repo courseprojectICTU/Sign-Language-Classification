@@ -19,11 +19,16 @@ REFERENCE_PATH = ROOT / "tests" / "fixtures" / "notebook_prediction_reference.js
 CONFIDENCE_TOLERANCE = 0.0001
 
 
-def _sha256_file(path: Path, *, normalize_line_endings: bool = False) -> str:
-    if normalize_line_endings:
-        contents = path.read_bytes().replace(b"\r\n", b"\n")
-        return hashlib.sha256(contents).hexdigest()
+def test_csv_hash_ignores_line_ending_convention() -> None:
+    assert _sha256_csv_bytes(b"header\r\nvalue\r\n") == _sha256_csv_bytes(b"header\nvalue\n")
 
+
+def _sha256_csv_bytes(content: bytes) -> str:
+    canonical_content = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(canonical_content).hexdigest()
+
+
+def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as file:
         for chunk in iter(lambda: file.read(1024 * 1024), b""):
@@ -63,7 +68,7 @@ def _load_sample(letter: str, expected_sha256: str) -> list[float]:
     csv_path = get_data_dir() / letter / "1.csv"
     assert csv_path.is_file(), f"Landmark sample not found: {csv_path}"
 
-    actual_sha256 = _sha256_file(csv_path, normalize_line_endings=True)
+    actual_sha256 = _sha256_csv_bytes(csv_path.read_bytes())
     assert actual_sha256 == expected_sha256, (
         f"CSV does not match the notebook reference for {letter}/1.csv: "
         f"expected SHA-256 {expected_sha256}, got {actual_sha256}"

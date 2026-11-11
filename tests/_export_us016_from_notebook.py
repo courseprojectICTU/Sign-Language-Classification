@@ -21,16 +21,17 @@ from src.vsl.labels import VIETNAMESE_ALPHABET
 OUTPUT = ROOT / "tests" / "fixtures" / "notebook_prediction_reference.json"
 
 
-def _sha256_file(path: Path, *, normalize_line_endings: bool = False) -> str:
-    if normalize_line_endings:
-        contents = path.read_bytes().replace(b"\r\n", b"\n")
-        return hashlib.sha256(contents).hexdigest()
-
+def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as file:
         for chunk in iter(lambda: file.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _sha256_csv_file(path: Path) -> str:
+    content = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(content).hexdigest()
 
 
 def main() -> None:
@@ -68,7 +69,7 @@ def main() -> None:
                 "letter": predicted_letter,
                 "confidence": confidence,
                 "confidence_percent": round(confidence * 100, 2),
-                "csv_sha256": _sha256_file(csv_path, normalize_line_endings=True),
+                "csv_sha256": _sha256_csv_file(csv_path),
             }
         )
 

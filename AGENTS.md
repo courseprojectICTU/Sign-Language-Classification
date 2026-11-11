@@ -1,8 +1,9 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-09** — dữ kiện được đối chiếu với `origin/develop` và trạng thái US-033 trong phiên này. Nếu bạn phát hiện file này lệch với thực tế,
-hãy sửa nó ngay (đọc mục 10.0 trước — file có tiếng Việt, `edit` dễ fail).
+**Cập nhật lần cuối: 2026-11-11** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
+hãy sửa nó ngay (file có tiếng Việt, lưu ý UTF-8 khi sửa).
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
 trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md).
@@ -12,8 +13,8 @@ trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](
 
 ## 1. Dự án là gì
 
-Phân loại **bảng chữ cái ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) từ webcam.
-Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh **heatmap
+Phân loại **bảng chữ cái ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) từ webcam/ảnh.
+Pipeline: ảnh → MediaPipe trích landmark bàn tay + mặt → sinh **heatmap
 224x224x3** → CNN **ResNet50** → softmax 23 lớp.
 
 **Repo:** `https://github.com/courseprojectICTU/Sign-Language-Classification.git`
@@ -24,33 +25,27 @@ Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh *
 
 | Nguồn | Trạng thái |
 |---|---|
-| `README.md` | mô tả dự án gốc, có **2 số liệu sai** (xem mục 5, ý 10) |
 | `docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/architecture/ADR-001-*` | kế hoạch web hóa + CI/CD trên Azure |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (GET /health + POST /predict + GET /version) + Dockerfile Linux + 3 notebook + 1 script Python native**.
-Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck, version, Dockerfile, benchmark harness US-013 và kiểm thử Terraform US-018/US-019). Hạ tầng staging đã triển khai và hoạt động trên Microsoft Azure Container Apps. Terraform AzureRM và Azure Blob remote state đã được thiết lập; US-019 bổ sung ACR cleanup, deployment identity least-privilege và GitHub OIDC. Chưa có pipeline CI/CD triển khai tự động; hiện có workflow OIDC smoke test chạy thủ công.
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038 và kiểm thử Terraform US-018/US-019).
+Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (`cae-vsl-staging-std` / `vsl-api`, `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`, `Multiple` revision mode) và Azure App Service (`vsl-vietnam`, `https://vsl-vietnam.azurewebsites.net`, đang được `web/config.js` trỏ tới); frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). Chưa có pipeline CD tự động triển khai lên Azure (`US-029`); hiện có PR CI (`.github/workflows/ci.yml`, không push), workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`) và workflow build/push ACR thủ công (`.github/workflows/acr-publish.yml`).
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-11-08) |
+| Mục | Giá trị (đối chiếu 2026-11-11) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| Nhánh local | `develop`, `feature/US-007`, `feature/US-012` (đang checkout), `feature/US-015`, `feature/US-016`, `feature/US-018`, `feature/US-019`, `feature/US-022`, `feature/US-038`, `backup/develop-before-rollback` |
-| `develop` | `780b7aa` — đồng bộ với `origin/develop` |
-| `feature/US-012` | `f0f293c` — đã nghiệm thu PASS trong phiên 2026-11-08; chưa push/PR |
-| `feature/US-013` | `b2ebdfc` — đã hợp nhất vào `develop` qua PR #19 |
-| `feature/US-014` | `846f06e` — đã hợp nhất vào `develop` qua PR #20 |
-| `feature/US-015` | `ac6e72d` — US-015 đã merge vào `develop` qua PR #11 |
-| `feature/US-016` | `5a98a85` — US-016 đã merge vào `develop` qua PR #12 |
-| `feature/US-018` | Terraform AzureRM + Azure Blob backend; branch local |
-| `feature/US-019` | ACR cleanup, deployment identity giới hạn quyền và GitHub OIDC; code đã commit; ACR staging đã import vào remote state, apply bị chặn bởi quyền Entra và provider registration |
+| `develop` / `origin/develop` | `8461a16` (`Merge pull request #42 from courseprojectICTU/bugfix/us019-oidc-subject`) |
+| Nhánh làm việc hiện tại | `docs/sync-group4-azure-staging` (rẽ từ `develop` `8461a16`) |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
-| Trạng thái working tree | Đang ở `feature/US-012`; có các thư mục untracked `infra/` và `web/` không thuộc US-012, đã giữ nguyên |
+| Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
 
 
 ### 2.1. BẪY: `git status` và `git diff` trên MSYS
@@ -67,7 +62,7 @@ sh.exe: *** fatal error - NtCreateDirectoryObject(\BaseNamedObjects\msys-2.0S5-.
   ```
 - **Bẫy mạng TLS (schannel):** Luôn thêm `-c http.sslBackend=openssl` khi fetch/push:
   ```powershell
-  git -c http.sslBackend=openssl push origin feature/US-002
+  git -c http.sslBackend=openssl push origin <branch>
   ```
 
 ---
@@ -83,11 +78,22 @@ train/training_plot_keras.png                     biểu đồ loss/accuracy
 run_realtime.ipynb                                inference webcam qua Jupyter
 run_realtime.py                                   inference webcam native OpenCV (import src.vsl)
 run_realtime.cmd                                  launcher 1-click cho run_realtime.py
-run_notebook.cmd                                  launcher Jupyter an toàn (xem mục 12.1)
-requirements.txt                                  deps đã pin, THUẦN ASCII (mục 10.1)
-requirements-dev.txt                              pytest (dev-only)
-Dockerfile                                        Dockerfile Linux chạy uvicorn tại cổng 8080 (US-010)
-.dockerignore                                     loại trừ context nặng cho build container (US-010)
+run_notebook.cmd                                  launcher Jupyter an toàn
+pyproject.toml                                    cấu hình Ruff và Black (line-length=100, py312)
+requirements.txt                                  deps đầy đủ cho notebook + runtime, THUẦN ASCII
+requirements-runtime.txt                          deps tối giản cho Docker runtime image (US-038)
+requirements-dev.txt                              pytest, ruff, black, playwright, httpx, fastapi...
+Dockerfile                                        multi-stage Linux build ghim digest, port 8080, appuser (US-038)
+.dockerignore                                     loại trừ context nặng cho build container (US-010/US-038)
+.github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
+.github/workflows/ci.yml                          PR/push CI: Ruff, Black, pytest, Docker build no-push (US-026/US-038)
+.github/workflows/azure-oidc-smoke.yml            workflow_dispatch kiểm tra đăng nhập GitHub OIDC (US-019)
+.github/workflows/acr-publish.yml                 workflow_dispatch build & push image linux/amd64 qua OIDC lên vslacr3795 (US-024/US-038)
+web/index.html                                    giao diện web tĩnh tải/chụp ảnh (US-022)
+web/app.js                                        logic gọi POST /predict, camera capture, hiển thị lỗi (US-022)
+web/styles.css                                    giao diện responsive cho web/ (US-022)
+web/config.js                                     cấu hình window.VSL_CONFIG.apiBaseUrl (US-022/US-024)
+web/labels.json                                   23 nhãn sinh từ src/vsl/labels.py (US-022)
 infra/versions.tf                                 ghim Terraform và AzureRM provider
 infra/provider.tf                                 cấu hình AzureRM theo subscription
 infra/backend.tf                                  Azure Blob remote backend
@@ -97,11 +103,24 @@ infra/outputs.tf                                  định danh không nhạy c�
 infra/environments/{staging,production}.tfvars   biến theo môi trường; production cần điền giá trị đã xác minh
 infra/bootstrap-azure/                            bootstrap Storage Account + private Blob container
 infra/README.md                                   hướng dẫn bootstrap và init/plan với Azure Blob state
+src/vsl/__init__.py                               re-export heatmap, labels, config
+src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
+src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
+src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
+src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
+src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
+scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
+scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
+scripts/smoke_test.py                             CLI kiểm tra /health, /version, /predict sau deploy (US-017)
+scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
+scripts/rollback.sh                               script Cloud Run cũ giữ lại cho test_ops_contract.py (legacy)
 HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
+README.md                                         tổng quan, chạy cục bộ, CI, Docker, vận hành
 AGENTS.md                                         file này (bộ nhớ dự án)
-.github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
-.github/workflows/azure-oidc-smoke.yml             workflow_dispatch kiểm tra đăng nhập GitHub OIDC
 docs/README.md                                    sơ đồ và mục lục tra cứu toàn bộ tài liệu dự án
+docs/RUNBOOK.md                                   sổ tay vận hành & xử lý sự cố ACA/CI/CORS/Rollback/Chi phí
+docs/PR_DESCRIPTION_US-038.md                     mô tả tổng hợp PR US-038
+docs/implementation/US-IMPLEMENTATION-STATUS.md   bảng trạng thái và tồn đọng sau merge
 docs/architecture/ADR-001-frontend-hosting.md     ADR chọn Cloudflare Pages kết hợp backend Azure
 docs/architecture/THONG_TIN_DE_TAI.txt            tổng quan đề tài và kiến trúc đám mây
 docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md   kế hoạch 2 tuần / 4 mảng công việc kỹ thuật
@@ -115,57 +134,86 @@ docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và
 docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
-docs/api/US-001.md                                hợp đồng create_heatmap; input sai ném ValueError theo US-014
-docs/api/US-002.md                                hợp đồng API của US-002 (labels - PASS)
-docs/api/US-003.md                                hợp đồng API của US-003 (config - PASS)
-docs/api/US-004.md                                hợp đồng API của US-004 (requirements - PASS)
-docs/api/US-005.md                                hợp đồng API của US-005 (health - PASS)
-docs/api/US-006.md                                hợp đồng API của US-006 (/predict)
-docs/api/US-007.md                                hợp đồng API cho trạng thái thiếu landmark (BR-008)
-docs/api/US-008.md                                hợp đồng API của US-008 (version metadata - PASS)
-docs/api/US-010.md                                hợp đồng đóng gói container US-010 (PASS)
-docs/api/US-012.md                                hợp đồng test/lifecycle model (N/A public API)
-docs/api/US-013.md                                hợp đồng CLI và báo cáo đo lường cold start (PASS harness)
-docs/api/US-014.md                                hợp đồng kiểm thử và đặc tả US-014 (PASS)
-docs/api/US-015.md                                hợp đồng US-015 (landmark contract - PASS)
-docs/api/US-016.md                                tài liệu hồi cứu US-016 (N/A public API; test contract)
+docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
 docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
-docs/api/US-018.md                                hợp đồng Terraform CLI và Azure Blob backend (ANALYSIS_READY)
-docs/api/US-019.md                                hợp đồng ACR, RBAC và GitHub OIDC (local implementation PASS)
+docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
+docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
+docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
 docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
 docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
-docs/runbook/cost_management.md                  budget, MFA, dịch vụ cấm và xử lý cảnh báo (US-033)
-docs/runbook/billing_security.md                 quy trình billing guardrails và MFA (US-033)
+docs/runbook/cost_management.md                   budget, MFA, dịch vụ cấm và xử lý cảnh báo (US-033)
+docs/runbook/billing_security.md                  quy trình billing guardrails và MFA (US-033)
 infra/billing-budget/                             Terraform budget $5 với cảnh báo $1/$5 (chưa apply)
 src/vsl/__init__.py                               re-export heatmap, labels, config
 src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
 src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
 src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
 src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
-src/vsl/service.py                                FastAPI service + GET /health, POST /predict, GET /version
+src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
 scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
-tests/test_config.py                              test US-003 (AC-003-01, AC-003-02, BR-004: 4 test)
-tests/test_dockerfile.py                          test US-010 (AC-010-01, BR-005, BR-009, BR-011, BR-025: 3 test)
-tests/test_health.py                              test US-005 (AC-005-01, AC-005-02, BR-011: 3 test)
-tests/test_heatmap.py                             NumPy-only heatmap tests US-014 (9 test, <30s)
-tests/test_heatmap_contract.py                    golden/repository contract tests US-001 (9 test)
-tests/test_labels.py                              test US-002 (AC-002-01, AC-002-02, BR-003: 4 test)
+scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
+scripts/smoke_test.py                             CLI kiểm tra /health, /version, /predict sau deploy (US-017)
+scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
+scripts/rollback.sh                               script Cloud Run cũ giữ lại cho test_ops_contract.py (legacy)
+HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
+README.md                                         tổng quan, chạy cục bộ, CI, Docker, vận hành
+AGENTS.md                                         file này (bộ nhớ dự án)
+docs/README.md                                    sơ đồ và mục lục tra cứu toàn bộ tài liệu dự án
+docs/RUNBOOK.md                                   sổ tay vận hành & xử lý sự cố ACA/CI/CORS/Rollback/Chi phí
+docs/PR_DESCRIPTION_US-038.md                     mô tả tổng hợp PR US-038
+docs/implementation/US-IMPLEMENTATION-STATUS.md   bảng trạng thái và tồn đọng sau merge
+docs/architecture/ADR-001-frontend-hosting.md     ADR chọn Cloudflare Pages kết hợp backend Azure
+docs/architecture/THONG_TIN_DE_TAI.txt            tổng quan đề tài và kiến trúc đám mây
+docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md   kế hoạch 2 tuần / 4 mảng công việc kỹ thuật
+docs/planning/KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md kế hoạch chuyển đổi tài liệu sang Azure
+docs/planning/product-backlog-cicd-2-tuan.xlsx    backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
+docs/process/WORKFLOW.md                          quy trình bắt buộc cho mọi US
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md     hướng dẫn 5 bước thẩm định PR cho Reviewer
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.docx   bản xuất bản Word (.docx) của quy trình Reviewer
+docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md     hồ sơ bàn giao kỹ thuật hạ tầng Azure
+docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và triển khai Azure Container Apps
+docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
+docs/api/README.md                                quy ước + 9 phase + checklist API docs
+docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
+docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
+docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
+docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
+docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
+docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
+docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
+docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
+tests/run_ops_tests.py                            runner kiểm thử nhóm ops contract
+tests/test_ci_workflow.py                         kiểm thử workflow CI (US-026)
+tests/test_cold_start_benchmark.py                unit test harness benchmark US-013
+tests/test_config.py                              test US-003 (BR-004)
+tests/test_cors.py                                test CORS allowlist US-025
+tests/test_cors_version.py                        test tích hợp CORS và /version
+tests/test_dockerfile.py                          test Dockerfile multi-stage & digest (US-010/US-038)
+tests/test_health.py                              test US-005 (/health)
+tests/test_heatmap.py                             NumPy-only heatmap tests US-014
+tests/test_heatmap_contract.py                    golden/repository contract tests US-001
+tests/test_labels.py                              test US-002 (BR-003)
 tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
-tests/test_predict.py                             tests API US-006/US-007 (detection, logging, pipeline)
-tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
-tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash model/CSV, confidence tolerance 0.0001
-tests/test_us018_terraform.py                     kiểm tra AzureRM provider, môi trường, Blob backend và bootstrap state
-tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
-tests/_generate_service_reference.py              lệnh tương thích cũ, chuyển tiếp sang exporter trực tiếp (US-016)
-tests/_export_us016_from_notebook.py               xuất trực tiếp dự đoán notebook và SHA model/CSV (US-016)
-tests/test_requirements.py                        test US-004 (AC-004-01, BR-005: 3 test)
-tests/test_cold_start_benchmark.py                 unit test harness benchmark US-013
-tests/test_us012_model_lifecycle.py                 kiểm thử nạp model một lần, readiness và log duration (US-012)
-tests/test_version.py                             test US-008 (AC-008-01: 3 test)
+tests/test_ops_contract.py                        kiểm thử hợp đồng CI/CD, CORS, rollback, runbook, Docker
 tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
+tests/test_predict.py                             tests API US-006/US-007
+tests/test_requirements.py                        test US-004 (BR-005)
+tests/test_rollback.py                            test CLI rollback ACA US-031
+tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
+tests/test_smoke_test.py                          test CLI smoke test US-017
+tests/test_us012_model_lifecycle.py               kiểm thử nạp model một lần, readiness và log duration (US-012)
+tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash chuẩn hóa LF
+tests/test_us018_terraform.py                     kiểm tra AzureRM provider, môi trường, Blob backend và bootstrap
+tests/test_us019_azure_terraform.py               kiểm tra Terraform ACR cleanup, RBAC và OIDC (US-019)
+tests/test_us019_secret_policy.py                 quét private key & static secret trên tree và git history
+tests/test_us022_web.py                           kiểm thử Playwright cho giao diện web/ (US-022)
+tests/test_version.py                             test US-008 (/version)
+tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
+tests/_generate_service_reference.py              chuyển tiếp sang exporter trực tiếp (US-016)
+tests/_export_us016_from_notebook.py              xuất dự đoán notebook và SHA model/CSV chuẩn hóa LF
 tests/_generate_golden.py                         script sinh lại golden (không phải test)
-.venv/                                            môi trường Python 3.12.7 đã sẵn sàng (~2,5 GB, gitignored)
+.venv/                                            môi trường Python 3.12.7 (~2,5 GB, gitignored)
 ```
 
 ---
@@ -201,7 +249,7 @@ Tổng = **1609 mẫu**.
    ký tự bị bỏ qua**, dù đĩa có 70 file. Thực tế chỉ **1150/1609** mẫu được train.
 2. **Đường dẫn tuyệt đối hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-003)**.
    Đã thay thế bằng module `src/vsl/config.py` đọc từ `VSL_MODEL_PATH`, `VSL_DATA_DIR` kèm fallback
-   tương đối tự động tính từ `PROJECT_ROOT`. Toàn bộ repository sạch 100% không còn chuỗi `D:\` (BR-004).
+   tương đối tự động tính từ `PROJECT_ROOT`. Toàn bộ repository sạch 100% không còn chuỗi `D:\` trong mã nguồn (BR-004).
 3. **`np.eye(23)` và `Dense(23)` hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-002)**.
    Đã thay thế bằng `np.eye(NUM_CLASSES)` và `Dense(NUM_CLASSES)` với `NUM_CLASSES = len(VIETNAMESE_ALPHABET)`
    suy ra tự động từ `src/vsl/labels.py`.
@@ -219,7 +267,7 @@ Tổng = **1609 mẫu**.
    và `from keras.applications.resnet50 import ...` để code sạch cảnh báo 100%.
 9. **Không bật `horizontal_flip`** trong `ImageDataGenerator`: Lật ngang sẽ biến ký hiệu tay này
    thành ký hiệu tay khác. Code realtime dùng `cv2.flip(image, 1)` (coi gương) là chủ ý đúng.
-10. **README ghi sai 2 chỗ:** ghi "50 mẫu/ký tự" (thực tế 70) và "độ chính xác 90%".
+10. **Lưu ý số liệu gốc:** Bộ dữ liệu thực tế có 70 CSV/ký tự (trừ `đ` có 69, tổng 1609 mẫu), không phải 50 mẫu/ký tự.
 
 ---
 
@@ -260,21 +308,29 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
 
 ## 8. Môi trường thực thi chuẩn
 
-- Python runtime cho test & dev: `.venv\Scripts\python.exe` (Python 3.12.10, xác minh 2026-10-28).
-- Lệnh chạy kiểm thử chuẩn:
+- Python runtime trên terminal bình thường: `.venv\Scripts\python.exe` (Python 3.12.7).
+- **Lưu ý trong sandbox agent trên máy Windows này:** `.venv\Scripts\python.exe`, `.venv\Scripts\ruff.exe`, `.venv\Scripts\black.exe` và driver `playwright/driver/node.exe` trong `.venv` có thể gặp lỗi nạp DLL (`_ctypes`/`_ssl`/`0xC0000142`). Khi đó:
+  - Chạy Python, `pytest`, và `black` bằng Python gốc `D:\program\python\python.exe` (đã liên kết `.venv\Lib\site-packages` qua `D:\program\python\Lib\site-packages\vsl_project.pth`):
+    ```powershell
+    & "D:\program\python\python.exe" -m pytest tests --ignore=tests/test_us022_web.py -v
+    & "D:\program\python\python.exe" -m black --check src tests scripts
+    ```
+  - Cài gói bổ sung vào `.venv` bằng `D:\program\python\python.exe -m pip install --prefix ".\.venv" --only-binary=:all: ...` (không cài đè `opencv-python-headless` lên môi trường webcam local nếu đang dùng `opencv-python`).
+- Lệnh chạy kiểm thử đầy đủ (trên terminal ngoài sandbox hoặc CI Linux):
   ```powershell
+  & ".\.venv\Scripts\ruff.exe" check src tests scripts
+  & ".\.venv\Scripts\black.exe" --check src tests scripts
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
-  (Bộ test thuần NumPy `tests/test_heatmap.py` đo ngày 2026-11-06: **9/9 tests PASSED** trong 0.28s; `tests/test_heatmap_contract.py`: **9/9 tests PASSED** trong 2.45s).
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
-  & ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --port 8000
+  & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
   ```
 - Khi chạy script python có in tiếng Việt ra console, luôn đặt:
   ```powershell
   $env:PYTHONIOENCODING = "utf-8"
   ```
-- File `requirements.txt` bắt buộc phải giữ **thuần ASCII**.
+- File `requirements.txt` và `requirements-dev.txt` bắt buộc phải giữ **thuần ASCII**.
 
 ---
 
@@ -287,40 +343,42 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 ## 10. Tiến độ User Stories & Lịch sử Thực hiện
 
-| Mã US | Tiêu đề | Nhánh | Trạng thái | Ghi chú nghiệm thu |
+| Mã US | Tiêu đề | Nhánh / PR | Trạng thái | Ghi chú nghiệm thu |
 |---|---|---|---|---|
-| **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `feature/US-001` | PASS (2026-10-19) | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 (10 tests) |
-| **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `feature/US-002` | PASS (2026-10-25) | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 (14 tests) |
-| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `feature/US-003` | PASS (2026-10-26) | `src/vsl/config.py`, biến môi trường `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 (18 tests) |
-| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `feature/US-004` | PASS (2026-10-26) | `requirements.txt`, `opencv-python-headless`, BR-005 (21 tests) |
-| **US-005** | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `feature/US-005` | PASS (2026-10-26) | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 (24 tests) |
-| **US-006** | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python server-side | `feature/US-006` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, MediaPipe 93 landmarks, tham số `flip`, AC-006-01, AC-006-02, BR-001, BR-006, BR-007 (32 tests) |
-| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | `feature/US-007` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; tham số `flip` tùy biến; log WARNING có timestamp UTC và reason; full suite 48/48 (2026-11-04) |
-| **US-008** | API `/version` trả model version, Git SHA và build time | `feature/US-008` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601, AC-008-01, BR-009; full suite 51/51 (2026-11-04) |
-| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `feature/US-010` | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, `python:3.12-slim`, healthcheck `/health` 200 trong 7s, AC-010-01, BR-005, BR-009, BR-011, BR-025; full suite 54/54 (2026-11-05) |
-| **US-012** | Nạp model một lần ngoài request handler | `feature/US-012` | PASS (2026-11-08) | BR-011; log duration khi load thành công/thất bại; AC-012-01, TSK-019/020; 75/75 test toàn repo; báo cáo tại `docs/reports/US-012-BAO-CAO-THUC-HIEN.md`; chưa push/PR |
-| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | `feature/US-013` | PASS (Harness & Tests) | Harness + 10 unit tests pass (64/64 suite); hạ tầng staging Azure Container Apps đã sẵn sàng; hợp đồng API và báo cáo benchmark đã hợp nhất tại docs/api/US-013.md |
-| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | `feature/US-014` | PASS (2026-11-06) | `tests/test_heatmap.py` 9/9 trong 0.28s; input sai ném `ValueError`; `docs/api/US-014.md` chuẩn 17 mục |
-| **US-015** | Test hợp đồng dữ liệu 93 cột | `feature/US-015` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py`, AC-015-01/02, TSK-024/025, BR-001 (đã merge qua PR #11) |
-| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | `feature/US-016` | PASS (2026-10-28) | Fixture tham chiếu 23 mẫu có hash model/CSV và confidence chính xác; direct notebook/service parity tolerance 0.0001 (đã merge qua PR #12) |
-| **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | `feature/US-033` | IMPLEMENTED LOCALLY; CLOUD VALIDATION BLOCKED | Terraform budget $5 với cảnh báo $1/$5, email Google Group, runbook MFA/dịch vụ cấm/xử lý alert; chưa apply, chưa test email, chưa xác minh MFA do thiếu quyền Billing/Workspace admin |
+| **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | PR `#1`..`#4` / `develop` | PASS (2026-10-19) | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 |
+| **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `develop` | PASS (2026-10-25) | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 |
+| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `develop` | PASS (2026-10-26) | `src/vsl/config.py`, `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 |
+| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `develop` | PASS (2026-10-26) | `requirements.txt`, `opencv-python-headless`, BR-005 |
+| **US-005** | API `/health` phản ánh trạng thái model | PR `#9` | PASS (2026-10-26) | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 |
+| **US-006** | API `/predict` nhận ảnh và chạy MediaPipe server-side | PR `#10` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, 93 landmarks, `flip` |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
+| **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
+| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
+| **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |
+| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | PR `#19` | PASS (Harness & Tests) | `scripts/benchmark_cold_start.py`, `docs/api/US-013.md` |
+| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | PR `#20` | PASS (2026-11-06) | `tests/test_heatmap.py`, input sai ném `ValueError` |
+| **US-015** | Test hợp đồng dữ liệu 93 cột | PR `#11` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py` |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | PR `#12`, PR `#36` | PASS (2026-10-28) | Fixture 23 mẫu có hash model/CSV chuẩn hóa LF |
+| **US-017** | Smoke test tự động sau triển khai | PR `#29` | MERGED (CLI PASS) | `scripts/smoke_test.py`; unit test pass; live deploy/CD chờ US-029 |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | PR `#22` | PASS — STAGING | AzureRM + Blob state `vslstate2026`/`tfstate`; production placeholder |
+| **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | PR `#22`, PR `#42` | PASS — STAGING APPLIED | Đã đăng ký `Microsoft.ManagedIdentity`, apply `infra/` vào `vslstate2026`, OIDC smoke test & `acr-publish.yml` (`42843489497`) chạy xanh; `azurerm_container_registry_task.cleanup` bị gói Students chặn (`TasksOperationsNotAllowed`) |
+| **US-022** | Trang web tĩnh tải hoặc chụp ảnh và hiển thị kết quả | PR `#23` | MERGED — PASS | `web/` + `scripts/generate_web_labels.py` + `tests/test_us022_web.py` |
+| **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33`, PR `#37`, PR `#41` | PARTIAL (AC-024-01 LIVE OK) | `https://sign-language-classification.pages.dev` HTTP 200; live CORS/`/health`/`/version`/`POST /predict` đã pass trên cả `vsl-vietnam` (`web/config.js`) và `vsl-api` (`9a1c3aa...`); còn AC-024-02 (scale-to-zero `<1s`) và thử ảnh tay+mặt thật |
+| **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | PASS — STAGING LIVE | Strict allowlist `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` đang chạy live trên cả `vsl-vietnam` lẫn Standard ACA `vsl-api` |
+| **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
+| **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
+| **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | `feature/US-033` | IMPLEMENTED LOCALLY; CLOUD VALIDATION BLOCKED | Terraform budget $5 với cảnh báo $1/$5, email Google Group, runbook MFA/dịch vụ cấm/xử lý alert (GCP); chưa apply, chưa test email, chưa xác minh MFA do thiếu quyền Billing/Workspace admin |
+| **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
+| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
 
-| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | `feature/US-038` | ĐANG TÍCH HỢP | Multi-stage Docker build ghim digest, non-root runtime, Git SHA/build time, healthcheck; CORS cấu hình theo allowlist; đang hợp nhất với develop và chạy kiểm thử |
-| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | `feature/US-018` | PASS — STAGING | Azure staging `rg-vsl-staging`/`eastasia`: Storage Account `vslstate2026` và private Blob container `tfstate` tồn tại; Storage Account HTTPS-only, TLS 1.2+, shared-key access tắt, Blob versioning bật. Terraform bootstrap không tự tạo role assignment; identity có sẵn `Storage Blob Data Contributor`. Root `terraform init`, `plan` và no-op `apply` thành công qua Azure CLI/Azure AD; Blob `sign-language-classification/staging.tfstate` xác minh được (state v4, serial 2, 0 resources), plan đã lấy/nhả state lock. US-018 tests 4/4, full suite 77/77, Terraform fmt/validate và `git diff --check` đều PASS. Production vẫn là placeholder, chưa plan/apply. Không lưu/gửi secret trong chat. |
-| **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | `feature/US-019` | PASS — LOCAL VALIDATION | Dùng ACR hiện có `vslacr3795`; tác vụ preview `acr purge` chạy hằng ngày, giữ tối đa 3 tag `vsl-api` đủ điều kiện sau mỗi lần chạy (không phải giới hạn tức thời); identity dọn dẹp riêng có `AcrDelete`; principal triển khai GitHub chỉ có `AcrPush` trên ACR và `Container Apps Contributor` trên `vsl-api`; FIC chỉ tin subject nhánh `develop` đã duyệt. Đã có workflow OIDC smoke thủ công và Terraform outputs không nhạy cảm. US-019 tests 8/8, toàn bộ tests 85/85, Terraform fmt/init (`-backend=false`)/validate và `git diff --check` đều PASS. Không chạy cloud plan/import/apply, purge hoặc dispatch workflow; biến production vẫn là placeholder. Chủ repository cần tự xóa GitHub Secrets cũ nếu không còn được workflow khác dùng. |
 ---
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
 
-**Cập nhật trạng thái US-019 (2026-11-07):** ACR staging `vslacr3795` đã được
-import vào remote Terraform state. `terraform apply` chưa tạo resource nào:
-Entra trả 403 khi tạo App Registration và subscription chưa đăng ký
-`Microsoft.ManagedIdentity`. Chỉ tiếp tục apply sau khi Azure admin cấp quyền
-Entra phù hợp và đăng ký resource provider. Chủ dự án sẽ push/merge nhánh qua
-quy trình review; GitHub Secrets cũ do chủ repository tự kiểm tra/xóa.
-
-Khi bắt đầu phiên làm việc mới:
-1. Đọc lại file này (`AGENTS.md`) và [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
-2. US-018 bootstrap đã tạo Storage Account và private container `tfstate` trên Azure staging. Xác nhận root Terraform init/plan thành công với Azure AD/CLI authentication và state key riêng của staging; production chưa cấu hình bằng giá trị xác thực.
-3. Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials.
-4. Không push hoặc tạo PR nếu chưa có quyết định của chủ dự án.
+1. **Hạ tầng Azure staging sau Nhóm 4 (2026-11-11):**
+   - `vslacr3795.azurecr.io/vsl-api:9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã chạy live trên cả App Service `vsl-vietnam` (`https://vsl-vietnam.azurewebsites.net`, target của `web/config.js`) và Standard ACA `vsl-api` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io` trên `cae-vsl-staging-std`, dùng UAMI `id-vsl-api-pull` với `AcrPull`, `Multiple` revision mode).
+   - Environment Express cũ `cae-vsl-staging` đã tách `vsl-api` ra; chủ dự án có thể xóa dọn khi xác nhận không còn dùng.
+   - `azurerm_role_assignment.deployment_app` đã được khôi phục cho `vsl-api` mới; `azurerm_container_registry_task.cleanup` vẫn bị giới hạn gói Azure for Students (`TasksOperationsNotAllowed`).
+2. **US-024 / US-017 kiểm chứng end-to-end với ảnh thật:** chạy `scripts/smoke_test.py --image <ảnh tay+mặt thật>` và kiểm tra browser trực tiếp trên `https://sign-language-classification.pages.dev`; đo `AC-024-02` nếu chủ dự án duyệt thử scale-to-zero (`minReplicas=0`).
+3. **US-029:** triển khai pipeline CD tự động (OIDC + push ACR + deploy Standard ACA `vsl-api` / App Service + `scripts/smoke_test.py` + `scripts/rollback.py`).
+4. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
