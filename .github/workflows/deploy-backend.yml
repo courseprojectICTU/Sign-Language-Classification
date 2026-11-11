@@ -1,0 +1,286 @@
+name: Deploy backend to Azure staging
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aca-staging-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, smoke-test, and promote ACA revision
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME }}
+      AZURE_ACR_NAME: ${{ vars.AZURE_ACR_NAME }}
+      IMAGE_REPOSITORY: vsl-api
+      GIT_SHA: ${{ github.sha }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in \
+            AZURE_CLIENT_ID \
+            AZURE_TENANT_ID \
+            AZURE_SUBSCRIPTION_ID \
+            AZURE_RESOURCE_GROUP \
+            AZURE_CONTAINER_APP_NAME \
+            AZURE_ACR_NAME; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Required GitHub Actions variable ${name} is not configured."
+              exit 1
+            fi
+          done
+
+      - name: Sign in to Azure with GitHub OIDC
+        id: azure-login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Container Apps CLI extension
+        shell: bash
+        run: az extension add --name containerapp --upgrade
+
+      - name: Build and push image to ACR
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          login_server="$(az acr show \
+            --name "$AZURE_ACR_NAME" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query loginServer \
+            --output tsv)"
+          if [[ -z "$login_server" ]]; then
+            echo "::error::Could not resolve the configured ACR login server."
+            exit 1
+          fi
+
+          image="${login_server}/${IMAGE_REPOSITORY}:${GIT_SHA}"
+          az acr login --name "$AZURE_ACR_NAME" --subscription "$AZURE_SUBSCRIPTION_ID"
+          docker build \
+            --platform linux/amd64 \
+            --build-arg "GIT_SHA=${GIT_SHA}" \
+            --build-arg "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --tag "$image" \
+            .
+          docker push "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy candidate revision without stable traffic
+        id: candidate
+        shell: bash
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+        run: |
+          set -euo pipefail
+          az containerapp revision set-mode \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --mode multiple
+
+          revisions="$(az containerapp revision list \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --output json)"
+          previous_revision="$(jq -r \
+            '[.[] | select(.properties.active == true and .properties.trafficWeight == 100) | .name]
+             | if length == 1 then .[0] else empty end' <<< "$revisions")"
+          if [[ -z "$previous_revision" ]]; then
+            echo "::error::Expected exactly one active revision with 100% traffic; refusing deployment."
+            exit 1
+          fi
+
+          suffix="r${GITHUB_RUN_ID}"
+          az containerapp update \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --image "$IMAGE" \
+            --revision-suffix "$suffix" \
+            --no-traffic \
+            --only-show-errors
+
+          revision="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.latestRevisionName \
+            --output tsv)"
+          if [[ -z "$revision" || "$revision" == "$previous_revision" ]]; then
+            echo "::error::Azure did not create a distinct candidate revision."
+            exit 1
+          fi
+          echo "previous_revision=$previous_revision" >> "$GITHUB_OUTPUT"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+
+          provisioned=false
+          for attempt in $(seq 1 30); do
+            state="$(az containerapp revision show \
+              --name "$AZURE_CONTAINER_APP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --subscription "$AZURE_SUBSCRIPTION_ID" \
+              --revision "$revision" \
+              --query properties.provisioningState \
+              --output tsv)"
+            if [[ "$state" == "Provisioned" ]]; then
+              provisioned=true
+              break
+            fi
+            if [[ "$state" == "Failed" ]]; then
+              echo "::error::Candidate revision ${revision} failed provisioning."
+              exit 1
+            fi
+            sleep 10
+          done
+          if [[ "$provisioned" != true ]]; then
+            echo "::error::Candidate revision ${revision} did not provision within 5 minutes."
+            exit 1
+          fi
+
+          label="candidate"
+          az containerapp revision label add \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --revision "$revision" \
+            --label "$label" \
+            --yes
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+          fqdn="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)"
+          if [[ -z "$fqdn" ]]; then
+            echo "::error::Container App ingress FQDN is not configured."
+            exit 1
+          fi
+
+          echo "candidate_url=https://${label}.${fqdn}" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-test candidate revision
+        shell: bash
+        env:
+          CANDIDATE_URL: ${{ steps.candidate.outputs.candidate_url }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if python scripts/smoke_test.py \
+              --url "$CANDIDATE_URL" \
+              --expected-sha "$GIT_SHA"; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 30 ]]; then
+              echo "Candidate is not ready yet (attempt ${attempt}/30); retrying in 10 seconds."
+              sleep 10
+            fi
+          done
+          echo "::error::Candidate health/version smoke test failed; stable traffic was not changed."
+          exit 1
+
+      - name: Shift traffic only after smoke test passes
+        shell: bash
+        env:
+          PREVIOUS_REVISION: ${{ steps.candidate.outputs.previous_revision }}
+          CANDIDATE_REVISION: ${{ steps.candidate.outputs.revision }}
+        run: |
+          set -euo pipefail
+          restore_previous() {
+            if ! az containerapp ingress traffic set \
+              --name "$AZURE_CONTAINER_APP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --subscription "$AZURE_SUBSCRIPTION_ID" \
+              --revision-weight "${PREVIOUS_REVISION}=100" "${CANDIDATE_REVISION}=0" \
+              --only-show-errors; then
+              echo "::error::Automatic traffic rollback failed; inspect the Container App immediately."
+              return 1
+            fi
+            echo "Restored 100% traffic to ${PREVIOUS_REVISION}."
+          }
+
+          promotion_attempted=false
+          promotion_verified=false
+          rollback_on_failure() {
+            local exit_code=$?
+            trap - EXIT
+            if [[ "$exit_code" -ne 0 && "$promotion_attempted" == true && "$promotion_verified" != true ]]; then
+              restore_previous || true
+            fi
+            exit "$exit_code"
+          }
+          trap rollback_on_failure EXIT
+
+          promotion_attempted=true
+          az containerapp ingress traffic set \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --revision-weight "${CANDIDATE_REVISION}=100" \
+            --only-show-errors
+
+          traffic="$(az containerapp revision list \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --output json)"
+          active_revision="$(jq -r \
+            '[.[] | select(.properties.active == true and .properties.trafficWeight == 100) | .name]
+             | if length == 1 then .[0] else empty end' <<< "$traffic")"
+          if [[ "$active_revision" != "$CANDIDATE_REVISION" ]]; then
+            echo "::error::Traffic verification failed; restoring the previous revision on exit."
+            exit 1
+          fi
+
+          service_fqdn="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)"
+          if ! python scripts/smoke_test.py \
+            --url "https://${service_fqdn}" \
+            --expected-sha "$GIT_SHA"; then
+            echo "::error::Post-promotion verification failed; restoring the previous revision on exit."
+            exit 1
+          fi
+
+          promotion_verified=true
+          echo "Promoted ${CANDIDATE_REVISION} to 100% traffic."
+
+      - name: Remove temporary candidate label
+        if: always() && steps.candidate.outputs.label != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          az containerapp revision label remove \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --label "${{ steps.candidate.outputs.label }}" \
+            --only-show-errors

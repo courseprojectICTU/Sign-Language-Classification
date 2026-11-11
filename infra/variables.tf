@@ -55,3 +55,17 @@ variable "github_oidc_subject" {
     error_message = "github_oidc_subject must belong to the configured GitHub repository."
   }
 }
+
+variable "github_oidc_main_subject" {
+  description = "Optional exact GitHub Actions subject trusted for main-branch deployment."
+  type        = string
+  default     = ""
+
+  validation {
+    condition = var.github_oidc_main_subject == "" || can(regex(
+      "^repo:courseprojectICTU(@[0-9]+)?/Sign-Language-Classification(@[0-9]+)?:ref:refs/heads/main$",
+      var.github_oidc_main_subject
+    ))
+    error_message = "github_oidc_main_subject must be the configured repository's main branch subject."
+  }
+}

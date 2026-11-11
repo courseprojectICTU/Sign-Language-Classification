@@ -112,7 +112,7 @@ hoặc commit vào repository.
 | US-017 | Smoke test tự động sau triển khai | Thực hiện HTTP request kiểm tra endpoint `GET /health` với điều kiện `model_loaded == true`. |
 | US-024 | Triển khai Frontend lên Cloudflare Pages | Cấu hình API qua `web/config.js` (`https://vsl-vietnam.azurewebsites.net`) hoặc biến môi trường tới `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`. |
 | US-026 | Pipeline CI kiểm thử và build image | Chạy trên runner của GitHub Actions sử dụng Dockerfile chuẩn Linux. |
-| US-029 | CD tự động triển khai revision mới | Sử dụng GitHub Action `azure/container-apps-deploy-action@v1` với Azure OIDC (Mục 4); push image bằng quyền `AcrPush`, không dùng ACR admin credentials. |
+| US-029 | CD tự động triển khai revision mới | Nhánh `feature/US-029` bổ sung `.github/workflows/deploy-backend.yml`: Azure OIDC, push ACR bằng `AcrPush`, triển khai revision Standard ACA `vsl-api` không traffic, smoke `/health` + `/version`, rồi chuyển traffic hoặc khôi phục revision trước. Chưa merge hoặc xác minh live; FIC `main`, GitHub Variables và ACR cần được kiểm tra trước lần chạy đầu. |
 | US-034 | Cảnh báo Cloud Logging lỗi 5xx | Truy vấn log qua `workspace-rgvslstaging8EBp` hoặc cấu hình Alert rule trên Azure Monitor. |
 
 ---

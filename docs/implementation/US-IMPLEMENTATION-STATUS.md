@@ -1,8 +1,8 @@
 # Requested User Stories — Implementation and Handoff Status
 
 **Updated:** 2026-11-11
-**Scope:** US-038, US-026, US-017, US-025, US-031, and US-035 (plus related frontend/infra merges on `develop`).
-**Current baseline:** `develop` / `origin/develop` at `8461a16` (PR `#42`), with staging Azure rollout (`cae-vsl-staging-std`, `vsl-api`, `vsl-vietnam`) verified live on 2026-11-11.
+**Scope:** US-038, US-026, US-017, US-025, US-029, US-031, and US-035 (plus related frontend/infra merges on `develop`).
+**Current baseline:** `develop` / `origin/develop` at `4c44d09` (PR `#44`), with staging Azure rollout (`cae-vsl-staging-std`, `vsl-api`, `vsl-vietnam`) verified live on 2026-11-11. US-029 changes are on `feature/US-029`, not yet merged.
 
 ## Summary
 
@@ -12,6 +12,7 @@
 | US-026 — Pull-request CI | **Merged into `develop` (PR `#30`)** | `b2f23e9` (`feature/US-026`), updated in PR `#34` & PR `#36` | Workflow does not push or deploy (`push: false`). Hosted Actions run results are verified on GitHub Actions, not locally for Docker/Playwright driver under sandbox. |
 | US-017 — Deployment smoke test | **Merged into `develop` (PR `#29`)** | `4af6c03` (`feature/US-017`), `scripts/smoke_test.py` | Unit tests use HTTP stubs; `/health`, `/version`, and CORS/`POST /predict` (`no_hand`) passed live on 2026-11-11, while `smoke_test.py --image` with a real hand+face sample image and CD wiring (`US-029`) remain pending. |
 | US-025 — CORS and network errors | **Live on staging & merged (PR `#28`)** | `5e96efb` (`feature/US-025`), `src/vsl/service.py` + `tests/test_cors.py` | `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` is live on both App Service `vsl-vietnam` and Standard Container App `vsl-api` (`9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f`); preflight `200`, `POST /predict` `200`, and disallowed-origin `400` were verified on 2026-11-11. |
+| US-029 — Blue-green CD to ACA staging | **Implemented on `feature/US-029`; not merged/live-verified** | `.github/workflows/deploy-backend.yml`, `scripts/smoke_test.py`, Terraform main-branch OIDC | Local suite passed (158 tests); apply FIC and verify GitHub variables/ACR before a supervised live run. |
 | US-031 — ACA traffic rollback | **Merged into `develop` (PR `#27`)** | `61f5e7f` (`feature/US-031`), `scripts/rollback.py` | `vsl-api` on `cae-vsl-staging-std` is now provisioned in `Multiple` revision mode (`vsl-api--lhkogbo`); live rollback rehearsal with a second active revision and automatic CD wiring (`US-029`) remain pending. |
 | US-035 — README and runbook | **Merged into `develop` (PR `#24`)** | `3250e29` (`feature/US-035`), unified with post-merge updates | `README.md`, `docs/RUNBOOK.md`, and this status ledger were updated after subsequent merges (`#22`–`#36`) to remove conflict markers and reflect `develop` accurately. |
 
@@ -46,7 +47,7 @@
 
 ## Remaining environment & delivery gaps
 
-- **CD Automation (`US-029`):** Not yet present in `develop`; image publishing and ACA deployment remain manual (manual OIDC ACR publish workflow `.github/workflows/acr-publish.yml` is merged on `develop`).
+- **CD Automation (`US-029`):** Workflow implementation is on `feature/US-029` and is not merged or live-verified. It targets Standard ACA staging `vsl-api` only, not App Service `vsl-vietnam`. Before first use, apply the main-branch OIDC federation through reviewed Terraform, verify GitHub Actions variables and the actual ACR name, and run a supervised staging deployment.
 - **Azure OIDC & Staging Infra (`US-019`):** `Microsoft.ManagedIdentity` is registered and staging Terraform is applied against `vslstate2026` (`vsl-github-actions-staging` has `AcrPush` on `vslacr3795` and `Container Apps Contributor` on recreated `vsl-api`); GitHub OIDC smoke test and ACR publish (`42843489497`) passed. Only `azurerm_container_registry_task.cleanup` remains blocked by Azure for Students (`TasksOperationsNotAllowed`).
 - **Cloudflare Pages E2E (`US-024`):** `vslacr3795.azurecr.io/vsl-api:9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` with `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` is live on both App Service `vsl-vietnam` (`web/config.js`) and Standard Container App `vsl-api` (`cae-vsl-staging-std`), passing `/health`, `/version`, CORS preflight, and `POST /predict` (`no_hand`) checks; remaining gaps are a live real-photo (`hand+face`) E2E verification and `AC-024-02` scale-to-zero measurement while `minReplicas=1`.
 - **Live ACA Rollback Rehearsal (`US-031`):** Not yet executed on Azure (`vsl-api` on `cae-vsl-staging-std` is now provisioned in `Multiple` revision mode).
