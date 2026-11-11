@@ -50,3 +50,17 @@ def test_ci_records_docker_build_duration_and_image_size() -> None:
     assert "docker image inspect" in content
     assert "IMAGE_SIZE" in content
     assert "BUILD_DURATION" in content or "DURATION" in content
+
+
+def test_ci_playwright_install_has_apt_resilience_and_timeouts() -> None:
+    content = _workflow_text()
+
+    assert "timeout-minutes:" in content
+    assert "~/.cache/ms-playwright" in content
+    assert 'Acquire::ForceIPv4 "true"' in content
+    assert "/etc/apt/apt-mirrors.txt" in content
+    assert "mirrors.edge.kernel.org/ubuntu" in content
+    assert "azure.archive.ubuntu.com/ubuntu" in content
+    assert "archive.ubuntu.com/ubuntu" in content
+    assert "verify_playwright_launch" in content
+    assert "timeout " in content
