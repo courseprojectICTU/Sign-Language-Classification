@@ -178,3 +178,57 @@ def test_ac_011_02_converter_failure_cleans_partial_artifacts_and_preserves_runt
     assert "preprocess_heatmap" in service_source
     gitignore_source = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert "*.onnx" in gitignore_source
+
+
+def test_tsk_018_csv_validation_and_cli_verify_parity_gate(tmp_path, monkeypatch):
+    export_onnx = _exporter()
+
+    bad_csv = tmp_path / "bad.csv"
+    bad_csv.write_text("col_a,col_b\n0.1,0.2\n", encoding="utf-8")
+    try:
+        export_onnx.load_csv_landmarks(bad_csv)
+    except export_onnx.OnnxExportError:
+        pass
+    else:
+        raise AssertionError("Expected OnnxExportError for invalid landmark CSV header")
+
+    fake_model = tmp_path / "source.h5"
+    fake_model.write_bytes(b"h5")
+    out_onnx = tmp_path / "out.onnx"
+    report_path = tmp_path / "report.json"
+
+    monkeypatch.setattr(
+        export_onnx,
+        "export_keras_to_onnx",
+        lambda *args, **kwargs: {
+            "source_path": str(fake_model),
+            "output_path": str(out_onnx),
+            "onnx_size_bytes": 123,
+            "opset": 15,
+        },
+    )
+    monkeypatch.setattr(
+        export_onnx,
+        "measure_keras_vs_onnx_parity",
+        lambda *args, **kwargs: {
+            "parity_passed": False,
+            "max_abs_diff": 0.25,
+            "argmax_match_count": 10,
+            "sample_count": 23,
+        },
+    )
+
+    exit_code = export_onnx.main(
+        [
+            "--model-path",
+            str(fake_model),
+            "--output",
+            str(out_onnx),
+            "--json-report",
+            str(report_path),
+            "--verify-parity",
+        ]
+    )
+    assert exit_code != 0
+    saved = json.loads(report_path.read_text(encoding="utf-8"))
+    assert saved["parity"]["parity_passed"] is False
