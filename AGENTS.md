@@ -317,7 +317,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
 | **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
-| **US-011** | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | `feature/US-011` | READY FOR GATE D (2026-11-11) | `scripts/export_onnx.py`, `tests/test_onnx_parity.py` (`6/6` PASS; `max_abs_diff=1.583e-06`, `23/23` argmax, H5 `137MB` -> ONNX `96MB`, `Q1` giữ runtime TF/Keras) |
+| **US-011** | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | `feature/US-011` | PASS (2026-11-11 — chốt Cổng D) | `scripts/export_onnx.py`, `tests/test_onnx_parity.py` (`6/6` PASS; `max_abs_diff=1.583e-06`, `23/23` argmax, H5 `137MB` -> ONNX `96MB`, `Q1` giữ runtime TF/Keras) |
 | **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |
 | **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | PR `#19` | PASS (Harness & Tests) | `scripts/benchmark_cold_start.py`, `docs/api/US-013.md` |
 | **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | PR `#20` | PASS (2026-11-06) | `tests/test_heatmap.py`, input sai ném `ValueError` |
