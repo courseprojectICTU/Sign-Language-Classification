@@ -84,8 +84,9 @@ def test_tsk_035_environment_pull_identity_and_cost_guardrails():
         env_block,
     )
     assert re.search(r'logs_destination\s*=\s*"log-analytics"', env_block)
-    assert re.search(r"internal_load_balancer_enabled\s*=\s*false", env_block)
-    assert re.search(r"zone_redundancy_enabled\s*=\s*false", env_block)
+    assert "infrastructure_subnet_id" not in env_block
+    assert "internal_load_balancer_enabled" not in env_block
+    assert "zone_redundancy_enabled" not in env_block
     workload_profile = _extract_hcl_block(env_block, r"workload_profile\s*\{")
     assert re.search(r'name\s*=\s*"Consumption"', workload_profile)
     assert re.search(r'workload_profile_type\s*=\s*"Consumption"', workload_profile)

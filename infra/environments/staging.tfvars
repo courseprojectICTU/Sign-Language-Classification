@@ -5,3 +5,12 @@ environment         = "staging"
 acr_name            = "vslacr3795"
 container_app_name  = "vsl-api"
 github_oidc_subject = "repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/develop"
+
+log_analytics_workspace_name   = "workspace-rgvslstaging8EBp"
+container_app_environment_name = "cae-vsl-staging-std"
+image_tag                      = "9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f"
+container_cpu                  = 1
+container_memory               = "2Gi"
+container_min_replicas         = 0
+container_max_replicas         = 3
+allowed_origins                = "https://sign-language-classification.pages.dev"

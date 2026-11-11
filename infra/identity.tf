@@ -1,8 +1,3 @@
-data "azurerm_container_app" "vsl_api" {
-  name                = var.container_app_name
-  resource_group_name = var.resource_group_name
-}
-
 resource "azuread_application" "github_deploy" {
   display_name     = "vsl-github-actions-${var.environment}"
   sign_in_audience = "AzureADMyOrg"
@@ -30,7 +25,7 @@ resource "azurerm_role_assignment" "deployment_push" {
 }
 
 resource "azurerm_role_assignment" "deployment_app" {
-  scope                            = data.azurerm_container_app.vsl_api.id
+  scope                            = azurerm_container_app.vsl_api.id
   role_definition_name             = "Container Apps Contributor"
   principal_id                     = azuread_service_principal.github_deploy.object_id
   principal_type                   = "ServicePrincipal"
