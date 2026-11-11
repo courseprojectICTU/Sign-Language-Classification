@@ -48,6 +48,7 @@ class ApiStub:
     status_code: int = 200
     response: dict[str, object] = field(default_factory=lambda: SUCCESS_RESPONSE.copy())
     request_method: str = ""
+    request_path: str = ""
     request_content_type: str = ""
     request_body: bytes = b""
 
@@ -81,6 +82,7 @@ def test_site() -> Iterator[LocalSite]:
         def do_POST(self) -> None:
             content_length = int(self.headers.get("Content-Length", "0"))
             api.request_method = self.command
+            api.request_path = self.path
             api.request_content_type = self.headers.get("Content-Type", "")
             api.request_body = self.rfile.read(content_length)
             api.received.set()
@@ -163,10 +165,43 @@ def test_ac_022_01_upload_sends_file_and_displays_prediction(
     result.get_by_text("đ", exact=True).wait_for()
 
     assert test_site.api.request_method == "POST"
+    assert test_site.api.request_path == "/predict?flip=false"
     assert test_site.api.request_content_type.startswith("multipart/form-data;")
     assert b'name="file"' in test_site.api.request_body
     assert b'filename="ban-tay.jpg"' in test_site.api.request_body
     assert "95%" in result.inner_text()
+
+
+def test_flip_button_updates_preview_and_prediction_option(
+    page: Page, test_site: LocalSite
+) -> None:
+    _open_site(page, test_site)
+    flip_button = page.locator("#flip-image")
+    expect(flip_button).to_be_disabled()
+
+    page.get_by_label("Chọn ảnh").set_input_files(
+        {
+            "name": "ban-tay.jpg",
+            "mimeType": "image/jpeg",
+            "buffer": _jpeg_bytes(),
+        }
+    )
+    expect(flip_button).to_be_enabled()
+    expect(flip_button).to_have_attribute("aria-pressed", "false")
+
+    flip_button.click()
+    expect(flip_button).to_have_attribute("aria-pressed", "true")
+    expect(page.get_by_role("img", name="Ảnh xem trước")).to_have_class("is-flipped")
+
+    flip_button.click()
+    expect(flip_button).to_have_attribute("aria-pressed", "false")
+    expect(page.get_by_role("img", name="Ảnh xem trước")).not_to_have_class("is-flipped")
+    flip_button.click()
+
+    page.get_by_role("button", name="Dự đoán").click()
+    page.get_by_role("region", name="Kết quả dự đoán").get_by_text("đ", exact=True).wait_for()
+
+    assert test_site.api.request_path == "/predict?flip=true"
 
 
 def test_ac_022_02_keeps_loading_and_page_visible_until_cold_start_finishes(
@@ -258,7 +293,7 @@ def test_tsk_040_displays_api_business_and_http_errors(
 
 def test_tsk_040_displays_network_error_message(page: Page, test_site: LocalSite) -> None:
     _open_site(page, test_site)
-    page.route("**/predict", lambda route: route.abort())
+    page.route("**/predict**", lambda route: route.abort())
     page.get_by_label("Chọn ảnh").set_input_files(
         {
             "name": "ban-tay.jpg",
