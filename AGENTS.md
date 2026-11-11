@@ -40,9 +40,9 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| `develop` / `origin/develop` | `8461a16` (`Merge pull request #42 from courseprojectICTU/bugfix/us019-oidc-subject`) |
-| Nhánh làm việc hiện tại | `docs/sync-group4-azure-staging` (rẽ từ `develop` `8461a16`) |
-| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40` |
+| `develop` / `origin/develop` | `4c44d09` (`Merge pull request #44 from courseprojectICTU/docs/sync-group4-azure-staging`) |
+| Nhánh làm việc hiện tại | `feature/US-033` (đã merge `develop` `4c44d09`) |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
 | Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
@@ -99,7 +99,8 @@ infra/provider.tf                                 cấu hình AzureRM theo subsc
 infra/backend.tf                                  Azure Blob remote backend
 infra/registry.tf                                 cấu hình ACR và tác vụ purge tag định kỳ (US-019)
 infra/identity.tf                                 deployment identity, RBAC tối thiểu và GitHub FIC (US-019)
-infra/outputs.tf                                  định danh không nhạy cảm cho GitHub Actions Variables (US-019)
+infra/budget.tf                                   Azure subscription budget $5 với cảnh báo $1/$5 (US-033)
+infra/outputs.tf                                  định danh OIDC và billing_budget_id (US-019/US-033)
 infra/environments/{staging,production}.tfvars   biến theo môi trường; production cần điền giá trị đã xác minh
 infra/bootstrap-azure/                            bootstrap Storage Account + private Blob container
 infra/README.md                                   hướng dẫn bootstrap và init/plan với Azure Blob state
@@ -166,6 +167,7 @@ tests/test_us018_terraform.py                     kiểm tra AzureRM provider, m
 tests/test_us019_azure_terraform.py               kiểm tra Terraform ACR cleanup, RBAC và OIDC (US-019)
 tests/test_us019_secret_policy.py                 quét private key & static secret trên tree và git history
 tests/test_us022_web.py                           kiểm thử Playwright cho giao diện web/ (US-022)
+tests/test_us033_cost_guardrails.py               kiểm thử Terraform budget Azure, Entra ID MFA & runbook (US-033)
 tests/test_version.py                             test US-008 (/version)
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
@@ -326,6 +328,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | PASS — STAGING LIVE | Strict allowlist `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` đang chạy live trên cả `vsl-vietnam` lẫn Standard ACA `vsl-api` |
 | **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
 | **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
+| **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | `feature/US-033` | PASS — STAGING VERIFIED | Đã apply `vsl-monthly-cost-guardrail-staging` (`$5`, `20%` `$1` / `100%` `$5`, `Owner`) trên `373b1f03-330f-4302-a9e9-aa1fe793bf2e` và xác minh trên Azure Portal; Entra ID `Security defaults: Enabled`; `docs/RUNBOOK.md` Mục 7, `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
 

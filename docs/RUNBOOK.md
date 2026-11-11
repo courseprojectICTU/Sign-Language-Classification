@@ -197,17 +197,51 @@ However, if the live ACA revision has not yet been updated with
 
 ---
 
-## 7. Vượt ngân sách / Chi phí vượt dự kiến (Cloud cost exceeds expectations)
+## 7. Vượt ngân sách / Chi phí vượt dự kiến (Cloud cost guardrails, MFA & alert response)
 
-1. Review Azure Cost Management / Cost Analysis (and Sponsorship balance if
-   applicable) for the correct subscription and billing period.
-2. Check ACA replica counts (`minReplicas`/`maxReplicas`), CPU/memory, ACR
-   image retention (`infra/registry.tf` configures a daily `acr purge` task
-   keeping 3 tags), Log Analytics ingestion/retention, and other resources.
-3. Do not lower minimum replicas, scale to zero, or delete resources solely to
-   reduce cost without assessing availability and obtaining owner approval.
-4. Set an appropriate budget/alert in Azure for the billing account. This
-   repository does not automatically configure cost alerts.
+### 7.1. Azure Billing Budget (`$1` / `$5`) và Sponsorship Balance
+
+- Mục tiêu chi phí `0 VNĐ` (`BR-016` Free Tier Guardrails) trên gói **Azure for Students** (`100 USD` credit).
+- Module `infra/budget.tf` khai báo tài nguyên `azurerm_consumption_budget_subscription.monthly` với hạn mức tháng `$5 USD` (`time_grain = "Monthly"`):
+  - Ngưỡng `20%` (`$1 USD`, `Actual`, `GreaterThanOrEqualTo`): cảnh báo sớm đầu tiên.
+  - Ngưỡng `100%` (`$5 USD`, `Actual`, `GreaterThanOrEqualTo`): ngưỡng khẩn cấp.
+  - Người nhận mặc định là vai trò `Owner` của subscription, có thể bổ sung email nhóm qua `TF_VAR_budget_alert_emails` (tuyệt đối không commit email cá nhân vào Git).
+- Vì `infra/provider.tf` dùng `resource_provider_registrations = "none"`, hãy kiểm tra đăng ký provider `Microsoft.Consumption` trước khi `terraform apply`:
+  ```powershell
+  az provider register --namespace Microsoft.Consumption
+  terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+  ```
+- **Lưu ý đặc thù gói Sponsorship / Azure for Students:** Budget chỉ gửi cảnh báo (không tự tắt dịch vụ) và dữ liệu Azure Cost Management có độ trễ cập nhật vài giờ. Ngoài Azure Cost Management trong Azure Portal, luôn đối chiếu số dư credit thực tế tại `https://www.microsoftazuresponsorships.com` (mục **Balance**). Nếu gói tài trợ chặn API `Microsoft.Consumption/budgets` khi `apply`, đặt `-var="enable_billing_budget=false"` và thiết lập cảnh báo tương đương trên Azure Portal / Sponsorships Portal.
+
+### 7.2. Bắt buộc bật MFA trên Microsoft Entra ID
+
+- MFA áp dụng cho **danh tính người dùng tương tác** truy cập Azure Portal / Azure CLI (khác với pipeline CI/CD GitHub Actions đã dùng OIDC không mật khẩu tĩnh theo `US-019`).
+- Chủ dự án / Global Administrator kiểm tra tại **Microsoft Entra ID → Properties → Manage Security defaults** (bật **Security defaults** nếu dùng gói miễn phí) hoặc **Conditional Access** yêu cầu MFA cho toàn bộ thành viên có quyền trên subscription `rg-vsl-staging` / `vslstate2026`.
+- Với tài khoản khách (External/Guest accounts) được mời vào tenant, yêu cầu chủ tài khoản bật xác thực hai lớp (Microsoft Authenticator / passkey / FIDO2) và kiểm tra trạng thái trong **Entra ID → Users → Per-user MFA / Sign-in logs** trước khi cấp quyền IAM.
+- Không lưu mật khẩu, Client Secret hay mã khôi phục MFA trong repository hoặc chat.
+
+### 7.3. Dịch vụ và cấu hình Azure bị cấm / được phép có điều kiện (`BR-016`)
+
+Không tạo hoặc bật các dịch vụ/cấu hình trong nhóm **Bị cấm** nếu chưa có ngoại lệ bằng văn bản từ chủ dự án:
+
+| Nhóm | Dịch vụ / cấu hình | Quy tắc áp dụng |
+|---|---|---|
+| **Bị cấm** | VM có GPU (`NC`/`NV`/`ND`), Azure Machine Learning compute cluster chạy liên tục | Tiêu tốn credit rất nhanh ngay cả khi chạy thời gian ngắn. |
+| **Bị cấm** | AKS (Azure Kubernetes Service), App Service Plan Premium/Isolated, VM chạy 24/7 | Tính phí compute nền liên tục theo giờ. |
+| **Bị cấm** | Azure SQL Database HA/vCore lớn, Cosmos DB provisioned throughput, Azure Cache for Redis chạy thường trực | Chi phí cố định hàng tháng vượt ngân sách demo. |
+| **Bị cấm** | Application Gateway, Azure Front Door, Azure Load Balancer Standard trả phí theo giờ, NAT Gateway | Phát sinh phí cố định theo giờ và lưu lượng ngoài hạn mức demo. |
+| **Bị cấm** | Container Apps đặt `minReplicas > 0` hoặc App Service Always On không được phê duyệt | Trái nguyên tắc scale-to-zero của `BR-016` *(hiện staging `vsl-api` đang tạm giữ `minReplicas = 1` và App Service `vsl-vietnam` để đo đạc/ổn định demo dưới sự duyệt của chủ dự án; cần đưa về `minReplicas = 0` khi chốt chế độ tiết kiệm)*. |
+| **Có điều kiện** | Azure Container Apps (`WorkloadProfiles` Consumption, `cae-vsl-staging-std`), `1.0 vCPU`, `2.0 GiB RAM` | Đặt `minReplicas = 0` (trừ khi chủ dự án duyệt đo kiểm), giới hạn `maxReplicas <= 2`. |
+| **Có điều kiện** | Azure Container Registry (`vslacr3795`, SKU `Basic`) | Bật dọn tag cũ (giữ tối đa 3 tag `vsl-api` mới nhất theo `infra/registry.tf` hoặc dọn thủ công nếu gói Students chặn ACR Task). |
+| **Có điều kiện** | Log Analytics Workspace (`workspace-rgvslstaging8EBp`) & Storage Account (`vslstate2026`) | Giữ mức thu thập/retention mặc định tối thiểu, không bật diagnostic dump dư thừa. |
+| **Miễn phí** | Cloudflare Pages (`https://sign-language-classification.pages.dev`) & GitHub Actions | Nằm trong hạn mức miễn phí hàng tháng. |
+
+### 7.4. Quy trình xử lý khi nhận cảnh báo chi phí `$1` (20%) hoặc chạm `$5` (100%)
+
+1. **Khi chạm `$1` (`20%`):** Người nhận thông báo báo ngay cho chủ dự án; không chờ đến `$5`. Mở **Azure Cost Management → Cost analysis** (nhóm theo *Service name* / *Meter*) và đối chiếu số dư trên `https://www.microsoftazuresponsorships.com`.
+2. Tạm dừng triển khai/thay đổi hạ tầng mới. Kiểm tra các tài nguyên đang hoạt động trong `rg-vsl-staging` và toàn subscription: `minReplicas` / `maxReplicas` của `vsl-api`, trạng thái App Service `vsl-vietnam`, Environment cũ (`cae-vsl-staging`), dung lượng ACR `vslacr3795`, mức ingest Log Analytics và kiểm tra xem có tài nguyên ngoài danh sách cho phép hay không.
+3. Không hạ `minReplicas`, scale về 0 hoặc xóa resource đang phục vụ khi chưa đánh giá tác động và có xác nhận của chủ dự án. Không xóa tài nguyên chứa state (`vslstate2026`).
+4. **Khi chạm `$5` (`100%`) hoặc chi phí tăng bất thường:** Coi là sự cố (*incident*), ngừng mọi pipeline deploy, cô lập/tắt tài nguyên ngoài allow-list sau khi chủ dự án duyệt và ghi nhận nguyên nhân + hành động khắc phục vào nhật ký vận hành.
 
 ---
 
