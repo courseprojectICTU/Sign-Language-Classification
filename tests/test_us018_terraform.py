@@ -102,8 +102,6 @@ def test_terraform_configuration_no_longer_declares_google_cloud_resources():
         for pattern in ("*.tf", "*.hcl")
         for path in INFRA.rglob(pattern)
         if ".terraform" not in path.parts
-        # US-033 intentionally isolates Google Cloud billing guardrails here.
-        and path.relative_to(INFRA).parts[0] != "billing-budget"
     ]
 
     assert terraform_files
