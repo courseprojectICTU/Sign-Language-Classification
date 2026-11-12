@@ -69,7 +69,7 @@ def test_tsk_032_adopts_existing_registry_and_configures_three_tag_cleanup():
     assignment = _role_assignment_body(registry, "cleanup_delete")
     assert re.search(r'role_definition_name\s*=\s*"AcrDelete"', assignment)
     assert re.search(
-        r"scope\s*=\s*azurerm_container_registry\.vsl\.id",
+        r"scope\s*=\s*azurerm_container_registry\.vsl(?:\[0\])?\.id",
         assignment,
     )
 
@@ -80,7 +80,7 @@ def test_tsk_033_limits_deployment_roles_to_registry_and_container_app():
     push = _role_assignment_body(identity, "deployment_push")
     assert re.search(r'role_definition_name\s*=\s*"AcrPush"', push)
     assert re.search(
-        r"scope\s*=\s*azurerm_container_registry\.vsl\.id",
+        r"scope\s*=\s*(?:azurerm_container_registry\.vsl(?:\[0\])?\.id|local\.acr_id)",
         push,
     )
 
@@ -127,11 +127,11 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
     )
     assert '"api://AzureADTokenExchange"' in identity
     assert re.search(r"subject\s*=\s*var\.github_oidc_subject", identity)
-    assert (
-        "github_oidc_subject = "
-        '"repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:'
-        'ref:refs/heads/develop"'
-    ) in staging
+    assert re.search(
+        r'github_oidc_subject\s*=\s*"repo:courseprojectICTU@343123217/'
+        r'Sign-Language-Classification@1421059989:ref:refs/heads/develop"',
+        staging,
+    )
     for output_name in (
         "github_oidc_client_id",
         "github_oidc_tenant_id",

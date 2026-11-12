@@ -120,3 +120,11 @@ scale down to zero replicas and consume zero compute units. Because `vsl-api`
 uses `revision_mode = "Multiple"`, deactivate any older pre-US-020 active
 revision that still holds `minReplicas > 0` (`az containerapp revision deactivate`)
 so zero-traffic periods can scale down to `0` replicas.
+
+## Staging vs Production Isolation and Shared ACR (US-021)
+
+Both environments deploy from this single root `infra/` configuration using
+separate variable files and separate Azure Blob remote state keys:
+
+- **Staging:** `environments/staging.tfvars` with `key=sign-language-classification/staging.tfstate` (`manage_registry = true`, `log_level = "INFO"`, `container_min_replicas = 0`). Staging manages the shared ACR `vslacr3795` (`moved` blocks preserve existing state resources seamlessly).
+- **Production:** `environments/production.tfvars` with `key=sign-language-classification/production.tfstate` (`manage_registry = false`, `acr_name = "vslacr3795"`, `registry_subscription_id`, `registry_resource_group_name = "rg-vsl-staging"`, `log_level = "WARNING"`, `container_min_replicas = 0` per `BR-016`). Production creates its own Log Analytics Workspace, ACA Environment, Container App, User-Assigned Managed Identity (`AcrPull`), and GitHub OIDC identity while pulling tested images from the shared ACR (`BR-017`).

@@ -118,23 +118,13 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Prepare example environment variables
-        run: |
-          cp infra/environments/staging/staging.tfvars.example infra/environments/staging/staging.tfvars
-          cp infra/environments/production/production.tfvars.example infra/environments/production/production.tfvars
-
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive infra
 
-      - name: Validate staging Terraform
+      - name: Validate root Terraform
         run: |
-          terraform -chdir=infra/environments/staging init -backend=false -input=false
-          terraform -chdir=infra/environments/staging validate -no-color
-
-      - name: Validate production Terraform
-        run: |
-          terraform -chdir=infra/environments/production init -backend=false -input=false
-          terraform -chdir=infra/environments/production validate -no-color
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate -no-color
 
       - name: Run Ruff
         run: ruff check src tests scripts

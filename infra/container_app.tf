@@ -1,9 +1,17 @@
+locals {
+  common_tags = merge(var.tags, {
+    environment = var.environment
+    managed_by  = "terraform"
+  })
+}
+
 resource "azurerm_log_analytics_workspace" "vsl" {
   name                = var.log_analytics_workspace_name
   location            = var.location
   resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
   retention_in_days   = 30
+  tags                = local.common_tags
 }
 
 resource "azurerm_container_app_environment" "vsl" {
@@ -12,6 +20,7 @@ resource "azurerm_container_app_environment" "vsl" {
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.vsl.id
   logs_destination           = "log-analytics"
+  tags                       = local.common_tags
 
   workload_profile {
     name                  = "Consumption"
@@ -23,10 +32,12 @@ resource "azurerm_user_assigned_identity" "vsl_api_pull" {
   name                = "id-${var.container_app_name}-pull"
   resource_group_name = var.resource_group_name
   location            = var.location
+  tags                = local.common_tags
 }
 
 resource "azurerm_role_assignment" "vsl_api_acr_pull" {
-  scope                            = azurerm_container_registry.vsl.id
+  provider                         = azurerm.registry
+  scope                            = local.acr_id
   role_definition_name             = "AcrPull"
   principal_id                     = azurerm_user_assigned_identity.vsl_api_pull.principal_id
   principal_type                   = "ServicePrincipal"
@@ -44,6 +55,7 @@ resource "azurerm_container_app" "vsl_api" {
   revision_mode                = "Multiple"
   workload_profile_name        = "Consumption"
   max_inactive_revisions       = 100
+  tags                         = local.common_tags
 
   identity {
     type         = "UserAssigned"
@@ -51,7 +63,7 @@ resource "azurerm_container_app" "vsl_api" {
   }
 
   registry {
-    server   = azurerm_container_registry.vsl.login_server
+    server   = local.acr_login_server
     identity = azurerm_user_assigned_identity.vsl_api_pull.id
   }
 
@@ -81,13 +93,18 @@ resource "azurerm_container_app" "vsl_api" {
 
     container {
       name   = var.container_app_name
-      image  = "${azurerm_container_registry.vsl.login_server}/${var.image_repository}:${var.image_tag}"
+      image  = "${local.acr_login_server}/${var.image_repository}:${var.image_tag}"
       cpu    = var.container_cpu
       memory = var.container_memory
 
       env {
         name  = "PORT"
         value = "8080"
+      }
+
+      env {
+        name  = "LOG_LEVEL"
+        value = var.log_level
       }
 
       env {
@@ -146,8 +163,8 @@ resource "azurerm_container_app" "vsl_api" {
     }
 
     precondition {
-      condition     = var.environment != "staging" || var.container_min_replicas == 0
-      error_message = "Staging Container App must set container_min_replicas = 0 to comply with BR-016."
+      condition     = var.container_min_replicas == 0
+      error_message = "Container App must set container_min_replicas = 0 to comply with BR-016 Free Tier Guardrails."
     }
 
     precondition {

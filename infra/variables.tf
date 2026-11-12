@@ -220,3 +220,46 @@ variable "model_path" {
     error_message = "model_path must not be empty."
   }
 }
+
+variable "manage_registry" {
+  description = "Whether this state manages the Azure Container Registry (true for staging, false when production shares an existing ACR)."
+  type        = bool
+  default     = true
+}
+
+variable "registry_subscription_id" {
+  description = "Subscription ID containing the shared ACR; defaults to subscription_id when empty."
+  type        = string
+  default     = ""
+
+  validation {
+    condition = (
+      trimspace(var.registry_subscription_id) == ""
+      || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.registry_subscription_id))
+    )
+    error_message = "registry_subscription_id must be empty or a valid UUID."
+  }
+}
+
+variable "registry_resource_group_name" {
+  description = "Resource group containing the shared ACR; defaults to resource_group_name when empty."
+  type        = string
+  default     = ""
+}
+
+variable "log_level" {
+  description = "Application log level injected as LOG_LEVEL (e.g., INFO on staging, WARNING on production)."
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR"], var.log_level)
+    error_message = "log_level must be one of DEBUG, INFO, WARNING, or ERROR."
+  }
+}
+
+variable "tags" {
+  description = "Additional Azure resource tags merged with environment and managed_by."
+  type        = map(string)
+  default     = {}
+}

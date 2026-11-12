@@ -1,12 +1,22 @@
-subscription_id     = "REPLACE_WITH_PRODUCTION_SUBSCRIPTION_ID"
-resource_group_name = "REPLACE_WITH_PRODUCTION_RESOURCE_GROUP"
-location            = "REPLACE_WITH_PRODUCTION_AZURE_REGION"
-environment         = "production"
-acr_name            = "REPLACE_WITH_PRODUCTION_ACR_NAME"
-container_app_name  = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_NAME"
-github_oidc_subject = "REPLACE_WITH_PRODUCTION_GITHUB_OIDC_SUBJECT"
-
+subscription_id                = "REPLACE_WITH_PRODUCTION_SUBSCRIPTION_ID"
+resource_group_name            = "REPLACE_WITH_PRODUCTION_RESOURCE_GROUP"
+location                       = "REPLACE_WITH_PRODUCTION_AZURE_REGION"
+environment                    = "production"
+manage_registry                = false
+acr_name                       = "vslacr3795"
+registry_subscription_id       = "373b1f03-330f-4302-a9e9-aa1fe793bf2e"
+registry_resource_group_name   = "rg-vsl-staging"
+container_app_name             = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_NAME"
+github_oidc_subject            = "REPLACE_WITH_PRODUCTION_GITHUB_OIDC_SUBJECT"
 log_analytics_workspace_name   = "REPLACE_WITH_PRODUCTION_LOG_ANALYTICS_WORKSPACE"
 container_app_environment_name = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_ENVIRONMENT"
 image_tag                      = "REPLACE_WITH_PRODUCTION_IMAGE_TAG"
+container_cpu                  = 1
+container_memory               = "2Gi"
+container_min_replicas         = 0
+container_max_replicas         = 3
+log_level                      = "WARNING"
 allowed_origins                = "REPLACE_WITH_PRODUCTION_ALLOWED_ORIGINS"
+tags = {
+  workload = "sign-language-classification"
+}

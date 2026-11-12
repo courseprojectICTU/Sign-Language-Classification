@@ -101,7 +101,10 @@ def test_tsk_035_environment_pull_identity_and_cost_guardrails():
         container_app_tf,
         r'resource\s+"azurerm_role_assignment"\s+"vsl_api_acr_pull"\s*\{',
     )
-    assert re.search(r"scope\s*=\s*azurerm_container_registry\.vsl\.id", pull_role)
+    assert re.search(
+        r"scope\s*=\s*(?:azurerm_container_registry\.vsl(?:\[0\])?\.id|local\.acr_id)",
+        pull_role,
+    )
     assert re.search(r'role_definition_name\s*=\s*"AcrPull"', pull_role)
     assert re.search(
         r"principal_id\s*=\s*azurerm_user_assigned_identity\.vsl_api_pull\.principal_id",
@@ -143,7 +146,10 @@ def test_tsk_035_container_app_scale_to_zero_and_revision_mode():
     assert "azurerm_user_assigned_identity.vsl_api_pull.id" in identity_block
 
     registry_block = _extract_hcl_block(app_block, r"registry\s*\{")
-    assert re.search(r"server\s*=\s*azurerm_container_registry\.vsl\.login_server", registry_block)
+    assert re.search(
+        r"server\s*=\s*(?:azurerm_container_registry\.vsl(?:\[0\])?\.login_server|local\.acr_login_server)",
+        registry_block,
+    )
     assert re.search(
         r"identity\s*=\s*azurerm_user_assigned_identity\.vsl_api_pull\.id",
         registry_block,
@@ -171,7 +177,7 @@ def test_tsk_035_container_app_scale_to_zero_and_revision_mode():
     )
 
     lifecycle_block = _extract_hcl_block(app_block, r"lifecycle\s*\{")
-    assert 'var.environment != "staging" || var.container_min_replicas == 0' in lifecycle_block
+    assert "var.container_min_replicas == 0" in lifecycle_block
     assert "var.container_max_replicas >= var.container_min_replicas" in lifecycle_block
     assert 'var.container_cpu != 1 || var.container_memory == "2Gi"' in lifecycle_block
 
@@ -210,10 +216,7 @@ def test_tsk_036_resources_probes_env_ingress_outputs_and_identity_scope():
     template_block = _extract_hcl_block(app_block, r"template\s*\{")
     container_block = _extract_hcl_block(template_block, r"container\s*\{")
     assert re.search(r"name\s*=\s*var\.container_app_name", container_block)
-    assert (
-        '"${azurerm_container_registry.vsl.login_server}/${var.image_repository}:${var.image_tag}"'
-        in container_block
-    )
+    assert '"${local.acr_login_server}/${var.image_repository}:${var.image_tag}"' in container_block
     assert re.search(r"cpu\s*=\s*var\.container_cpu", container_block)
     assert re.search(r"memory\s*=\s*var\.container_memory", container_block)
 

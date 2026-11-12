@@ -39,3 +39,13 @@ output "container_app_environment_id" {
   description = "Azure Resource ID of the Container Apps Environment."
   value       = azurerm_container_app_environment.vsl.id
 }
+
+output "image_reference" {
+  description = "Container image deployed to this environment."
+  value       = azurerm_container_app.vsl_api.template[0].container[0].image
+}
+
+output "shared_acr_login_server" {
+  description = "Login server of the shared Azure Container Registry."
+  value       = local.acr_login_server
+}
