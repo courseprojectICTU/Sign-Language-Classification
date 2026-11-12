@@ -40,9 +40,9 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| `develop` / `origin/develop` | `b7d8945` (`Merge pull request #38 from courseprojectICTU/feature/US-011`) |
-| Nhánh làm việc hiện tại | `feature/US-020` (đã merge `develop` `b7d8945`) |
-| Đã merge vào `develop` | `US-001`..`US-008`, `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44` |
+| `develop` / `origin/develop` | `7b9e7cb` (`Merge pull request #46 from courseprojectICTU/feature/US-009`) |
+| Nhánh làm việc hiện tại | `feature/US-020` (đã merge `develop` `7b9e7cb`) |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-031` (PR #27), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
 | Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
@@ -164,6 +164,7 @@ tests/test_requirements.py                        test US-004 (BR-005)
 tests/test_rollback.py                            test CLI rollback ACA US-031
 tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
 tests/test_smoke_test.py                          test CLI smoke test US-017
+tests/test_us009_input_validation.py              kiểm thử giới hạn 5 MB & định dạng JPEG/JPG/PNG (US-009)
 tests/test_us012_model_lifecycle.py               kiểm thử nạp model một lần, readiness và log duration (US-012)
 tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash chuẩn hóa LF
 tests/test_us018_terraform.py                     kiểm tra AzureRM provider, môi trường, Blob backend và bootstrap
@@ -318,6 +319,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-006** | API `/predict` nhận ảnh và chạy MediaPipe server-side | PR `#10` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, 93 landmarks, `flip` |
 | **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
 | **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
+| **US-009** | Giới hạn kích thước (5 MB) và định dạng ảnh đầu vào (`JPEG`/`JPG`/`PNG`) | PR `#46` (`develop`) | PASS (CỔNG D, 2026-11-11) | `src/vsl/service.py` (`415`/`413`/`400`, stream chunk + magic bytes, log WARNING UTC), `tests/test_us009_input_validation.py`; đã merge `develop` |
 | **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
 | **US-011** | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | PR `#38` (`develop`) | PASS (2026-11-11 — chốt Cổng D) | `scripts/export_onnx.py`, `tests/test_onnx_parity.py` (`6/6` PASS; `max_abs_diff=1.583e-06`, `23/23` argmax, H5 `137MB` -> ONNX `96MB`, `Q1` giữ runtime TF/Keras) |
 | **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |

@@ -1,8 +1,8 @@
 # Requested User Stories — Implementation and Handoff Status
 
-**Updated:** 2026-11-11
-**Scope:** US-038, US-026, US-017, US-025, US-031, US-035, US-033, US-011, and US-020 (plus related frontend/infra merges on `develop`).
-**Current baseline:** `develop` / `origin/develop` at `b7d8945` (PR `#38`, merging `feature/US-011`), with staging Azure rollout (`cae-vsl-staging-std`, `vsl-api` scaled-to-zero under `US-020`, `vsl-vietnam`) verified live on 2026-11-11.
+**Updated:** 2026-11-12
+**Scope:** US-038, US-026, US-017, US-025, US-031, US-035, US-033, US-011, US-009, and US-020 (plus related frontend/infra/CI merges on `develop`).
+**Current baseline:** `develop` / `origin/develop` at `7b9e7cb` (PR `#46`, merging `feature/US-009` after PR `#49` CI APT fix), with staging Azure rollout (`cae-vsl-staging-std`, `vsl-api` scaled-to-zero under `US-020`, `vsl-vietnam`) verified live on 2026-11-11.
 
 ## Summary
 
@@ -14,6 +14,7 @@
 | US-011 — Keras H5 to ONNX export & parity check | **Merged into `develop` (PR `#38`)** | `b7d8945`, `scripts/export_onnx.py` (`TSK-017`, `TSK-018`), `tests/test_onnx_parity.py`, `docs/api/US-011.md`, `requirements-dev.txt`, `.gitignore` | `AC-011-01` verified on `CPUExecutionProvider` (`max_abs_diff=1.583e-06`, `23/23` `argmax`, ONNX `96,119,874` vs H5 `137,042,364` bytes). Per `Q1`/`Q2`, runtime container (`Dockerfile`, `requirements-runtime.txt`, `src/vsl/service.py`) stays on Keras H5 and binary `.onnx` files are gitignored. |
 | US-025 — CORS and network errors | **Live on staging & merged (PR `#28`)** | `5e96efb` (`feature/US-025`), `src/vsl/service.py` + `tests/test_cors.py` | `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev` is live on both App Service `vsl-vietnam` and Standard Container App `vsl-api` (`9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f`); preflight `200`, `POST /predict` `200`, and disallowed-origin `400` were verified on 2026-11-11. |
 | US-031 — ACA traffic rollback | **Merged into `develop` (PR `#27`)** | `61f5e7f` (`feature/US-031`), `scripts/rollback.py` | `vsl-api` on `cae-vsl-staging-std` is now provisioned in `Multiple` revision mode (`vsl-api--lhkogbo`); live rollback rehearsal with a second active revision and automatic CD wiring (`US-029`) remain pending. |
+| US-009 — Input format & 5 MB upload guard | **Merged into `develop` (PR `#46`)** | `7b9e7cb`, `src/vsl/service.py`, `docs/api/US-009.md`, `tests/test_us009_input_validation.py` | Local unit/integration tests (`22/22`) and `167/167` non-browser suite passed and accepted at Gate D before merge; live container rollout remains pending image rebuild/deploy. |
 | US-033 — Azure Billing Budget & Entra ID MFA | **Merged into `develop` (PR `#35`) & verified** | `7d4350f`, `infra/budget.tf` (`vsl-monthly-cost-guardrail-staging`), `docs/RUNBOOK.md` (Section 7), `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` | Subscription budget (`$5/month`, `20%` = `$1` and `100%` = `$5` `Actual` alerts to `Owner`) and Entra ID `Security defaults: Enabled` verified on Azure Portal (`373b1f03-330f-4302-a9e9-aa1fe793bf2e`); optional extra `budget_alert_emails` can be passed if additional recipients beyond `Owner` are desired. |
 | US-020 — Azure Container Apps service with `min-instances = 0` | **Verified on staging (`feature/US-020`)** | `infra/container_app.tf`, `tests/test_us020_container_app.py`, `docs/api/US-020.md` | Imported 5 staging ARM resources into `vslstate2026`, applied `vsl-api--0000001` (`min_replicas = 0`, `max_replicas = 3`, `cpu = 1`, `memory = 2Gi`, HTTP `/health:8080` probes, `VSL_MODEL_PATH`, `VSL_ALLOWED_ORIGINS`), deactivated stale `vsl-api--lhkogbo`; `/health` `200`, `/version` `9a1c3aa...`, and Azure Monitor `Replica Count = 0.0` confirmed across `12:07Z–13:06Z` (`0` active replicas). Pending PR merge to `develop`. |
 | US-035 — README and runbook | **Merged into `develop` (PR `#24`)** | `3250e29` (`feature/US-035`), unified with post-merge updates | `README.md`, `docs/RUNBOOK.md`, and this status ledger were updated after subsequent merges (`#22`–`#36`) to remove conflict markers and reflect `develop` accurately. |
@@ -50,6 +51,9 @@
 
 ### US-035
 - `README.md`, `HUONG-DAN-CHAY.md`, `docs/RUNBOOK.md`, `docs/README.md`, and this file document the Azure Container Apps + Cloudflare Pages architecture, local setup, CI checks, cold-start triage, CORS configuration, guarded ACA rollback, and cloud cost checks.
+
+### US-009
+- Added chunked upload validation (`_read_validated_image_upload`) in `src/vsl/service.py` enforcing `Content-Type` (`image/jpeg`, `image/jpg`, `image/png`), JPEG/PNG file signature matching (rejecting disguised files like PDF-as-`.jpg` with HTTP `415`), early-abort `5 MB` (`5 * 1024 * 1024` bytes) payload limit (HTTP `413`), HTTP `400` for empty or corrupt image payloads, and safe UTC `WARNING` rejection logs without raw image bytes (`tests/test_us009_input_validation.py`).
 
 ### US-033
 - Added `infra/budget.tf` declaring `azurerm_consumption_budget_subscription.monthly` (`$5 USD/month`, `Actual` notifications at `20%` = `$1` and `100%` = `$5`, `Owner` role + configurable `budget_alert_emails`, gated by `enable_billing_budget`), along with `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py`, and Azure-aligned cost/MFA/prohibited-services guidance consolidated in Section 7 of `docs/RUNBOOK.md`. Removed the earlier GCP `infra/billing-budget/` and `docs/runbook/` files and restored strict no-GCP enforcement in `tests/test_us018_terraform.py`.
