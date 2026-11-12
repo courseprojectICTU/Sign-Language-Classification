@@ -115,6 +115,17 @@ jobs:
             verify_playwright_launch
           fi
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra
+
+      - name: Validate root Terraform
+        run: |
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate -no-color
+
       - name: Run Ruff
         run: ruff check src tests scripts
 

@@ -17,7 +17,8 @@ resource "azuread_service_principal" "github_deploy" {
 }
 
 resource "azurerm_role_assignment" "deployment_push" {
-  scope                            = azurerm_container_registry.vsl.id
+  provider                         = azurerm.registry
+  scope                            = local.acr_id
   role_definition_name             = "AcrPush"
   principal_id                     = azuread_service_principal.github_deploy.object_id
   principal_type                   = "ServicePrincipal"

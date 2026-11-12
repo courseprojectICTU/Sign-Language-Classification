@@ -120,3 +120,31 @@ scale down to zero replicas and consume zero compute units. Because `vsl-api`
 uses `revision_mode = "Multiple"`, deactivate any older pre-US-020 active
 revision that still holds `minReplicas > 0` (`az containerapp revision deactivate`)
 so zero-traffic periods can scale down to `0` replicas.
+
+## Staging vs Production Isolation and Shared ACR (US-021)
+
+Both environments deploy from this single root `infra/` configuration using
+separate variable files and separate Azure Blob remote state keys:
+
+- **Staging:** `environments/staging.tfvars` with `key=sign-language-classification/staging.tfstate` (`manage_registry = true`, `log_level = "INFO"`, `container_min_replicas = 0`). Staging manages the shared ACR `vslacr3795` (`moved` blocks preserve existing state resources seamlessly).
+- **Production:** `environments/production.tfvars` with `key=sign-language-classification/production.tfstate` (`manage_registry = false`, `acr_name = "vslacr3795"`, `registry_subscription_id`, `registry_resource_group_name = "rg-vsl-staging"`, `log_level = "WARNING"`, `container_min_replicas = 0` per `BR-016`). Production creates its own Log Analytics Workspace, ACA Environment, Container App, User-Assigned Managed Identity (`AcrPull`), and GitHub OIDC identity while pulling tested images from the shared ACR (`BR-017`).
+
+Verified read-only staging `plan` (`terraform -chdir=infra plan -lock=false -var-file="environments/staging.tfvars"`) on `staging.tfstate`: **`Plan: 1 to add, 4 to change, 0 to destroy`** (`vsl[0]`, `registry_cleanup[0]`, and `cleanup_delete[0]` matched via `moved` without replacement/destruction; 4 in-place updates add `tags` and `LOG_LEVEL = "INFO"`; 1 `+ create` is `azurerm_container_registry_task.cleanup[0]`, still blocked on Azure for Students by `TasksOperationsNotAllowed`).
+
+### Windows PowerShell Troubleshooting (Concurrent `azurerm` / `azuread` Token Cache)
+
+Because root `infra/` initializes `azurerm`, `azurerm.registry`, and `azuread` concurrently, Windows Azure CLI invocations from Terraform child processes can hit WAM (`-2147024891`) or parallel cache file locks (`msal_http_cache.bin`, `msal_token_cache.bin.lockfile`, `.azure/commands/*.log`). If `terraform plan` encounters these errors locally on Windows, run in your PowerShell session:
+
+```powershell
+$env:AZURE_LOGGING_ENABLE_LOG_FILE = "false"
+$env:AZURE_CORE_USE_MSAL_HTTP_CACHE = "false"
+$env:AZURE_CORE_ENABLE_BROKER_ON_WINDOWS = "false"
+# Optional: $env:AZURE_CONFIG_DIR = "$env:TEMP\azure-cli-session"
+az account clear
+az login --tenant "<tenant-id>"
+az account get-access-token --tenant "<tenant-id>" --scope "https://management.azure.com/.default" --output none
+az account get-access-token --tenant "<tenant-id>" --scope "https://management.core.windows.net/.default" --output none
+az account get-access-token --tenant "<tenant-id>" --resource "https://management.azure.com" --output none
+az account get-access-token --resource "https://graph.microsoft.com" --output none
+terraform -chdir=infra plan -lock=false -var-file="environments/staging.tfvars"
+```
