@@ -129,5 +129,6 @@ Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test
 | [`US-011.md`](US-011.md) | US-011 | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | `ANALYSIS_READY` (N/A public API; PASS 2026-11-11) |
 | [`US-015.md`](US-015.md) | US-015 | Hợp đồng dữ liệu 93 toạ độ landmark | `ANALYSIS_READY` (PASS) |
 | [`US-017.md`](US-017.md) | US-017 | Smoke test tự động sau triển khai & endpoint `/version` | `ANALYSIS_READY` (PASS) |
+| [`US-020.md`](US-020.md) | US-020 | Azure Container Apps service với `min-instances = 0` | `ANALYSIS_READY` (STAGING VERIFIED) |
 | [`US-025.md`](US-025.md) | US-025 | Cấu hình CORS và xử lý 3 trạng thái lỗi mạng | `ANALYSIS_READY` (PASS) |
 | [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |

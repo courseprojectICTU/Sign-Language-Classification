@@ -67,9 +67,11 @@ investigate ACA ingress, image pull, resource limits, and revision state.
 ## 3. Khởi động nguội chậm (Cold start is slow)
 
 1. Record the request time, endpoint, response status, and revision SHA.
-2. Check ACA logs and replica/revision state. Note that `docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md`
-   describes `minReplicas = 1` on staging, which avoids scale-to-zero cold starts;
-   verify live replica configuration in Azure rather than assuming from docs.
+2. Check ACA logs and replica/revision state. Note that `vsl-api` on staging
+   now runs `minReplicas = 0`, `maxReplicas = 3` (managed in `infra/container_app.tf`
+   under `US-020`, `startup_probe` on `/health:8080`), so idle periods scale to
+   zero and trigger cold starts on the first wake-up request; always verify live
+   replica configuration in Azure rather than assuming from docs.
 3. Distinguish a cold start from a slow request. Do not report a cold-start
    measurement unless the required preflight evidence proves the environment
    was cold.
@@ -230,8 +232,8 @@ Không tạo hoặc bật các dịch vụ/cấu hình trong nhóm **Bị cấm*
 | **Bị cấm** | AKS (Azure Kubernetes Service), App Service Plan Premium/Isolated, VM chạy 24/7 | Tính phí compute nền liên tục theo giờ. |
 | **Bị cấm** | Azure SQL Database HA/vCore lớn, Cosmos DB provisioned throughput, Azure Cache for Redis chạy thường trực | Chi phí cố định hàng tháng vượt ngân sách demo. |
 | **Bị cấm** | Application Gateway, Azure Front Door, Azure Load Balancer Standard trả phí theo giờ, NAT Gateway | Phát sinh phí cố định theo giờ và lưu lượng ngoài hạn mức demo. |
-| **Bị cấm** | Container Apps đặt `minReplicas > 0` hoặc App Service Always On không được phê duyệt | Trái nguyên tắc scale-to-zero của `BR-016` *(hiện staging `vsl-api` đang tạm giữ `minReplicas = 1` và App Service `vsl-vietnam` để đo đạc/ổn định demo dưới sự duyệt của chủ dự án; cần đưa về `minReplicas = 0` khi chốt chế độ tiết kiệm)*. |
-| **Có điều kiện** | Azure Container Apps (`WorkloadProfiles` Consumption, `cae-vsl-staging-std`), `1.0 vCPU`, `2.0 GiB RAM` | Đặt `minReplicas = 0` (trừ khi chủ dự án duyệt đo kiểm), giới hạn `maxReplicas <= 2`. |
+| **Bị cấm** | Container Apps đặt `minReplicas > 0` hoặc App Service Always On không được phê duyệt | Trái nguyên tắc scale-to-zero của `BR-016` *(staging `vsl-api` đã được chuyển về `minReplicas = 0` và xác nhận scale về `0` instance khi idle theo `US-020`; App Service `vsl-vietnam` giữ làm endpoint dự phòng hiện tại trong `web/config.js`)*. |
+| **Có điều kiện** | Azure Container Apps (`WorkloadProfiles` Consumption, `cae-vsl-staging-std`), `1.0 vCPU`, `2.0 GiB RAM` | Đặt `minReplicas = 0` (trừ khi chủ dự án duyệt đo kiểm), giới hạn `maxReplicas <= 3`. |
 | **Có điều kiện** | Azure Container Registry (`vslacr3795`, SKU `Basic`) | Bật dọn tag cũ (giữ tối đa 3 tag `vsl-api` mới nhất theo `infra/registry.tf` hoặc dọn thủ công nếu gói Students chặn ACR Task). |
 | **Có điều kiện** | Log Analytics Workspace (`workspace-rgvslstaging8EBp`) & Storage Account (`vslstate2026`) | Giữ mức thu thập/retention mặc định tối thiểu, không bật diagnostic dump dư thừa. |
 | **Miễn phí** | Cloudflare Pages (`https://sign-language-classification.pages.dev`) & GitHub Actions | Nằm trong hạn mức miễn phí hàng tháng. |
