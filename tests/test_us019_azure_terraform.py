@@ -90,7 +90,7 @@ def test_tsk_033_limits_deployment_roles_to_registry_and_container_app():
         deploy,
     )
     assert re.search(
-        r"scope\s*=\s*data\.azurerm_container_app\.vsl_api\.id",
+        r"scope\s*=\s*azurerm_container_app\.vsl_api\.id",
         deploy,
     )
 
@@ -129,7 +129,8 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
     assert re.search(r"subject\s*=\s*var\.github_oidc_subject", identity)
     assert (
         "github_oidc_subject = "
-        '"repo:courseprojectICTU/Sign-Language-Classification:ref:refs/heads/develop"'
+        '"repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:'
+        'ref:refs/heads/develop"'
     ) in staging
     for output_name in (
         "github_oidc_client_id",

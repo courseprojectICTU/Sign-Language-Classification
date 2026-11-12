@@ -48,7 +48,7 @@ docs/
 ## 2. Mục Lục Tra Cứu Theo Nhóm Chức Năng
 
 ### 2.0. Hướng dẫn vận hành và bàn giao
-- [RUNBOOK.md](RUNBOOK.md): Chẩn đoán backend, cold start, CI, smoke test, CORS, rollback thủ công ACA và chi phí.
+- [RUNBOOK.md](RUNBOOK.md): Chẩn đoán backend, cold start, CI, smoke test, CORS, rollback thủ công ACA, Azure Billing Budget, Entra ID MFA và dịch vụ cấm (US-033 / US-035).
 - [US-IMPLEMENTATION-STATUS.md](implementation/US-IMPLEMENTATION-STATUS.md): Trạng thái hợp nhất trên `develop`, bằng chứng kiểm thử và các điểm vận hành còn chờ xử lý.
 - **US-033 — Billing Budget và MFA:** [Runbook bảo mật/billing trên nhánh feature/US-033](https://github.com/courseprojectICTU/Sign-Language-Classification/blob/feature/US-033/docs/runbook/billing_security.md). Đây là hướng dẫn alerts-only; trạng thái tạo budget, gửi cảnh báo thử và xác minh MFA cần được kiểm tra trên GCP.
 
@@ -72,9 +72,8 @@ docs/
 
 ### 2.5. Nhóm Hợp Đồng API, CLI & Hạ tầng (`docs/api/`)
 - [README.md](api/README.md): Quy ước đặt tên, 9 phase xây dựng tài liệu API và checklist thẩm định.
-- [Contract US-011 — xuất model ONNX và kiểm tra parity](https://github.com/courseprojectICTU/Sign-Language-Classification/blob/feature/US-011/docs/api/US-011.md): trạng thái `DRAFT`; chưa có kết quả conversion/parity được xác nhận.
-- [US-021.md](api/US-021.md): Kiến trúc shared ACR và hai môi trường Azure Container Apps độc lập. [CI của PR #43](https://github.com/courseprojectICTU/Sign-Language-Classification/actions/runs/42851723612) đã thành công; Terraform chưa được apply nên chưa xác nhận triển khai Azure.
-- Hợp đồng theo từng User Story: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (`/health`), `US-006.md` (`/predict`), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (`/version`), `US-010.md` (đóng gói Dockerfile), `US-012.md` (test/lifecycle nạp model), `US-013.md` (benchmark cold start staging), `US-014.md` (unit test NumPy heatmap), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu notebook), `US-017.md` (CLI smoke test), `US-018.md` (Terraform Azure Blob state), `US-019.md` (ACR, RBAC & GitHub OIDC), `US-022.md` (web frontend tĩnh), `US-024.md` (Cloudflare Pages), `US-025.md` (CORS allowlist & lỗi mạng), `US-031.md` (CLI rollback ACA), `US-038.md` (tối ưu multi-stage Docker build & CI metrics).
+- [US-021.md](api/US-021.md): Kiến trúc shared ACR và hai môi trường Azure Container Apps độc lập (`feature/US-021`, chờ review/thống nhất với root `infra/`).
+- Hợp đồng theo từng User Story: `US-001.md` (tạo heatmap), `US-002.md` (nhãn 23 ký tự), `US-003.md` (cấu hình đường dẫn), `US-004.md` (phụ thuộc Linux), `US-005.md` (`/health`), `US-006.md` (`/predict`), `US-007.md` (trạng thái thiếu landmark), `US-008.md` (`/version`), `US-009.md` (validation định dạng & dung lượng ảnh `/predict`), `US-010.md` (đóng gói Dockerfile), `US-011.md` (chuyển model Keras sang ONNX), `US-012.md` (test/lifecycle nạp model), `US-013.md` (benchmark cold start staging), `US-014.md` (unit test NumPy heatmap), `US-015.md` (hợp đồng 93 cột), `US-016.md` (đối chiếu notebook), `US-017.md` (CLI smoke test), `US-018.md` (Terraform Azure Blob state), `US-019.md` (ACR, RBAC & GitHub OIDC), `US-020.md` (ACA service min-instances=0), `US-021.md` (tách môi trường staging & production), `US-022.md` (web frontend tĩnh), `US-024.md` (Cloudflare Pages), `US-025.md` (CORS allowlist & lỗi mạng), `US-031.md` (CLI rollback ACA), `US-033.md` (Azure Billing Budget, Entra ID MFA & cost guardrails), `US-038.md` (tối ưu multi-stage Docker build & CI metrics).
 
 ### 2.6. Nhóm Báo Cáo Tổng Hợp (`docs/reports/`)
 - [US-012-BAO-CAO-THUC-HIEN.md](reports/US-012-BAO-CAO-THUC-HIEN.md): Ghi nhận phạm vi, task, bằng chứng kiểm thử, quyết định API docs N/A và nghiệm thu US-012.

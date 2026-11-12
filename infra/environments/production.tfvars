@@ -5,3 +5,8 @@ environment         = "production"
 acr_name            = "REPLACE_WITH_PRODUCTION_ACR_NAME"
 container_app_name  = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_NAME"
 github_oidc_subject = "REPLACE_WITH_PRODUCTION_GITHUB_OIDC_SUBJECT"
+
+log_analytics_workspace_name   = "REPLACE_WITH_PRODUCTION_LOG_ANALYTICS_WORKSPACE"
+container_app_environment_name = "REPLACE_WITH_PRODUCTION_CONTAINER_APP_ENVIRONMENT"
+image_tag                      = "REPLACE_WITH_PRODUCTION_IMAGE_TAG"
+allowed_origins                = "REPLACE_WITH_PRODUCTION_ALLOWED_ORIGINS"

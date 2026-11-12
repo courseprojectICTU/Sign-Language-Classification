@@ -3,7 +3,7 @@
 File này là **quy trình bắt buộc** cho mọi User Story trong dự án. Đọc lại file này
 trước khi bắt đầu bất kỳ US nào. Nguồn dữ liệu gốc: `docs/planning/product-backlog-cicd-2-tuan.xlsx`.
 
-Cập nhật lần cuối: 2026-11-10 (ghi nhận US-021 tách staging/production trên Azure Container Apps).
+Cập nhật lần cuối: 2026-11-11 (hợp nhất `develop` `0313fca` gồm US-033, US-011, US-009, US-020 cùng US-021 tách staging/production trên Azure Container Apps).
 
 ---
 
@@ -300,5 +300,9 @@ py -3.12 -m pytest tests -v
 | 2026-11-06 | **US-014** | `feature/US-014` | `docs/api/US-014.md` (`ANALYSIS_READY`, đã duyệt) | TSK-022, TSK-023 | AC-014-01, AC-014-02 — **9/9 unit test thuần NumPy (0.28s); 9/9 test hợp đồng (2.43s)** | PASS (chủ dự án xác nhận 2026-11-06) |
 | 2026-11-08 | **US-012** | `feature/US-012` | `docs/api/US-012.md` — hợp đồng test/lifecycle 17 mục; N/A cho public API | TSK-019, TSK-020 | AC-012-01 — **75/75 test toàn repo; 19/19 test lifecycle + health + predict** | PASS (chủ dự án xác nhận 2026-11-08) |
 | 2026-11-10 | **US-021** | `feature/US-021` | N/A — IaC, không tạo API công khai | Module Container Apps, ACR dùng chung, state tách riêng | 18 test liên quan, Ruff/Black, Terraform fmt/validate — local PASS; CI GitHub chờ PR | Chưa nghiệm thu |
+| 2026-11-11 | **US-033** | `feature/US-033` (PR `#35` / `develop`) | `docs/api/US-033.md` (`ANALYSIS_READY`) | TSK-061, TSK-062 — `infra/budget.tf` (`$5` / `20%` `$1` / `100%` `$5`), `docs/RUNBOOK.md` Mục 7 (Entra ID MFA, dịch vụ cấm, xử lý alert) | AC-033-01 — **PASS (Staging Azure Portal)**: `vsl-monthly-cost-guardrail-staging` (`$5`, `20%`/`100%`, `Owner`) và Entra ID `Security defaults: Enabled` đã xác minh trên Portal | PASS (chủ dự án nghiệm thu 2026-11-11, PR `#35`) |
+| 2026-11-11 | **US-011** | `feature/US-011` (`PR #38` / `develop`) | `docs/api/US-011.md` (`ANALYSIS_READY`, đã duyệt Cổng B/C; N/A public API) | TSK-017, TSK-018 — `scripts/export_onnx.py`, `tests/test_onnx_parity.py`, `requirements-dev.txt`, `.gitignore` | AC-011-01, AC-011-02, BR-006 — **151/151 test toàn repo (trừ 14 browser test Playwright) + 1/1 asset test PASS**; `test_onnx_parity.py` **6/6 PASS** (`max_abs_diff=1.583e-06 < 1e-4`, `argmax 23/23`, H5 `137.042.364` B → ONNX `96.119.874` B); sandbox loại trừ `14` browser test & `ruff.exe` (chờ CI Linux) | PASS (chủ dự án xác nhận Cổng D 2026-11-11) |
+| 2026-11-11 | **US-009** | `feature/US-009` (`PR #46` / `develop`) | `docs/api/US-009.md` (`PASS CỔNG D`) | TSK-014 — validation `image/jpeg`/`image/jpg`/`image/png`, magic bytes, stream `<= 5 MB`, `415`/`413`/`400`, log `WARNING` UTC | AC-009-01, AC-009-02, BR-010 — **22/22 test US-009 + 167/167 non-browser suite** | PASS (chủ dự án xác nhận Cổng D 2026-11-11) |
+| 2026-11-11 | **US-020** | `feature/US-020` (`PR #48` / `develop`) | `docs/api/US-020.md` (`ANALYSIS_READY`) | TSK-035, TSK-036 — `infra/container_app.tf`, `variables.tf`, `identity.tf`, `outputs.tf`, `environments/*.tfvars`, `infra/README.md` | AC-020-01, AC-020-02, BR-016 — **PASS (Staging)**: import 5 resource vào `vslstate2026`, apply `vsl-api--0000001` (`min_replicas=0`, `max_replicas=3`, `/health` `200`, `/version` `9a1c3aa...`), tắt revision cũ `vsl-api--lhkogbo`, Azure Monitor `Replica Count = 0.0` (12:07Z–13:06Z) & `replica list` trống | PASS (chủ dự án xác nhận 2026-11-11) |
 
 
