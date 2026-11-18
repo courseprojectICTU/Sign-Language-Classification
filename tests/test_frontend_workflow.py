@@ -47,7 +47,7 @@ def test_frontend_workflow_file_exists() -> None:
 def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> None:
     """AC-028-01 & TSK-053: Triggers chỉ kích hoạt khi sửa đổi web/** hoặc workflow frontend."""
     workflow = _read_workflow()
-    triggers = workflow.get("on", {})
+    triggers = workflow.get("on") or workflow.get(True) or {}
 
     # 1. Pull Request Trigger
     assert "pull_request" in triggers, "Workflow phải có trigger pull_request"
@@ -76,7 +76,7 @@ def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> Non
 def test_ac_028_02_path_filtering_excludes_backend_and_infra_paths() -> None:
     """AC-028-02: Pipeline không dùng wildcard '*' và không bao quát các thư mục ngoài frontend."""
     workflow = _read_workflow()
-    triggers = workflow.get("on", {})
+    triggers = workflow.get("on") or workflow.get(True) or {}
 
     for event_name in ("pull_request", "push"):
         paths = triggers.get(event_name, {}).get("paths", [])
