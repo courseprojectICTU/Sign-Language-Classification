@@ -1,20 +1,21 @@
-name: Deploy backend to Azure staging
+name: Deploy backend to Azure (Staging & Production)
 
 on:
   push:
     branches:
+      - develop
       - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: aca-staging-deployment
+  group: aca-${{ github.ref_name }}-deployment
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build, smoke-test, and promote ACA revision
+    name: Build, smoke-test, and promote ACA revision (${{ github.ref_name }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,6 +35,25 @@ jobs:
         with:
           lfs: true
 
+      - name: Determine target deployment environment
+        id: target-env
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            target_env="production"
+            rg="${{ vars.AZURE_PROD_RESOURCE_GROUP || 'rg-vsl-prod' }}"
+            app="${{ vars.AZURE_PROD_CONTAINER_APP_NAME || 'vsl-api' }}"
+          else
+            target_env="staging"
+            rg="${{ vars.AZURE_STAGING_RESOURCE_GROUP || vars.AZURE_RESOURCE_GROUP || 'rg-vsl-staging' }}"
+            app="${{ vars.AZURE_STAGING_CONTAINER_APP_NAME || vars.AZURE_CONTAINER_APP_NAME || 'vsl-api' }}"
+          fi
+          echo "TARGET_ENV=${target_env}" >> "$GITHUB_ENV"
+          echo "AZURE_RESOURCE_GROUP=${rg}" >> "$GITHUB_ENV"
+          echo "AZURE_CONTAINER_APP_NAME=${app}" >> "$GITHUB_ENV"
+          echo "Target Environment: ${target_env} (Resource Group: ${rg}, Container App: ${app})"
+
       - name: Validate deployment configuration
         shell: bash
         run: |
@@ -50,6 +70,11 @@ jobs:
               exit 1
             fi
           done
+          if [[ "$TARGET_ENV" == "production" ]]; then
+            echo "::notice::Branch 'main' targeted for Production deployment. Staging environment is isolated and untouched."
+          else
+            echo "::notice::Branch 'develop' targeted for Staging deployment. Production environment is isolated and untouched."
+          fi
 
       - name: Sign in to Azure with GitHub OIDC
         id: azure-login

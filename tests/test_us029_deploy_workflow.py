@@ -16,7 +16,10 @@ def test_deploy_workflow_uses_main_push_and_azure_oidc() -> None:
     workflow = _read(".github/workflows/deploy-backend.yml")
 
     assert re.search(r"(?m)^on:\s*$", workflow)
-    assert re.search(r"(?ms)^on:\s*\n\s+push:\s*\n\s+branches:\s*\n\s+- main", workflow)
+    assert re.search(
+        r"(?ms)^on:\s*\n\s+push:\s*\n\s+branches:\s*\n\s+- develop\s*\n\s+- main",
+        workflow,
+    )
     assert re.search(r"(?m)^\s+id-token:\s*write\s*$", workflow)
     assert "azure/login@v2" in workflow
     assert all(
@@ -32,6 +35,9 @@ def test_deploy_workflow_uses_main_push_and_azure_oidc() -> None:
     )
     assert "secrets." not in workflow
     assert "cancel-in-progress: false" in workflow
+    assert "TARGET_ENV" in workflow
+    assert "production" in workflow
+    assert "staging" in workflow
 
 
 def test_workflow_builds_smokes_candidate_then_shifts_and_recovers_traffic() -> None:
