@@ -1,0 +1,111 @@
+name: Frontend CI/CD (Cloudflare Pages)
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "web/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  deployments: write
+
+concurrency:
+  group: pages-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy-pages:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Validate Cloudflare configuration
+        shell: bash
+        run: |
+          if [[ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]]; then
+            echo "::error::Required secret CLOUDFLARE_API_TOKEN is missing or empty."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+            echo "::error::Required secret CLOUDFLARE_ACCOUNT_ID is missing or empty."
+            exit 1
+          fi
+
+      - name: Determine target deployment branch
+        id: branch
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DEPLOY_BRANCH=${{ github.head_ref }}" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "DEPLOY_BRANCH=main" >> "$GITHUB_ENV"
+          else
+            echo "DEPLOY_BRANCH=develop" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy frontend to Cloudflare Pages
+        id: wrangler-pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web --project-name=sign-language-classification --branch=${{ env.DEPLOY_BRANCH }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment Preview URL on Pull Request
+        if: github.event_name == 'pull_request' && steps.wrangler-pages.outputs.deployment-url != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- vsl-cloudflare-pages-preview -->";
+            const previewUrl = "${{ steps.wrangler-pages.outputs.pages-deployment-alias-url || steps.wrangler-pages.outputs.deployment-url }}";
+            const commitUrl = "${{ steps.wrangler-pages.outputs.deployment-url }}";
+            const body = `${marker}
+            ### 🚀 Cloudflare Pages Preview Deployment
+
+            | Name | Link |
+            |---|---|
+            | **Latest Commit** | \`${context.sha.substring(0, 7)}\` |
+            | **Preview URL** | [${previewUrl}](${previewUrl}) |
+            | **Commit-Specific Deployment** | [${commitUrl}](${commitUrl}) |
+
+            *Deploys automatically when files under \`web/\` are updated.*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => comment.body.includes(marker));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
