@@ -65,3 +65,47 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy web --project-name=sign-language-classification --branch=${{ env.DEPLOY_BRANCH }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment Preview URL on Pull Request
+        if: github.event_name == 'pull_request' && steps.wrangler-pages.outputs.deployment-url != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- vsl-cloudflare-pages-preview -->";
+            const previewUrl = "${{ steps.wrangler-pages.outputs.pages-deployment-alias-url || steps.wrangler-pages.outputs.deployment-url }}";
+            const commitUrl = "${{ steps.wrangler-pages.outputs.deployment-url }}";
+            const body = `${marker}
+            ### 🚀 Cloudflare Pages Preview Deployment
+
+            | Name | Link |
+            |---|---|
+            | **Latest Commit** | \`${context.sha.substring(0, 7)}\` |
+            | **Preview URL** | [${previewUrl}](${previewUrl}) |
+            | **Commit-Specific Deployment** | [${commitUrl}](${commitUrl}) |
+
+            *Deploys automatically when files under \`web/\` are updated.*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => comment.body.includes(marker));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
