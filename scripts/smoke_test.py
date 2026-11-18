@@ -84,10 +84,10 @@ def smoke_test(
     url: str,
     *,
     expected_sha: str,
-    image_path: Path,
+    image_path: Path | None = None,
     timeout: float = 30,
 ) -> dict[str, str | float]:
-    """Run all smoke checks, raising SmokeTestError on any failed requirement."""
+    """Run readiness checks and an optional prediction check, raising on failure."""
     parsed_url = urlsplit(url)
     if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
         raise SmokeTestError("--url must be an absolute HTTP or HTTPS base URL")
@@ -101,7 +101,10 @@ def smoke_test(
         raise SmokeTestError("--timeout must be a finite positive number")
 
     normalized_url = url.rstrip("/")
-    image_body, image_content_type = _multipart_image(Path(image_path))
+    image_body = None
+    image_content_type = None
+    if image_path is not None:
+        image_body, image_content_type = _multipart_image(Path(image_path))
 
     health = _request_json(f"{normalized_url}/health", timeout=timeout)
     if health.get("model_loaded") is not True:
@@ -114,8 +117,15 @@ def smoke_test(
         raise SmokeTestError(
             f"/version git_sha mismatch: expected {expected_sha!r}, got {actual_sha!r}"
         )
+    if not isinstance(actual_sha, str):
+        raise SmokeTestError("/version git_sha must be a string")
     print(f"PASS /version: git_sha={actual_sha}")
 
+    if image_path is None:
+        return {"git_sha": actual_sha}
+
+    if image_body is None or image_content_type is None:
+        raise SmokeTestError("Prediction smoke test image was not prepared")
     prediction = _request_json(
         f"{normalized_url}/predict",
         method="POST",
@@ -150,9 +160,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--image",
-        required=True,
         type=Path,
-        help="Path to a valid image with a detectable hand and face",
+        help="Optional valid image; when supplied, also verify POST /predict",
     )
     parser.add_argument(
         "--timeout",

@@ -60,6 +60,41 @@ def test_smoke_test_checks_health_version_and_prediction(
     assert "PASS /health" in capsys.readouterr().out
 
 
+def test_smoke_test_can_check_health_and_version_without_prediction(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    calls = []
+
+    def request_json(
+        url: str,
+        *,
+        method: str = "GET",
+        data: bytes | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float = 30,
+    ) -> dict[str, object]:
+        calls.append((url, method))
+        if url.endswith("/health"):
+            return {"model_loaded": True}
+        assert url.endswith("/version")
+        return {"git_sha": "commit-123"}
+
+    monkeypatch.setattr(smoke_test, "_request_json", request_json)
+
+    result = smoke_test.smoke_test(
+        "https://service.example",
+        expected_sha="commit-123",
+    )
+
+    assert result == {"git_sha": "commit-123"}
+    assert calls == [
+        ("https://service.example/health", "GET"),
+        ("https://service.example/version", "GET"),
+    ]
+    assert "PASS /version: git_sha=commit-123" in capsys.readouterr().out
+
+
 def test_smoke_test_stops_when_model_is_not_ready(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -154,7 +189,7 @@ def test_smoke_test_rejects_invalid_prediction_response(
         )
 
 
-def test_smoke_test_rejects_missing_image_before_request(
+def test_smoke_test_rejects_explicit_missing_image_before_request(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     called = False
