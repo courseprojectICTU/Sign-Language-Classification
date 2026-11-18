@@ -27,6 +27,99 @@ from src.vsl.landmarks import FACE_KEYPOINTS, TOTAL_LANDMARK_COORDS
 
 logger = logging.getLogger("vsl.service")
 DEFAULT_MODEL_VERSION = "v1.0"
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB (BR-010)
+UPLOAD_CHUNK_BYTES = 64 * 1024
+HTTP_413_STATUS = getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413)
+_IMAGE_SIGNATURES: Dict[str, bytes] = {
+    "image/jpeg": b"\xff\xd8\xff",
+    "image/jpg": b"\xff\xd8\xff",
+    "image/png": b"\x89PNG\r\n\x1a\n",
+}
+_UNSUPPORTED_MEDIA_DETAIL = "Định dạng tệp không được hỗ trợ. Chỉ chấp nhận ảnh JPEG/JPG hoặc PNG."
+
+
+def _normalize_content_type(raw_content_type: Optional[str]) -> str:
+    """Normalize a multipart MIME header to lowercase media type without parameters."""
+    return (raw_content_type or "").split(";", 1)[0].strip().lower()
+
+
+def _log_upload_rejection(
+    status_code: int,
+    reason: str,
+    content_type: str,
+    bytes_read: int,
+) -> None:
+    """Log rejected upload metadata without recording raw image bytes (BR-010)."""
+    timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+    logger.warning(
+        "upload_rejected timestamp=%s status_code=%s reason=%s content_type=%s bytes_read=%s",
+        timestamp,
+        status_code,
+        reason,
+        content_type or "unknown",
+        bytes_read,
+    )
+
+
+def _raise_unsupported_media_type(reason: str, media_type: str, bytes_read: int) -> None:
+    """Log and raise HTTP 415 Unsupported Media Type for invalid image uploads."""
+    _log_upload_rejection(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        reason,
+        media_type,
+        bytes_read,
+    )
+    raise HTTPException(
+        status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        detail=_UNSUPPORTED_MEDIA_DETAIL,
+    )
+
+
+async def _read_validated_image_upload(file: UploadFile) -> Tuple[bytes, str]:
+    """Stream-read an uploaded image while enforcing JPEG/JPG/PNG and 5 MB bounds (BR-010)."""
+    media_type = _normalize_content_type(file.content_type)
+    expected_signature = _IMAGE_SIGNATURES.get(media_type)
+    if expected_signature is None:
+        _raise_unsupported_media_type("unsupported_content_type", media_type, 0)
+
+    chunks: List[bytes] = []
+    total_bytes = 0
+    signature_checked = False
+
+    while True:
+        chunk = await file.read(UPLOAD_CHUNK_BYTES)
+        if not chunk:
+            break
+
+        total_bytes += len(chunk)
+        if not signature_checked:
+            prefix = b"".join(chunks) + chunk
+            if len(prefix) >= len(expected_signature):
+                if not prefix.startswith(expected_signature):
+                    _raise_unsupported_media_type("invalid_file_signature", media_type, total_bytes)
+                signature_checked = True
+
+        if total_bytes > MAX_UPLOAD_BYTES:
+            _log_upload_rejection(HTTP_413_STATUS, "payload_too_large", media_type, total_bytes)
+            raise HTTPException(
+                status_code=HTTP_413_STATUS,
+                detail="Kích thước tệp vượt quá giới hạn tối đa 5 MB.",
+            )
+
+        chunks.append(chunk)
+
+    content = b"".join(chunks)
+    if not content:
+        _log_upload_rejection(status.HTTP_400_BAD_REQUEST, "empty_file", media_type, 0)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể giải mã dữ liệu ảnh tải lên. Vui lòng gửi tệp ảnh hợp lệ.",
+        )
+
+    if not signature_checked and not expected_signature.startswith(content):
+        _raise_unsupported_media_type("invalid_file_signature", media_type, total_bytes)
+
+    return content, media_type
 
 
 def _utc_timestamp(value: Optional[str] = None) -> str:
@@ -395,14 +488,16 @@ def create_app() -> FastAPI:
         status_code=status.HTTP_200_OK,
     )
     async def predict_endpoint(
-        file: UploadFile = File(..., description="Tệp ảnh tải lên (JPEG, PNG...)"),
+        file: UploadFile = File(
+            ..., description="Tệp ảnh tải lên (JPEG, JPG hoặc PNG, tối đa 5 MB)"
+        ),
         top_k: int = Query(3, ge=1, le=NUM_CLASSES, description="Số lượng gợi ý xác suất cao nhất"),
         flip: bool = Query(
             False,
             description="Lật gương ảnh ngang (True nếu là ảnh webcam/selfie gương, False nếu là ảnh chụp trực tiếp)",
         ),
     ) -> PredictResponse:
-        """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006)."""
+        """Endpoint nhận ảnh multipart và dự đoán ký hiệu ngôn ngữ ký hiệu tiếng Việt (US-006, US-009)."""
         # BR-011: Kiểm tra trạng thái nạp của model
         if getattr(app.state, "model", None) is None:
             raise HTTPException(
@@ -410,10 +505,16 @@ def create_app() -> FastAPI:
                 detail="Mô hình nhận diện chưa sẵn sàng. Vui lòng kiểm tra lại sau.",
             )
 
-        content = await file.read()
+        content, media_type = await _read_validated_image_upload(file)
         try:
             landmarks, has_hand, has_face = extract_landmarks_from_image(content, flip=flip)
         except ValueError:
+            _log_upload_rejection(
+                status.HTTP_400_BAD_REQUEST,
+                "corrupt_image_data",
+                media_type,
+                len(content),
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Không thể giải mã dữ liệu ảnh tải lên. Vui lòng gửi tệp ảnh hợp lệ.",

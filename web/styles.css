@@ -277,6 +277,16 @@ h1 {
   object-fit: contain;
 }
 
+.preview-panel img.is-flipped {
+  transform: scaleX(-1);
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+}
+
 .submit-row {
   justify-content: flex-end;
   margin-top: 18px;

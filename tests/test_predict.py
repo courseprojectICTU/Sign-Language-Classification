@@ -200,18 +200,18 @@ def test_predict_tra_trang_thai_cu_the_khi_thieu_landmark(
 
 
 def test_predict_file_khong_phai_anh_tra_400():
-    """POST /predict nhận file byte rác không giải mã được ảnh trả 400 Bad Request."""
+    """POST /predict nhận file JPEG đúng header nhưng dữ liệu hỏng trả 400 Bad Request."""
     from src.vsl.service import create_app
 
     app = create_app()
     app.state.model = MagicMock()
 
     client = TestClient(app, raise_server_exceptions=False)
-    corrupt_bytes = b"This is not a valid JPEG/PNG image data"
+    corrupt_jpeg_bytes = b"\xff\xd8\xff\xe0This is corrupt JPEG image data"
 
     response = client.post(
         "/predict",
-        files={"file": ("corrupt.bin", io.BytesIO(corrupt_bytes), "application/octet-stream")},
+        files={"file": ("corrupt.jpg", io.BytesIO(corrupt_jpeg_bytes), "image/jpeg")},
     )
 
     assert response.status_code == 400, f"Kỳ vọng 400 Bad Request, nhận: {response.status_code}"

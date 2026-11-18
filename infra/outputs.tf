@@ -14,3 +14,38 @@ output "github_oidc_subscription_id" {
   description = "Subscription ID for the GitHub OIDC workflow."
   value       = var.subscription_id
 }
+
+output "billing_budget_id" {
+  description = "Resource ID of the subscription monthly cost guardrail budget when enabled."
+  value       = try(azurerm_consumption_budget_subscription.monthly[0].id, null)
+}
+
+output "container_app_url" {
+  description = "HTTPS endpoint URL of the Azure Container App."
+  value       = "https://${azurerm_container_app.vsl_api.ingress[0].fqdn}"
+}
+
+output "container_app_fqdn" {
+  description = "Ingress FQDN of the Azure Container App."
+  value       = azurerm_container_app.vsl_api.ingress[0].fqdn
+}
+
+output "container_app_id" {
+  description = "Azure Resource ID of the Container App."
+  value       = azurerm_container_app.vsl_api.id
+}
+
+output "container_app_environment_id" {
+  description = "Azure Resource ID of the Container Apps Environment."
+  value       = azurerm_container_app_environment.vsl.id
+}
+
+output "image_reference" {
+  description = "Container image deployed to this environment."
+  value       = azurerm_container_app.vsl_api.template[0].container[0].image
+}
+
+output "shared_acr_login_server" {
+  description = "Login server of the shared Azure Container Registry."
+  value       = local.acr_login_server
+}

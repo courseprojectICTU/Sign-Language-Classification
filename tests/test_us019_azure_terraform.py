@@ -69,7 +69,7 @@ def test_tsk_032_adopts_existing_registry_and_configures_three_tag_cleanup():
     assignment = _role_assignment_body(registry, "cleanup_delete")
     assert re.search(r'role_definition_name\s*=\s*"AcrDelete"', assignment)
     assert re.search(
-        r"scope\s*=\s*azurerm_container_registry\.vsl\.id",
+        r"scope\s*=\s*azurerm_container_registry\.vsl(?:\[0\])?\.id",
         assignment,
     )
 
@@ -80,7 +80,7 @@ def test_tsk_033_limits_deployment_roles_to_registry_and_container_app():
     push = _role_assignment_body(identity, "deployment_push")
     assert re.search(r'role_definition_name\s*=\s*"AcrPush"', push)
     assert re.search(
-        r"scope\s*=\s*azurerm_container_registry\.vsl\.id",
+        r"scope\s*=\s*(?:azurerm_container_registry\.vsl(?:\[0\])?\.id|local\.acr_id)",
         push,
     )
 
@@ -90,7 +90,7 @@ def test_tsk_033_limits_deployment_roles_to_registry_and_container_app():
         deploy,
     )
     assert re.search(
-        r"scope\s*=\s*data\.azurerm_container_app\.vsl_api\.id",
+        r"scope\s*=\s*azurerm_container_app\.vsl_api\.id",
         deploy,
     )
 

@@ -3,6 +3,7 @@
 (() => {
   const fileInput = document.querySelector("#image-input");
   const imagePreview = document.querySelector("#image-preview");
+  const flipImageButton = document.querySelector("#flip-image");
   const previewPlaceholder = document.querySelector("#preview-placeholder");
   const openCameraButton = document.querySelector("#open-camera");
   const closeCameraButton = document.querySelector("#close-camera");
@@ -24,6 +25,7 @@
   if (
     !(fileInput instanceof HTMLInputElement) ||
     !(imagePreview instanceof HTMLImageElement) ||
+    !(flipImageButton instanceof HTMLButtonElement) ||
     !(previewPlaceholder instanceof HTMLElement) ||
     !(openCameraButton instanceof HTMLButtonElement) ||
     !(closeCameraButton instanceof HTMLButtonElement) ||
@@ -48,6 +50,8 @@
   let cameraStream = null;
   let previewUrl = null;
   let selectedImage = null;
+  let isImageFlipped = false;
+  let predictionInProgress = false;
 
   function showPreview(file) {
     if (previewUrl) {
@@ -59,7 +63,8 @@
     imagePreview.src = previewUrl;
     imagePreview.hidden = false;
     previewPlaceholder.hidden = true;
-    predictButton.disabled = false;
+    predictButton.disabled = predictionInProgress;
+    flipImageButton.disabled = predictionInProgress;
     errorMessage.hidden = true;
     resultRegion.hidden = true;
   }
@@ -83,7 +88,7 @@
     openCameraButton.disabled = false;
   }
 
-  async function requestPrediction(file) {
+  async function requestPrediction(file, flip) {
     const apiBaseUrl = window.VSL_CONFIG?.apiBaseUrl;
     if (typeof apiBaseUrl !== "string" || apiBaseUrl.trim() === "") {
       throw new Error("Địa chỉ dịch vụ dự đoán chưa được cấu hình.");
@@ -91,9 +96,10 @@
 
     const formData = new FormData();
     formData.append("file", file);
+    const query = new URLSearchParams({ flip: String(flip) });
 
     const response = await fetch(
-      `${apiBaseUrl.replace(/\/+$/, "")}/predict`,
+      `${apiBaseUrl.replace(/\/+$/, "")}/predict?${query}`,
       {
         method: "POST",
         body: formData,
@@ -191,6 +197,12 @@
     }
   });
 
+  flipImageButton.addEventListener("click", () => {
+    isImageFlipped = !isImageFlipped;
+    imagePreview.classList.toggle("is-flipped", isImageFlipped);
+    flipImageButton.setAttribute("aria-pressed", String(isImageFlipped));
+  });
+
   cameraVideo.addEventListener("loadedmetadata", () => {
     captureButton.disabled = cameraVideo.videoWidth === 0;
   });
@@ -253,17 +265,19 @@
   });
 
   predictButton.addEventListener("click", async () => {
-    if (!selectedImage) {
+    if (!selectedImage || predictionInProgress) {
       return;
     }
 
+    predictionInProgress = true;
     predictButton.disabled = true;
+    flipImageButton.disabled = true;
     loadingStatus.hidden = false;
     errorMessage.hidden = true;
     resultRegion.hidden = true;
 
     try {
-      const payload = await requestPrediction(selectedImage);
+      const payload = await requestPrediction(selectedImage, isImageFlipped);
       displayPrediction(payload);
     } catch (error) {
       console.error("Image prediction failed:", error);
@@ -275,8 +289,10 @@
             : "Không thể dự đoán ảnh. Vui lòng thử lại.";
       errorMessage.hidden = false;
     } finally {
+      predictionInProgress = false;
       loadingStatus.hidden = true;
       predictButton.disabled = selectedImage === null;
+      flipImageButton.disabled = selectedImage === null;
     }
   });
 
