@@ -4,14 +4,27 @@ Dự án phân loại **23 ký tự bảng chữ cái ngôn ngữ ký hiệu ti�
 
 ---
 
+## Live Environments (Đường dẫn hệ thống trực tuyến)
+
+| Môi trường | Thành phần | Nền tảng | Đường dẫn (URL) | Ghi chú |
+|---|---|---|---|---|
+| **Production** | Frontend | Cloudflare Pages | [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev) | Nhánh `main`, triển khai tự động qua CI/CD (`US-024`, `US-028`) |
+| **Production** | Backend API | Azure Container Apps | `https://vsl-api.<prod_domain>.eastasia.azurecontainerapps.io` | Nhánh `main` (`rg-vsl-prod`), quy hoạch hạ tầng theo `US-021` & `US-029` |
+| **Staging** | Frontend | Cloudflare Pages | [https://develop.sign-language-classification.pages.dev](https://develop.sign-language-classification.pages.dev) | Nhánh `develop`, kèm Preview URL tự động cho từng PR (`US-028`) |
+| **Staging** | Backend API | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io) | Nhánh `develop` (`rg-vsl-staging`), tự động triển khai qua GitHub OIDC (`US-029`) |
+| **Staging** | API Docs (Swagger) | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs) | Giao diện kiểm thử API tương tác OpenAPI / Swagger UI |
+| **Staging** | Backend (Dự phòng) | Azure App Service | [https://vsl-vietnam.azurewebsites.net](https://vsl-vietnam.azurewebsites.net) | Endpoint dự phòng hiện tại được tham chiếu trong `web/config.js` |
+
+---
+
 ## Architecture and current delivery status
 
 - **Backend (`src/vsl/`):** FastAPI service tại `src/vsl/service.py`, lắng nghe cổng `8080`, cung cấp `GET /health`, `GET /version`, và `POST /predict`, cùng CORS allowlist tường minh qua `VSL_ALLOWED_ORIGINS` (`US-025`).
 - **Model pipeline:** 93 hand/face coordinates → `create_heatmap` (`src/vsl/heatmap.py`) → ResNet50 Caffe preprocessing → softmax 23 lớp (`src/vsl/labels.py`). File trọng số được lưu bằng Git LFS tại `train/vsl_cnn_pose_keras.h5` (~137 MB). Bộ dữ liệu landmark gồm 23 thư mục tại `data/anphabet/` (tổng **1.609 file CSV**; 70 mẫu/ký tự, riêng `đ` có 69 mẫu).
-- **Frontend (`web/`):** Giao diện web tĩnh (`web/index.html`, `web/app.js`, `web/styles.css`, `web/config.js`, `web/labels.json`), cho phép tải ảnh hoặc chụp từ camera và gọi `POST /predict` (`US-022`). Đã triển khai thử lên Cloudflare Pages (`https://sign-language-classification.pages.dev`, `US-024`), hiện chờ cập nhật `VSL_ALLOWED_ORIGINS` trên Azure Container Apps để trình duyệt gọi API không bị chặn CORS.
+- **Frontend (`web/`):** Giao diện web tĩnh (`web/index.html`, `web/app.js`, `web/styles.css`, `web/config.js`, `web/labels.json`), cho phép tải ảnh hoặc chụp từ camera và gọi `POST /predict` (`US-022`). Đã triển khai lên Cloudflare Pages (`https://sign-language-classification.pages.dev`, `US-024`), cấu hình CORS allowlist chặt chẽ (`US-025`) và pipeline CI/CD frontend tự động với Preview deployments (`US-028`).
 - **Container & CI:** `Dockerfile` multi-stage `linux/amd64` ghim digest `python:3.12.7-slim-bookworm`, dùng `requirements-runtime.txt` và non-root `appuser` (`US-038`). Workflow PR CI (`.github/workflows/ci.yml`, `US-026`) chạy Ruff, Black, full `pytest`, và Docker build (không push).
-- **Cloud & IaC (`infra/`):** Đích triển khai đám mây là **Microsoft Azure Container Apps (ACA)** (không phải Cloud Run). Thư mục `infra/` khai báo Terraform `azurerm` + Azure Blob remote state (`US-018`) và ACR/IAM/GitHub OIDC (`US-019`). Workflow CD tự động (`US-029`) chưa có trên `develop`.
-- **Operations CLI (`scripts/`):** Đã có `scripts/smoke_test.py` (`US-017`), `scripts/rollback.py` (`US-031`, dry-run mặc định cho ACA), `scripts/benchmark_cold_start.py` (`US-013`), và `scripts/generate_web_labels.py` (`US-022`). Lưu ý các kiểm thử cloud trực tiếp (live smoke test, live rollback rehearsal, `terraform apply` hoàn chỉnh cho OIDC) vẫn cần xác minh trên môi trường Azure thực tế.
+- **Cloud & IaC (`infra/`):** Đích triển khai đám mây là **Microsoft Azure Container Apps (ACA)**. Thư mục `infra/` khai báo Terraform `azurerm` + Azure Blob remote state (`US-018`), ACR/IAM/GitHub OIDC (`US-019`), Container Apps scale-to-zero (`US-020`), phân tách môi trường staging/production (`US-021`), và pipeline CD backend tự động (`.github/workflows/deploy-backend.yml`, `US-029`).
+- **Operations CLI (`scripts/`):** Đã có `scripts/smoke_test.py` (`US-017`), `scripts/rollback.py` (`US-031`, dry-run mặc định cho ACA), `scripts/benchmark_cold_start.py` (`US-013`), và `scripts/generate_web_labels.py` (`US-022`).
 
 ---
 
