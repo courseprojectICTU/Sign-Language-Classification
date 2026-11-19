@@ -93,18 +93,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          login_server="$(az acr show \
-            --name "$AZURE_ACR_NAME" \
-            --subscription "$AZURE_SUBSCRIPTION_ID" \
-            --query loginServer \
-            --output tsv)"
-          if [[ -z "$login_server" ]]; then
-            echo "::error::Could not resolve the configured ACR login server."
-            exit 1
-          fi
-
+          login_server="${AZURE_ACR_NAME}.azurecr.io"
           image="${login_server}/${IMAGE_REPOSITORY}:${GIT_SHA}"
-          az acr login --name "$AZURE_ACR_NAME" --subscription "$AZURE_SUBSCRIPTION_ID"
+          az acr login --name "$AZURE_ACR_NAME"
           docker build \
             --platform linux/amd64 \
             --build-arg "GIT_SHA=${GIT_SHA}" \
