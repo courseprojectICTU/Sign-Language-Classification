@@ -46,7 +46,7 @@ def test_workflow_builds_smokes_candidate_then_shifts_and_recovers_traffic() -> 
     assert "docker build" in workflow
     assert "docker push" in workflow
     assert "GIT_SHA: ${{ github.sha }}" in workflow
-    assert "--no-traffic" in workflow
+    assert "--revision-suffix" in workflow
     smoke_position = workflow.index("scripts/smoke_test.py")
     shift_position = workflow.index("az containerapp ingress traffic set")
     assert smoke_position < shift_position

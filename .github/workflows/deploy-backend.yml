@@ -138,7 +138,6 @@ jobs:
             --subscription "$AZURE_SUBSCRIPTION_ID" \
             --image "$IMAGE" \
             --revision-suffix "$suffix" \
-            --no-traffic \
             --only-show-errors
 
           revision="$(az containerapp show \
