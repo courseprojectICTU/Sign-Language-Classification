@@ -58,6 +58,7 @@ def test_workflow_builds_smokes_candidate_then_shifts_and_recovers_traffic() -> 
     assert "trap rollback_on_failure EXIT" in workflow
     assert "promotion_attempted=true" in workflow
     assert "promotion_verified=true" in workflow
+    assert "---${label}" in workflow
 
 
 def test_main_branch_oidc_subject_is_provisioned_for_staging_deployer() -> None:

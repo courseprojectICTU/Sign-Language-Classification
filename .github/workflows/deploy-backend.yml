@@ -197,7 +197,13 @@ jobs:
             exit 1
           fi
 
-          echo "candidate_url=https://${label}.${fqdn}" >> "$GITHUB_OUTPUT"
+          if [[ "$fqdn" == "${AZURE_CONTAINER_APP_NAME}."* ]]; then
+            env_domain="${fqdn#"${AZURE_CONTAINER_APP_NAME}."}"
+            candidate_fqdn="${AZURE_CONTAINER_APP_NAME}---${label}.${env_domain}"
+          else
+            candidate_fqdn="${label}.${fqdn}"
+          fi
+          echo "candidate_url=https://${candidate_fqdn}" >> "$GITHUB_OUTPUT"
 
       - name: Smoke-test candidate revision
         shell: bash
