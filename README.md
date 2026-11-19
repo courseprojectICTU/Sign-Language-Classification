@@ -8,12 +8,11 @@ Dự án phân loại **23 ký tự bảng chữ cái ngôn ngữ ký hiệu ti�
 
 | Môi trường | Thành phần | Nền tảng | Đường dẫn (URL) | Ghi chú |
 |---|---|---|---|---|
-| **Production** | Frontend | Cloudflare Pages | [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev) | Nhánh `main`, triển khai tự động qua CI/CD (`US-024`, `US-028`) |
-| **Production** | Backend API | Azure Container Apps | `https://vsl-api.<prod_domain>.eastasia.azurecontainerapps.io` | Nhánh `main` (`rg-vsl-prod`), quy hoạch hạ tầng theo `US-021` & `US-029` |
-| **Staging** | Frontend | Cloudflare Pages | [https://develop.sign-language-classification.pages.dev](https://develop.sign-language-classification.pages.dev) | Nhánh `develop`, kèm Preview URL tự động cho từng PR (`US-028`) |
-| **Staging** | Backend API | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io) | Nhánh `develop` (`rg-vsl-staging`), tự động triển khai qua GitHub OIDC (`US-029`) |
+| **Live Web App** | Frontend | Cloudflare Pages | [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev) | Giao diện web trực tuyến chính thức, tự động triển khai qua Cloudflare Pages (`US-024`, `US-028`). Kèm Preview URL tự động trên mỗi PR |
+| **Staging** | Backend API | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io) | Nhánh `develop` (`rg-vsl-staging`), tự động triển khai qua GitHub OIDC & smoke test (`US-029`). Đang kết nối trực tiếp với Frontend |
 | **Staging** | API Docs (Swagger) | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs) | Giao diện kiểm thử API tương tác OpenAPI / Swagger UI |
-| **Staging** | Backend (Dự phòng) | Azure App Service | [https://vsl-vietnam.azurewebsites.net](https://vsl-vietnam.azurewebsites.net) | Endpoint dự phòng hiện tại được tham chiếu trong `web/config.js` |
+| **Staging** | Backend (Dự phòng) | Azure App Service | [https://vsl-vietnam.azurewebsites.net](https://vsl-vietnam.azurewebsites.net) | Dịch vụ App Service dự phòng cũ (hiện tạm dừng / 503) |
+| **Production** | Backend API | Azure Container Apps | `https://vsl-api.<prod_domain>.eastasia.azurecontainerapps.io` | Nhánh `main` (`rg-vsl-prod`), quy hoạch hạ tầng theo `US-021` & `US-029` (chờ kích hoạt Gate D) |
 
 ---
 
