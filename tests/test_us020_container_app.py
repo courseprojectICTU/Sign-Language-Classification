@@ -186,7 +186,7 @@ def test_tsk_035_container_app_scale_to_zero_and_revision_mode():
     assert re.search(r"container_min_replicas\s*=\s*0\b", staging)
     assert re.search(r"container_max_replicas\s*=\s*3\b", staging)
     assert re.search(
-        r'allowed_origins\s*=\s*"https://sign-language-classification\.pages\.dev"',
+        r'allowed_origins\s*=\s*"[^"]*https://sign-language-classification\.pages\.dev[^"]*"',
         staging,
     )
     tag_match = re.search(r'^\s*image_tag\s*=\s*"([^"]+)"\s*$', staging, re.MULTILINE)

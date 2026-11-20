@@ -9,6 +9,7 @@ Dự án phân loại **23 ký tự bảng chữ cái ngôn ngữ ký hiệu ti�
 | Môi trường | Thành phần | Nền tảng | Đường dẫn (URL) | Ghi chú |
 |---|---|---|---|---|
 | **Live Web App** | Frontend | Cloudflare Pages | [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev) | Giao diện web trực tuyến chính thức, tự động triển khai qua Cloudflare Pages (`US-024`, `US-028`). Kèm Preview URL tự động trên mỗi PR |
+| **Staging** | Frontend Web | Cloudflare Pages | [https://develop.sign-language-classification.pages.dev](https://develop.sign-language-classification.pages.dev) | Giao diện web môi trường Staging (nhánh `develop`), tự động triển khai qua Cloudflare Pages Preview |
 | **Staging** | Backend API | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io) | Nhánh `develop` (`rg-vsl-staging`), tự động triển khai qua GitHub OIDC & smoke test (`US-029`). Đang kết nối trực tiếp với Frontend |
 | **Staging** | API Docs (Swagger) | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs) | Giao diện kiểm thử API tương tác OpenAPI / Swagger UI |
 | **Staging** | Backend (Dự phòng) | Azure App Service | [https://vsl-vietnam.azurewebsites.net](https://vsl-vietnam.azurewebsites.net) | Dịch vụ App Service dự phòng cũ (hiện tạm dừng / 503) |

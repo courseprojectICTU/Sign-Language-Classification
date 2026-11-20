@@ -132,12 +132,22 @@ jobs:
           fi
 
           suffix="r${GITHUB_RUN_ID}"
+          if [[ "$TARGET_ENV" == "production" ]]; then
+            default_origins="https://sign-language-classification.pages.dev"
+          else
+            default_origins="https://sign-language-classification.pages.dev,https://develop.sign-language-classification.pages.dev"
+          fi
+          allowed_origins="${{ vars.VSL_ALLOWED_ORIGINS || '' }}"
+          if [[ -z "$allowed_origins" ]]; then
+            allowed_origins="$default_origins"
+          fi
           az containerapp update \
             --name "$AZURE_CONTAINER_APP_NAME" \
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --subscription "$AZURE_SUBSCRIPTION_ID" \
             --image "$IMAGE" \
             --revision-suffix "$suffix" \
+            --set-env-vars "VSL_ALLOWED_ORIGINS=${allowed_origins}" \
             --only-show-errors
 
           revision="$(az containerapp show \
