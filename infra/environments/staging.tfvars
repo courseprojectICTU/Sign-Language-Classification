@@ -15,7 +15,7 @@ container_memory               = "2Gi"
 container_min_replicas         = 0
 container_max_replicas         = 3
 log_level                      = "INFO"
-allowed_origins                = "https://sign-language-classification.pages.dev"
+allowed_origins                = "https://sign-language-classification.pages.dev,https://develop.sign-language-classification.pages.dev"
 tags = {
   workload = "sign-language-classification"
 }
