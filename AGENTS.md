@@ -1,7 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-11** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+**Cập nhật lần cuối: 2026-11-21** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
 từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
 hãy sửa nó ngay (file có tiếng Việt, lưu ý UTF-8 khi sửa).
 
@@ -28,21 +28,22 @@ Pipeline: ảnh → MediaPipe trích landmark bàn tay + mặt → sinh **heatma
 | `docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/architecture/ADR-001-*` | kế hoạch web hóa + CI/CD trên Azure |
 | **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
 
-Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
-Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038, pipeline frontend US-028 và kiểm thử Terraform US-018/US-019/US-020/US-021/US-033).
-Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (`cae-vsl-staging-std` / `vsl-api`, `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`, `Multiple` revision mode, `min_replicas = 0`, `max_replicas = 3`) và Azure App Service (`vsl-vietnam`, `https://vsl-vietnam.azurewebsites.net`, đang được `web/config.js` trỏ tới); frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). `develop` chưa có pipeline CD backend tự động; hiện có PR CI (`.github/workflows/ci.yml`, không push), CI/CD frontend Cloudflare Pages (`.github/workflows/frontend.yml`, US-028), workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`) và workflow build/push ACR thủ công (`.github/workflows/acr-publish.yml`). Nhánh `feature/US-029` bổ sung CD Azure Container Apps staging (`.github/workflows/deploy-backend.yml`); đang trong quá trình review và kiểm thử.
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + workflow CD backend `.github/workflows/deploy-backend.yml` + workflow CI/CD frontend `.github/workflows/frontend.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038, pipeline frontend US-028, rollback frontend US-032, hợp đồng bộ nhớ dự án US-036 và kiểm thử Terraform US-018/US-019/US-020/US-021/US-033).
+Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (`cae-vsl-staging-std` / `vsl-api`, `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`, `Multiple` revision mode, `min_replicas = 0`, `max_replicas = 3`) và Azure App Service (`vsl-vietnam`, `https://vsl-vietnam.azurewebsites.net`, đang được `web/config.js` trỏ tới); frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev` cho production và `https://develop.sign-language-classification.pages.dev` cho preview branch). Pipeline CD backend tự động trên GitHub Actions (`.github/workflows/deploy-backend.yml`) hỗ trợ staging (`develop`) và production (`main`). Nhánh `main` đã gắn tag phát hành chính thức `v1.0.0` (commit `bf6c257`).
 
 ---
 
 ## 2. Git — trạng thái thực tế
 
-| Mục | Giá trị (đối chiếu 2026-11-11) |
+| Mục | Giá trị (đối chiếu 2026-11-21) |
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
-| `develop` / `origin/develop` | `dc9f9cd` (`Merge pull request #50 from courseprojectICTU/feature/US-028`) |
-| Nhánh làm việc hiện tại | `feature/US-029` |
-| Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49` |
+| `develop` / `origin/develop` | `8d3f15e` (`Merge pull request #58 from courseprojectICTU/feature/US-032`) |
+| `main` / `origin/main` | `bf6c257` (`Release v1.0.0: Merge develop into main`, tag `v1.0.0`) |
+| Nhánh làm việc hiện tại | `feature/US-036` |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-032` (PR #57, PR #58), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49`, `#56` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
 | Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
@@ -139,7 +140,11 @@ docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu h�
 docs/api/README.md                                quy ước + 9 phase + checklist API docs
 docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
 docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
+docs/api/US-032.md                                hợp đồng API/CLI rollback frontend Cloudflare Pages (US-032)
+docs/api/US-036.md                                hợp đồng cập nhật bộ nhớ dự án AGENTS.md (US-036)
 docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
+docs/reports/US-032-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-032
+docs/reports/US-036-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-036
 docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
 docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
 docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
@@ -174,7 +179,9 @@ tests/test_us019_secret_policy.py                 quét private key & static sec
 tests/test_us020_container_app.py                 kiểm tra Terraform ACA min_replicas=0, probes và BR-016 (US-020)
 tests/test_us021_terraform.py                     kiểm tra cô lập staging/production, shared ACR và BR-016 trên root infra/ (US-021)
 tests/test_us022_web.py                           kiểm thử Playwright cho giao diện web/ (US-022)
+tests/test_us032_frontend_rollback.py             kiểm thử instant rollback Cloudflare Pages và runbook (US-032)
 tests/test_us033_cost_guardrails.py               kiểm thử Terraform budget Azure, Entra ID MFA & runbook (US-033)
+tests/test_us036_agents_contract.py               kiểm thử hợp đồng bộ nhớ dự án AGENTS.md (US-036)
 tests/test_version.py                             test US-008 (/version)
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
@@ -236,6 +243,13 @@ Tổng = **1609 mẫu**.
 9. **Không bật `horizontal_flip`** trong `ImageDataGenerator`: Lật ngang sẽ biến ký hiệu tay này
    thành ký hiệu tay khác. Code realtime dùng `cv2.flip(image, 1)` (coi gương) là chủ ý đúng.
 10. **Lưu ý số liệu gốc:** Bộ dữ liệu thực tế có 70 CSV/ký tự (trừ `đ` có 69, tổng 1609 mẫu), không phải 50 mẫu/ký tự.
+11. **Bẫy subject claim GitHub OIDC trên Azure Entra ID (`AADSTS700213`):** Khi GitHub Actions tạo federated token, subject claim trả về có dạng `repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/<branch>`. Nếu cấu hình credential kịch bản GitHub mặc định trên Azure Portal (vốn chỉ nhận `repo:org/repo:ref:...`), Azure sẽ từ chối đăng nhập với mã lỗi `AADSTS700213: No matching federated identity record found`. Bắt buộc phải chọn kịch bản **`Other`** và dán chính xác subject claim đầy đủ có chứa ID tổ chức/kho (`courseprojectICTU@343123217/Sign-Language-Classification@1421059989`).
+12. **Bẫy lỗi DLL `0xC0000142` của Python 3.12 khi chạy Ruff/Black trên Windows sandbox:** Môi trường sandbox Windows chặn nạp `_ctypes.pyd` trong `.venv`, khiến các lệnh CLI như `.venv\Scripts\black.exe` và `python -m black` trong `.venv` bị crash với lỗi `0xC0000142`. Cách xử lý chuẩn là sử dụng Python 3.14 cài ngoài sandbox (`py -3.14` hoặc `C:\Users\doant\AppData\Local\Python\pythoncore-3.14-64\python.exe`):
+    ```powershell
+    & "py" -3.14 -m black --check src tests scripts
+    & "py" -3.14 -m ruff check src tests scripts
+    ```
+13. **Bẫy CORS đa môi trường trên Cloudflare Pages:** Mỗi commit/PR trên Cloudflare Pages đều sinh ra một preview deployment URL theo nhánh (ví dụ: `https://develop.sign-language-classification.pages.dev`). Nếu backend chỉ cấu hình domain chính `https://sign-language-classification.pages.dev`, toàn bộ request từ nhánh `develop` sẽ bị lỗi CORS preflight 400. Do đó, biến môi trường `VSL_ALLOWED_ORIGINS` trên Azure Container Apps và App Service bắt buộc phải liệt kê dạng danh sách phân tách bằng dấu phẩy bao gồm cả hai domain (`https://sign-language-classification.pages.dev,https://develop.sign-language-classification.pages.dev`).
 
 ---
 
@@ -290,6 +304,12 @@ NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
   & ".\.venv\Scripts\black.exe" --check src tests scripts
   & ".\.venv\Scripts\python.exe" -m pytest tests -v
   ```
+- Hoặc sử dụng môi trường Python 3.14 (vượt qua lỗi DLL Windows sandbox):
+  ```powershell
+  & "py" -3.14 -m ruff check src tests scripts
+  & "py" -3.14 -m black --check src tests scripts
+  & "py" -3.14 -m pytest tests -v
+  ```
 - Lệnh chạy FastAPI server cục bộ chuẩn:
   ```powershell
   & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
@@ -341,7 +361,8 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-028** | Pipeline frontend với trigger theo đường dẫn và preview deployment | `feature/US-028` / PR `#50` (`develop`) | MERGED — PASS | `.github/workflows/frontend.yml`, `tests/test_frontend_workflow.py` (`6/6` PASS), `docs/api/US-028.md` (`ANALYSIS_READY`), triggers đường dẫn `web/**` (và workflow), deploy preview kèm bình luận PR không spam (`<!-- vsl-cloudflare-pages-preview -->`), route staging (`develop`) & production (`main`), secrets `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID` đã cấu hình trên GitHub Repo Secrets |
 | **US-029** | CD backend ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (đã kiểm thử cục bộ; đang review) | `.github/workflows/deploy-backend.yml` (định tuyến `develop` -> staging, `main` -> production), GitHub OIDC, smoke `/health` + `/version`, traffic rollback; staging dùng OIDC `develop` đã áp dụng, production chờ cấp phát theo US-021 |
 | **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
-| **US-032** | Rollback frontend Cloudflare Pages về deployment trước | `feature/US-032` | PASS CỔNG D — READY | `docs/api/US-032.md` (`ANALYSIS_READY`), `tests/test_us032_frontend_rollback.py` (`2/2` PASS), `docs/RUNBOOK.md` Mục 5.3 (Dashboard/Wrangler CLI zero-build rollback < 10s, `BR-022`) |
+| **US-032** | Rollback frontend Cloudflare Pages về deployment trước | PR `#57`, PR `#58` (`develop`) | MERGED — PASS | `docs/api/US-032.md` (`ANALYSIS_READY`), `tests/test_us032_frontend_rollback.py` (`2/2` PASS), `docs/RUNBOOK.md` Mục 5.3 (Dashboard/Wrangler CLI zero-build rollback < 10s, `BR-022`) |
+| **US-036** | Cập nhật AGENTS.md theo cấu trúc mới | `feature/US-036` | IN PROGRESS (TSK-067) | Cập nhật AGENTS.md đồng bộ cấu trúc, mốc Git 2026-11-21, bẫy kỹ thuật OIDC/Black/CORS và môi trường Python 3.14; `tests/test_us036_agents_contract.py` |
 | **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | PR `#35` (`develop`) | PASS — STAGING VERIFIED | Đã apply `vsl-monthly-cost-guardrail-staging` (`$5`, `20%` `$1` / `100%` `$5`, `Owner`) trên `373b1f03-330f-4302-a9e9-aa1fe793bf2e` và xác minh trên Azure Portal; Entra ID `Security defaults: Enabled`; `docs/RUNBOOK.md` Mục 7, `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
@@ -350,10 +371,13 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 
 ## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
 
-1. **Hạ tầng Azure staging sau Nhóm 4 & US-020 (2026-11-11):**
-   - `vslacr3795.azurecr.io/vsl-api:9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đang chạy trên cả App Service `vsl-vietnam` (`https://vsl-vietnam.azurewebsites.net`, target của `web/config.js`) và Standard ACA `vsl-api` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io` trên `cae-vsl-staging-std`, UAMI `id-vsl-api-pull` với `AcrPull`, `Multiple` revision mode, `vsl-api--0000001` đã đặt `min_replicas = 0`, `max_replicas = 3`, revision cũ `vsl-api--lhkogbo` đã deactivate và xác nhận scale về `0` replica khi idle).
-   - Environment Express cũ `cae-vsl-staging` đã tách `vsl-api` ra; chủ dự án có thể xóa dọn khi xác nhận không còn dùng.
-   - `azurerm_role_assignment.deployment_app` đã đồng bộ scope `azurerm_container_app.vsl_api.id` trong `staging.tfstate`; `azurerm_container_registry_task.cleanup` vẫn bị giới hạn gói Azure for Students (`TasksOperationsNotAllowed`).
-2. **US-024 / US-017 kiểm chứng end-to-end với ảnh thật:** chạy `scripts/smoke_test.py --image <ảnh tay+mặt thật>` và kiểm tra browser trực tiếp trên `https://sign-language-classification.pages.dev`; đo `AC-024-02` khi `vsl-api` đang ở `0` replica.
-3. **US-029:** workflow CD Azure Container Apps (`.github/workflows/deploy-backend.yml`) trên nhánh `feature/US-029` đồng bộ với frontend: push `develop` triển khai staging (`rg-vsl-staging` / `vsl-api`), push `main` triển khai production (`rg-vsl-prod`). Staging dùng federated credential `develop` đã áp dụng trên Azure; production được cô lập độc lập theo US-021. Workflow hiện chỉ deploy ACA `vsl-api`, không deploy App Service `vsl-vietnam`.
+1. **Hạ tầng Azure & Cloudflare Pages (cập nhật 2026-11-21):**
+   - **Production:** Đã phát hành Release `v1.0.0` trên `main` (commit `bf6c257`, tag `v1.0.0`). Frontend hoạt động tại `https://sign-language-classification.pages.dev` kết nối trực tiếp với backend Azure.
+   - **Staging:** Backend `vsl-api` trên `cae-vsl-staging-std` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`) với `min_replicas = 0` (scale-to-zero khi idle). Frontend preview tại `https://develop.sign-language-classification.pages.dev`.
+   - **CD Pipelines:** `.github/workflows/deploy-backend.yml` (backend ACA) và `.github/workflows/frontend.yml` (frontend Cloudflare Pages) đã hỗ trợ tự động hóa theo nhánh `develop` (staging) và `main` (production).
+2. **US-032 (Đã hoàn thành):** Cơ chế Instant Rollback frontend về deployment trước không cần build lại qua Cloudflare Dashboard / Wrangler API (< 10s, `BR-022`) đã ghi nhận tại Mục 5.3 `docs/RUNBOOK.md`.
+3. **Các hạng mục tiếp theo:**
+   - **US-037:** Demo end-to-end và retrospective sau khi hoàn tất các hạng mục MUST của Sprint 2.
+   - **US-030:** Cổng phê duyệt thủ công cho môi trường production.
+   - **US-034:** Cảnh báo Azure Log Analytics cho lỗi 5xx trên Container Apps.
 4. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
