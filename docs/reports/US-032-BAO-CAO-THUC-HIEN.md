@@ -85,3 +85,4 @@ tests/test_us032_frontend_rollback.py::test_runbook_contains_frontend_rollback_s
   - Thời gian chuyển đổi domain chính: **~6 giây** (đạt tiêu chuẩn < 10 giây).
   - Không kích hoạt bất kỳ tiến trình GitHub Actions build lại nào.
   - Tệp `config.js` và mã JavaScript được chuyển tức thời, không xảy ra gián đoạn dịch vụ (Zero-Downtime).
+
