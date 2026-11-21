@@ -42,8 +42,8 @@ jobs:
           set -euo pipefail
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             target_env="production"
-            rg="${{ vars.AZURE_PROD_RESOURCE_GROUP || 'rg-vsl-prod' }}"
-            app="${{ vars.AZURE_PROD_CONTAINER_APP_NAME || 'vsl-api' }}"
+            rg="${{ vars.AZURE_PROD_RESOURCE_GROUP || vars.AZURE_RESOURCE_GROUP || 'rg-vsl-staging' }}"
+            app="${{ vars.AZURE_PROD_CONTAINER_APP_NAME || vars.AZURE_CONTAINER_APP_NAME || 'vsl-api' }}"
           else
             target_env="staging"
             rg="${{ vars.AZURE_STAGING_RESOURCE_GROUP || vars.AZURE_RESOURCE_GROUP || 'rg-vsl-staging' }}"
