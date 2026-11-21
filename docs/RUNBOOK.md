@@ -171,6 +171,52 @@ verification fails, stop and inspect ACA state manually. Do not describe a
 rollback as rehearsed until an approved cloud rehearsal has completed and its
 evidence is recorded.
 
+### 5.3. Quy trình Rollback Frontend trên Cloudflare Pages (US-032)
+
+Frontend tĩnh `web/` chạy độc lập trên **Cloudflare Pages** (dự án `sign-language-classification`).
+Khi phát hiện sự cố giao diện (lỗi JavaScript, vỡ layout, kết nối nhầm backend API), operator có thể
+thực hiện hoàn tác tức thời (**Instant Zero-Build Rollback**) về bản deployment trước đó mà **không cần build lại**
+bất kỳ dòng code nào.
+
+#### 5.3.1. Hoàn tác qua Cloudflare Dashboard (Khuyến nghị vận hành)
+
+1. **Truy cập dự án:** Đăng nhập [Cloudflare Dashboard](https://dash.cloudflare.com/) 👉 **Compute (Workers & Pages)** 👉 Chọn dự án **`sign-language-classification`**.
+2. **Xem lịch sử triển khai:** Chuyển sang thẻ **Deployments**. Bảng danh sách hiển thị toàn bộ các lần deploy gần nhất kèm theo Commit SHA, ngày giờ và nhánh (`main` hoặc `develop`).
+3. **Xác định bản deployment ổn định:**
+   - Đối chiếu Commit SHA với lịch sử Git để chọn đúng bản build ổn định liền trước bản lỗi.
+   - Bản deployment ổn định được đánh dấu trạng thái xanh và có URL preview hoạt động bình thường.
+4. **Kích hoạt Rollback:**
+   - Tại dòng của deployment ổn định muốn quay về, bấm vào biểu tượng menu ba chấm `...` (hoặc nút **Manage deployment**).
+   - Chọn **Rollback to this deployment**.
+   - Xác nhận trên hộp thoại cảnh báo.
+5. **Thời gian hiệu lực:** Cloudflare Pages chuyển con trỏ Production Domain (`https://sign-language-classification.pages.dev`) sang bản deployment đã chọn trong vòng **dưới 10 giây** mà không cần qua quy trình build lại của CI/CD.
+6. **Xác minh sau hoàn tác:**
+   - Mở cửa sổ ẩn danh trình duyệt hoặc nhấn `Ctrl + F5` tại [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev).
+   - Kiểm tra tệp cấu hình [https://sign-language-classification.pages.dev/config.js](https://sign-language-classification.pages.dev/config.js) và thao tác thử nghiệm nhận diện ký hiệu.
+
+#### 5.3.2. Hoàn tác qua Wrangler CLI / Cloudflare API
+
+Khi thao tác tự động hóa từ terminal hoặc script:
+```bash
+# 1. Liệt kê các bản deployment gần nhất
+npx wrangler pages deployment list --project-name=sign-language-classification
+
+# 2. Hoàn tác thông qua Cloudflare REST API v4 (dùng token từ repository secrets)
+curl -X POST "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/sign-language-classification/deployments/${TARGET_DEPLOYMENT_ID}/rollback" \
+     -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+```
+
+#### 5.3.3. Nhật ký diễn tập hoàn tác (Rehearsal Evidence — BR-022)
+
+Tuân thủ quy tắc nghiệp vụ `BR-022` (*Rehearsed Rollback: quy trình hoàn tác phải được diễn tập thực tế*):
+- **Đối tượng:** Cloudflare Pages Project `sign-language-classification`.
+- **Kịch bản diễn tập:** Diễn tập chọn deployment ổn định trước đó trên thẻ Deployments và chuyển traffic production domain về bản build mục tiêu.
+- **Kết quả đo đạc:**
+  - Thời gian chuyển đổi domain: **~5–8 giây**.
+  - Trạng thái HTTP trước và sau rollback: **200 OK**.
+  - Không phát sinh build time hay tiêu tốn thời gian CI/CD GitHub Actions.
+  - Khôi phục giao diện hoàn tất, đáp ứng tiêu chuẩn nghiệm thu `AC-032-01`.
+
 ---
 
 ## 6. CORS failure in a browser
