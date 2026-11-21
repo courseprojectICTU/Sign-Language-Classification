@@ -5,8 +5,9 @@ Verifies that AGENTS.md remains the accurate, up-to-date single source of truth
 for agent memory, architecture, directory structure, operational traps, and progress.
 """
 
-from pathlib import Path
 import re
+from pathlib import Path
+
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
