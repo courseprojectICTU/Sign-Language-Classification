@@ -48,9 +48,7 @@ def test_runbook_contains_frontend_rollback_section():
     assert (
         "sign-language-classification" in content
     ), "RUNBOOK.md must reference project sign-language-classification"
-    assert (
-        "Deployments" in content
-    ), "RUNBOOK.md must guide operator to inspect the Deployments tab"
+    assert "Deployments" in content, "RUNBOOK.md must guide operator to inspect the Deployments tab"
     assert (
         "Rollback to this deployment" in content or "Rollback" in content
     ), "RUNBOOK.md must document the rollback action"
