@@ -1,147 +1,137 @@
-**Sign-Language-Classification-v1.0**
+# Vietnamese Sign Language Classification
 
-Sign-Language-Classification-v1.0 là một dự án phân loại ngôn ngữ ký hiệu sử dụng các kỹ thuật học sâu và xử lý ảnh. Dự án tập trung vào việc nhận diện các ký tự trong bảng chữ cái tiếng Việt (23 ký tự không dấu) từ cử chỉ tay và một số điểm mốc trên khuôn mặt. Dự án bao gồm các công đoạn từ thu thập dữ liệu, huấn luyện mô hình CNN (dựa trên ResNet50), đến ứng dụng thời gian thực qua webcam.
+Dự án phân loại **23 ký tự bảng chữ cái ngôn ngữ ký hiệu tiếng Việt** (`a, b, c, d, đ, e, g, h, i, k, l, m, n, o, p, q, r, s, t, u, v, x, y`) từ ảnh và webcam. Pipeline sử dụng MediaPipe trích xuất **93 tọa độ landmark** (21 điểm bàn tay + 10 điểm khuôn mặt), dựng **heatmap `224x224x3`**, và suy luận bằng mô hình CNN **ResNet50** (Keras).
 
-<img width="700" height="862" alt="image" src="https://github.com/user-attachments/assets/c5e5c51d-ed29-48ee-890c-a12198716ef2" />
+---
 
-CẤU TRÚC THƯ MỤC
+## Live Environments (Đường dẫn hệ thống trực tuyến)
 
-<img width="571" height="155" alt="image" src="https://github.com/user-attachments/assets/8239c40a-7165-4473-add0-3bba081cfa41" />
+| Môi trường | Thành phần | Nền tảng | Đường dẫn (URL) | Ghi chú |
+|---|---|---|---|---|
+| **Live Web App** | Frontend | Cloudflare Pages | [https://sign-language-classification.pages.dev](https://sign-language-classification.pages.dev) | Giao diện web trực tuyến chính thức, tự động triển khai qua Cloudflare Pages (`US-024`, `US-028`). Kèm Preview URL tự động trên mỗi PR |
+| **Staging** | Frontend Web | Cloudflare Pages | [https://develop.sign-language-classification.pages.dev](https://develop.sign-language-classification.pages.dev) | Giao diện web môi trường Staging (nhánh `develop`), tự động triển khai qua Cloudflare Pages Preview |
+| **Staging** | Backend API | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io) | Nhánh `develop` (`rg-vsl-staging`), tự động triển khai qua GitHub OIDC & smoke test (`US-029`). Đang kết nối trực tiếp với Frontend |
+| **Staging** | API Docs (Swagger) | Azure Container Apps | [https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs](https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io/docs) | Giao diện kiểm thử API tương tác OpenAPI / Swagger UI |
+| **Staging** | Backend (Dự phòng) | Azure App Service | [https://vsl-vietnam.azurewebsites.net](https://vsl-vietnam.azurewebsites.net) | Dịch vụ App Service dự phòng cũ (hiện tạm dừng / 503) |
+| **Production** | Backend API | Azure Container Apps | `https://vsl-api.<prod_domain>.eastasia.azurecontainerapps.io` | Nhánh `main` (`rg-vsl-prod`), quy hoạch hạ tầng theo `US-021` & `US-029` (chờ kích hoạt Gate D) |
 
+---
 
-CÁC THƯ MỤC CHÍNH
+## Architecture and current delivery status
 
-data/: Chứa dữ liệu thu thập được, bao gồm các thư mục con cho từng ký tự (a, b, ..., y), mỗi thư mục chứa 50 file CSV lưu trữ landmarks của tay và mặt.
+- **Backend (`src/vsl/`):** FastAPI service tại `src/vsl/service.py`, lắng nghe cổng `8080`, cung cấp `GET /health`, `GET /version`, và `POST /predict`, cùng CORS allowlist tường minh qua `VSL_ALLOWED_ORIGINS` (`US-025`).
+- **Model pipeline:** 93 hand/face coordinates → `create_heatmap` (`src/vsl/heatmap.py`) → ResNet50 Caffe preprocessing → softmax 23 lớp (`src/vsl/labels.py`). File trọng số được lưu bằng Git LFS tại `train/vsl_cnn_pose_keras.h5` (~137 MB). Bộ dữ liệu landmark gồm 23 thư mục tại `data/anphabet/` (tổng **1.609 file CSV**; 70 mẫu/ký tự, riêng `đ` có 69 mẫu).
+- **Frontend (`web/`):** Giao diện web tĩnh (`web/index.html`, `web/app.js`, `web/styles.css`, `web/config.js`, `web/labels.json`), cho phép tải ảnh hoặc chụp từ camera và gọi `POST /predict` (`US-022`). Đã triển khai lên Cloudflare Pages (`https://sign-language-classification.pages.dev`, `US-024`), cấu hình CORS allowlist chặt chẽ (`US-025`) và pipeline CI/CD frontend tự động với Preview deployments (`US-028`).
+- **Container & CI:** `Dockerfile` multi-stage `linux/amd64` ghim digest `python:3.12.7-slim-bookworm`, dùng `requirements-runtime.txt` và non-root `appuser` (`US-038`). Workflow PR CI (`.github/workflows/ci.yml`, `US-026`) chạy Ruff, Black, full `pytest`, và Docker build (không push).
+- **Cloud & IaC (`infra/`):** Đích triển khai đám mây là **Microsoft Azure Container Apps (ACA)**. Thư mục `infra/` khai báo Terraform `azurerm` + Azure Blob remote state (`US-018`), ACR/IAM/GitHub OIDC (`US-019`), Container Apps scale-to-zero (`US-020`), phân tách môi trường staging/production (`US-021`), và pipeline CD backend tự động (`.github/workflows/deploy-backend.yml`, `US-029`).
+- **Operations CLI (`scripts/`):** Đã có `scripts/smoke_test.py` (`US-017`), `scripts/rollback.py` (`US-031`, dry-run mặc định cho ACA), `scripts/benchmark_cold_start.py` (`US-013`), và `scripts/generate_web_labels.py` (`US-022`).
 
-train/: Chứa các tệp mã nguồn cho việc huấn luyện mô hình, mô hình đã được huấn luyện và biểu đồ trực quan  (train_cnn_pose_keras.ipynb , vsl_cnn_pose_keras.h5, training_plot_keras.png).
+---
 
-process_images/: Chứa tệp Jupyter Notebook cho việc thu thập dữ liệu (capture_and_process_images.ipynb) 
+## Repository map
 
-run_realtime.ipynb: ứng dụng thời gian thực.
+| Path | Purpose |
+|---|---|
+| `src/vsl/` | Shared labels, config, landmarks contract, heatmap, and FastAPI service |
+| `web/` | Static web frontend (`index.html`, `app.js`, `styles.css`, `config.js`, `labels.json`) |
+| `tests/` | Unit, API-contract, Playwright web acceptance, Terraform, and regression tests |
+| `scripts/` | Cold-start benchmark, web label generator, smoke test, and guarded ACA rollback CLIs |
+| `infra/` | Terraform AzureRM, Azure Blob state bootstrap, ACR cleanup, and GitHub OIDC IaC |
+| `.github/workflows/` | PR lint/test/Docker build (`ci.yml`) and manual Azure OIDC smoke check (`azure-oidc-smoke.yml`) |
+| `data/anphabet/` | Landmark CSV dataset (23 characters, 1,609 CSV files) |
+| `train/` | Training notebook (`train_cnn_pose_keras.ipynb`) and Git-LFS model (`vsl_cnn_pose_keras.h5`) |
+| `process_images/` | Data collection notebook (`capture_and_process_images.ipynb`) |
+| `docs/` | Architecture ADRs, API/CLI contracts (`docs/api/`), Azure guides, status, and `RUNBOOK.md` |
 
-YÊU CẦU HỆ THỐNG
+---
 
-Phần mềm:
-Python 3.8 trở lên, 
-TensorFlow 2.x, 
-OpenCV, 
-MediaPipe, 
-Pandas, NumPy, Scikit-learn, 
-Matplotlib, 
-Jupyter Notebook (để chạy các tệp .ipynb)
+## Run locally
 
+Use Python 3.12 and ensure Git LFS has pulled the model file before running:
 
-Phần cứng:
-Webcam (để thu thập dữ liệu và chạy ứng dụng thời gian thực), 
-GPU (khuyến nghị để huấn luyện mô hình nhanh hơn)
+```powershell
+git lfs install
+git lfs pull
+py -3.12 -m venv .venv
+& ".\.venv\Scripts\python.exe" -m pip install -r requirements.txt
+& ".\.venv\Scripts\python.exe" -m uvicorn src.vsl.service:app --host 127.0.0.1 --port 8000
+```
 
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to try `/health`, `/version`, and `/predict`.
 
+For webcam inference and Jupyter notebooks, see [HUONG-DAN-CHAY.md](HUONG-DAN-CHAY.md), [`run_realtime.py`](run_realtime.py), and [`run_realtime.cmd`](run_realtime.cmd).
 
-CÀI ĐẶT
+---
 
-Clone repository:
-git clone https://github.com/your-repo/Sign-Language-Classification-v1.0.git
-cd Sign-Language-Classification-v1.0
+## Tests and lint
 
+Install dev dependencies and Playwright browsers:
 
-CÀI ĐẶT CÁC GÓI
+```powershell
+& ".\.venv\Scripts\python.exe" -m pip install -r requirements-dev.txt
+& ".\.venv\Scripts\python.exe" -m playwright install chromium firefox
+```
 
-Đảm bảo bạn đã cài đặt Python 3.8+. Bạn có thể sử dụng virtualenv hoặc conda để tạo môi trường ảo.
+Run lint, formatting, and the full test suite:
 
+```powershell
+& ".\.venv\Scripts\ruff.exe" check src tests scripts
+& ".\.venv\Scripts\black.exe" --check src tests scripts
+& ".\.venv\Scripts\python.exe" -m pytest tests -v
+```
 
-pip install -r requirements.txt
+The NumPy-only heatmap and repository contract tests can be run quickly without TensorFlow:
 
+```powershell
+& ".\.venv\Scripts\python.exe" -m pytest -v tests/test_heatmap.py tests/test_heatmap_contract.py
+```
 
-Nếu không có tệp requirements.txt, bạn có thể cài đặt các gói thủ công:
+*(Trên Windows, nếu `.venv\Scripts\python.exe` gặp lỗi nạp DLL `_ctypes`/`cv2`, dùng Python 3.12 gốc theo hướng dẫn trong [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md)).*
 
-pip install opencv-python mediapipe pandas numpy scikit-learn tensorflow matplotlib pillow
+---
 
+## Build and run Docker locally
 
+`Dockerfile` uses a two-stage `linux/amd64` build pinned to a `python:3.12.7-slim-bookworm` SHA-256 digest and installs runtime-only packages from `requirements-runtime.txt`:
 
-
-THIẾT LẬP ĐƯỜNG DẪN
-
-Đảm bảo rằng đường dẫn đến thư mục dữ liệu (BASE_PATH) trong các tệp mã nguồn là chính xác.
-
-Mặc định là D:\file\project\Sign-Language-Classification-v1.0\data\anphabet.
-
-Bạn có thể cần thay đổi đường dẫn này cho phù hợp với hệ thống của mình.
-
-
-
-SỬ DỤNG
-1. Thu thập dữ liệu
-
-Chạy tệp capture_and_process_images.ipynb để thu thập dữ liệu landmarks cho từng ký tự.
-
-Mỗi ký tự sẽ được thu thập 50 mẫu, lưu dưới dạng file CSV trong thư mục tương ứng (data/anphabet/<ký tự>/).
-
-Để thu thập dữ liệu cho một ký tự cụ thể, thay đổi tham số trong hàm capture_for_letter('a') (ví dụ: 'a', 'b', ...).
-
-
-2. Huấn luyện mô hình
-
-
-Chạy tệp train_cnn_pose_keras.ipynb để huấn luyện mô hình CNN dựa trên ResNet50.
-
-Dữ liệu sẽ được tải từ thư mục data/anphabet, chuyển thành heatmap, và chia thành các tập train/val/test.
-
-Mô hình sẽ được huấn luyện với hai giai đoạn:
-
-Giai đoạn 1: Đóng băng ResNet50 và huấn luyện các lớp tùy chỉnh.
-
-Giai đoạn 2: Fine-tune 10 tầng cuối của ResNet50.
-
-
-
-Mô hình đã huấn luyện sẽ được lưu vào vsl_cnn_pose_keras.h5.
-
-
-3. Chạy ứng dụng thời gian thực
-
-
-Chạy tệp run_realtime.ipynb để khởi động ứng dụng nhận diện ngôn ngữ ký hiệu qua webcam.
-
-Ứng dụng sẽ hiển thị hình ảnh từ webcam và dự đoán ký tự dựa trên cử chỉ tay và khuôn mặt.
-
-Nhấn Ctrl+C để dừng ứng dụng.
-
-
-DỮ LIỆU
-
-<img width="1024" height="657" alt="image" src="https://github.com/user-attachments/assets/925910c4-0e91-4eed-8c0d-230a4b5e6924" />
-
-
-Dữ liệu bao gồm landmarks của tay (21 điểm) và mặt (10 điểm cố định) cho 23 ký tự tiếng Việt không dấu.
-
-Mỗi ký tự có 50 mẫu, được lưu dưới dạng file CSV trong thư mục data/anphabet/<ký tự>/.
-
-Heatmap được tạo từ landmarks và sử dụng làm đầu vào cho mô hình CNN.
-
-
-MÔ HÌNH
-
-<img width="1024" height="1024" alt="ChatGPT Image 09_36_01 3 thg 8, 2025" src="https://github.com/user-attachments/assets/a905d33c-1b2b-4a81-bc4d-9d9c0b09f90c" />
-
-
-
-Mô hình sử dụng ResNet50 làm backbone, với các lớp tùy chỉnh bao gồm GlobalAveragePooling2D và hai lớp Dense (256 units và 23 units).
-
-Mô hình được huấn luyện với dữ liệu heatmap và đạt độ chính xác 90% trên tập kiểm tra (cập nhật sau khi huấn luyện).
-
-
-KẾT QUẢ
-
-<img width="1200" height="400" alt="training_plot_keras" src="https://github.com/user-attachments/assets/15a2d742-499b-4b94-af1e-58fde8d8bd2a" />
-
-
-
-Mô hình đạt độ chính xác 90% trên tập kiểm tra (cập nhật sau khi huấn luyện).
-
-Biểu đồ huấn luyện (loss và accuracy) được lưu trong training_plot_keras.png.
-
-
-GÓP Ý PHÁT TRIỂN
-
-Chúng tôi hoan nghênh mọi đóng góp và đề xuất cải tiến cho dự án. Vui lòng gửi pull request hoặc mở issue trên GitHub để chia sẻ ý tưởng hoặc báo lỗi.
-
+```powershell
+$sha = (git rev-parse HEAD).Trim()
+docker build --platform linux/amd64 --build-arg "GIT_SHA=$sha" --tag vsl-api:local .
+docker run --detach --publish 8080:8080 --name vsl-api-local vsl-api:local
+curl.exe --fail http://localhost:8080/health
+curl.exe --fail http://localhost:8080/version
+docker logs vsl-api-local
+docker stop vsl-api-local
+docker rm vsl-api-local
+```
+
+---
+
+## Environment variables
+
+| Name | Purpose | Default / notes |
+|---|---|---|
+| `VSL_MODEL_PATH` | Model file path | `train/vsl_cnn_pose_keras.h5` under repo root |
+| `VSL_DATA_DIR` | Landmark data directory | `data/anphabet` under repo root |
+| `VSL_MODEL_VERSION` | Model version returned by API | `v1.0` |
+| `GIT_SHA` | Source revision returned by `/version` | Docker build arg / git fallback (`unknown` if unavailable) |
+| `BUILD_TIME` | Build timestamp returned by `/version` | Docker build arg / service startup UTC ISO 8601 |
+| `VSL_ALLOWED_ORIGINS` | Exact comma-separated CORS origins | Empty by default (default-deny); wildcards rejected |
+
+No application secret is required for local inference. Never commit cloud credentials, subscription secrets, or Terraform state files to Git.
+
+---
+
+## Deploy and operate
+
+- **Cloud guide:** [docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md](docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md) and [docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md](docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md).
+- **Terraform IaC:** [infra/README.md](infra/README.md).
+- **Operations & troubleshooting:** [docs/RUNBOOK.md](docs/RUNBOOK.md) (CI failures, cold starts, smoke test, CORS, guarded ACA rollback, and cloud cost triage).
+- **Post-deploy smoke test (`US-017`):**
+  ```powershell
+  python scripts/smoke_test.py --url "https://<revision-fqdn>" --expected-sha "<commit-sha>" --image "<path-to-valid-image>"
+  ```
+- **Guarded ACA rollback (`US-031`, dry-run by default):**
+  ```powershell
+  python scripts/rollback.py --resource-group "<resource-group>" --app-name "<container-app>"
+  ```

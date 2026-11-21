@@ -1,0 +1,88 @@
+% ==============================================================================
+% MAIN.TEX - BÁO CÁO BÀI TẬP LỚN MÔN ĐIỆN TOÁN ĐÁM MÂY
+% TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG (ICTU)
+% ==============================================================================
+
+\documentclass[a4paper]{report}
+
+% Nạp cấu hình định dạng chuẩn ICTU (Font Times New Roman 13pt, lề 2.5-2.5-3.0-2.0, giãn dòng 1.3)
+\input{config}
+
+\begin{document}
+
+% ------------------------------------------------------------------------------
+% 1. TRANG BÌA VÀ PHỤ BÌA
+% ------------------------------------------------------------------------------
+\include{covers/cover}
+
+% ------------------------------------------------------------------------------
+% 2. PHẦN ĐẦU TÀI LIỆU (FRONT MATTER)
+% Đánh số trang kiểu số La Mã thường (i, ii, iii,...)
+% ------------------------------------------------------------------------------
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+% Trang nhận xét của giảng viên hướng dẫn
+\include{frontmatter/nhan_xet_gv}
+
+% Trang lời cảm ơn
+\include{frontmatter/loi_cam_on}
+
+% Mục lục tự động (Quy định ICTU)
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{MỤC LỤC}
+\tableofcontents
+
+% Danh mục các ký hiệu và chữ viết tắt
+\include{frontmatter/acronyms}
+
+% Danh mục bảng biểu tự động (Quy định: đánh số tự động)
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{DANH MỤC BẢNG BIỂU}
+\listoftables
+
+% Danh mục hình vẽ tự động (Quy định: đánh số tự động)
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{DANH MỤC HÌNH VẼ}
+\listoffigures
+
+% ------------------------------------------------------------------------------
+% 3. NỘI DUNG CHÍNH (MAIN MATTER)
+% Đánh số trang kiểu số Ả Rập (1, 2, 3,...), bắt đầu từ Lời mở đầu
+% ------------------------------------------------------------------------------
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% Lời mở đầu
+\include{chapters/0_loi_mo_dau}
+
+% Chương 1: Tổng quan đề tài và cơ sở kỹ thuật
+\include{chapters/1_tong_quan}
+
+% Chương 2: Thiết kế giải pháp và xây dựng hệ thống
+\include{chapters/2_thiet_ke}
+
+% Chương 3: Thực nghiệm, đánh giá kết quả và bàn luận
+\include{chapters/3_thuc_nghiem}
+
+% ------------------------------------------------------------------------------
+% 4. PHẦN KẾT VÀ TÀI LIỆU THAM KHẢO (BACK MATTER)
+% ------------------------------------------------------------------------------
+% Kết luận và hướng phát triển
+\include{backmatter/conclusion}
+
+% Danh mục tài liệu tham khảo (Chuẩn IEEE)
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{TÀI LIỆU THAM KHẢO}
+\bibliographystyle{IEEEtran}
+\bibliography{backmatter/references}
+
+% Phụ lục
+\include{backmatter/appendix}
+
+\end{document}

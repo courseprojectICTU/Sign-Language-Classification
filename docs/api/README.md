@@ -1,0 +1,137 @@
+# API Documentation — quy ước chung
+
+Thư mục này chứa **hợp đồng API** của dự án. Mỗi User Story tạo ra hoặc thay đổi
+một hợp đồng tiêu thụ **phải** có một file ở đây **trước** khi viết test và code.
+
+- Bộ khung bắt buộc: [`_TEMPLATE.md`](_TEMPLATE.md)
+- Quy trình tổng thể: [`docs/WORKFLOW.md`](../WORKFLOW.md)
+- Nguồn yêu cầu: `docs/product-backlog-cicd-2-tuan.xlsx`
+
+---
+
+## 1. Khi nào BẮT BUỘC có API docs
+
+Bắt buộc khi US tạo mới hoặc thay đổi **hợp đồng mà bên ngoài tiêu thụ**:
+
+| Loại | Ví dụ | Bắt buộc |
+|---|---|---|
+| Endpoint HTTP | `GET /health`, `POST /predict`, `GET /version` | Có |
+| Định dạng request/response | JSON body, mã lỗi | Có |
+| Hàm/module công khai dùng chung | `src/vsl/heatmap.py: create_heatmap(...)` | Có |
+| CLI / tham số dòng lệnh | `run_realtime.py --camera 1` | Có |
+| Định dạng file trao đổi | CSV 93 cột | Có |
+| Refactor thuần nội bộ, không đổi hợp đồng | đổi tên biến, tách file | Không (ghi `N/A` + lý do) |
+
+Nếu US **không** rơi vào nhóm bắt buộc, vẫn phải ghi rõ trong báo cáo:
+`API docs: N/A — lý do: ...` và được chủ dự án xác nhận.
+
+US không tạo public API nhưng cần ghi nhận hợp đồng test/lifecycle vẫn có thể có
+`US-0XX.md` theo đủ 17 mục; nêu rõ `API docs: N/A` cho public API và lý do
+trong tài liệu. Ví dụ: [`US-012.md`](US-012.md) và [`US-016.md`](US-016.md).
+
+---
+
+## 2. Quy ước đặt tên
+
+| Nội dung | Quy ước |
+|---|---|
+| File của một US | `US-0XX.md` (một file/US, dù có nhiều endpoint) |
+| Bộ khung | `_TEMPLATE.md` (không sửa, chỉ copy) |
+| File README | `README.md` (file này) |
+
+Không dùng tên khác. Không tạo thư mục con khi chưa có nhu cầu thật.
+
+---
+
+## 3. Vòng đời trạng thái
+
+```
+DRAFT
+  → ANALYSIS_READY       (đã đủ 17 mục + self-review)
+  → NEEDS_CLARIFICATION  (thiếu thông tin, chặn thiết kế)
+  → BLOCKED              (không truy cập được repo/dependency)
+```
+
+- Chỉ file ở `ANALYSIS_READY` mới được dùng làm căn cứ viết test/code.
+- Không dùng trạng thái `DONE`.
+
+---
+
+## 4. Quy trình 9 phase (áp dụng khi soạn `US-0XX.md`)
+
+| Phase | Nội dung | Bắt buộc |
+|---|---|---|
+| 1 | Repository Discovery — cấu trúc thật, module liên quan | Có |
+| 2 | Story Analysis — actor, goal, resource, action, BR, AC | Có |
+| 3 | Architecture & Domain Analysis — entity/service hiện có | Có |
+| 4 | Existing API & Security Analysis | Có |
+| 5 | Business Rules & Acceptance Criteria → rule kiểm thử được | Có |
+| 6 | API Gap Analysis — REUSE / MODIFY / NEW / NO API NEEDED | Có |
+| 7 | API Design — request, response, status, validation, error | Có |
+| 8 | Tạo `US-0XX.md` từ `_TEMPLATE.md`, đủ 17 mục | Có |
+| 9 | Self-review theo checklist mục 5 dưới đây | Có |
+
+Không được nhảy sang test/code khi phase 8–9 chưa xong.
+
+---
+
+## 5. Checklist self-review (phải tick hết)
+
+- [ ] Story được cover đầy đủ, không bịa yêu cầu
+- [ ] Mọi AC đều được map sang endpoint/hành vi + test
+- [ ] Đã kiểm tra API hiện có, không tạo endpoint trùng
+- [ ] Request không chứa `actorId`/`organizationId` nếu server tự suy ra được
+- [ ] Response/error khớp convention hiện có (hoặc nêu rõ đề xuất + lý do nếu chưa có)
+- [ ] Validation đầy đủ (kiểu dữ liệu, biên, số lượng)
+- [ ] Authorization rõ ràng theo role A01–A04
+- [ ] Organization scope kết luận rõ (kể cả khi `N/A`)
+- [ ] Audit impact kết luận rõ
+- [ ] Data model impact kết luận rõ
+- [ ] Mọi Business Rule liên quan được dẫn chứng (BR-001…BR-026)
+- [ ] Có Test Scenarios cho happy path + validation + lỗi + regression
+- [ ] Open Questions đã nêu hết (nếu còn chặn → `NEEDS_CLARIFICATION`)
+- [ ] **Không** sửa source code khi soạn tài liệu
+- [ ] Trạng thái cuối là `ANALYSIS_READY` hoặc `NEEDS_CLARIFICATION`/`BLOCKED`
+
+---
+
+## 6. Cách dùng nhanh
+
+```powershell
+Copy-Item docs\api\_TEMPLATE.md docs\api\US-0XX.md
+# điền 17 mục, tự review theo mục 5, rồi chờ chủ dự án duyệt
+```
+
+Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test (WORKFLOW bước 5).
+
+---
+
+## 7. Quy tắc bất biến
+
+1. **Docs trước, code sau.** Không có `US-0XX.md` = không được viết test/code cho US đó.
+2. **Một bản duy nhất.** Sửa API phải sửa chính file docs, không viết docs thứ hai.
+3. **Không bịa.** Thiếu bằng chứng → ghi `UNKNOWN` hoặc `CẦN XÁC NHẬN`.
+4. **Không giấu thay đổi.** Nếu thiết kế API buộc đổi hành vi cũ, ghi rõ ở mục 5 và 15.
+
+
+---
+
+## 8. Danh mục tài liệu API đã ban hành
+
+| File | Mã US | Tiêu đề | Trạng thái |
+|---|---|---|---|
+| [`US-001.md`](US-001.md) | US-001 | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | `ANALYSIS_READY` (PASS) |
+| [`US-002.md`](US-002.md) | US-002 | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `ANALYSIS_READY` (PASS) |
+| [`US-003.md`](US-003.md) | US-003 | Loại bỏ đường dẫn tuyệt đối hard-code | `ANALYSIS_READY` (PASS) |
+| [`US-004.md`](US-004.md) | US-004 | Chuẩn hoá `requirements.txt` cho Linux container | `ANALYSIS_READY` (PASS) |
+| [`US-005.md`](US-005.md) | US-005 | API kiểm tra sức khỏe `/health` phản ánh trạng thái model | `ANALYSIS_READY` (PASS) |
+| [`US-006.md`](US-006.md) | US-006 | API `/predict` nhận ảnh và chạy pipeline MediaPipe Python | `ANALYSIS_READY` (PASS) |
+| [`US-011.md`](US-011.md) | US-011 | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | `ANALYSIS_READY` (N/A public API; PASS 2026-11-11) |
+| [`US-015.md`](US-015.md) | US-015 | Hợp đồng dữ liệu 93 toạ độ landmark | `ANALYSIS_READY` (PASS) |
+| [`US-017.md`](US-017.md) | US-017 | Smoke test tự động sau triển khai & endpoint `/version` | `ANALYSIS_READY` (PASS) |
+| [`US-020.md`](US-020.md) | US-020 | Azure Container Apps service với `min-instances = 0` | `ANALYSIS_READY` (STAGING VERIFIED) |
+| [`US-021.md`](US-021.md) | US-021 | Tách môi trường staging và production trên Azure Container Apps | `ANALYSIS_READY` (thống nhất root `infra/`; `BR-016`/`BR-017`) |
+| [`US-025.md`](US-025.md) | US-025 | Cấu hình CORS và xử lý 3 trạng thái lỗi mạng | `ANALYSIS_READY` (PASS) |
+| [`US-028.md`](US-028.md) | US-028 | Pipeline frontend với trigger theo đường dẫn và preview deployment | `ANALYSIS_READY` (PASS) |
+| [`US-029.md`](US-029.md) | US-029 | CD ACA staging: smoke-test revision rồi chuyển traffic | PR description / API công khai: N/A |
+| [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |

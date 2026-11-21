@@ -30,14 +30,18 @@ scikit-learn==1.9.1
 h5py==3.16.0
 protobuf==4.25.9
 
-opencv-python==4.11.0.86
-opencv-contrib-python==4.11.0.86
+opencv-python-headless==4.11.0.86
 pillow==12.3.0
 matplotlib==3.11.2
 
 # To run the .ipynb notebooks
 notebook==7.6.3
 ipykernel==7.4.0
+
+# Web API service (EPC-02)
+fastapi==0.162.0
+uvicorn==0.54.0
+python-multipart==0.0.32
 
 # ---------------------------------------------------------------------------
 # TROUBLESHOOTING: `pip install -r requirements.txt` can sit at ~100% CPU for

@@ -50,7 +50,11 @@ if "%PYTHON_EXE%"=="" (
   )
 )
 
-if "%PYTHON_EXE%"=="" set "PYTHON_EXE=D:\program\python\python.exe"
+if "%PYTHON_EXE%"=="" (
+  for /f "delims=" %%I in ('where python 2^>nul') do (
+    if "%PYTHON_EXE%"=="" set "PYTHON_EXE=%%I"
+  )
+)
 
 set "PYTHONPATH=%ROOT%\.venv\Lib\site-packages;%PYTHONPATH%"
 set "__PYVENV_LAUNCHER__=%ROOT%\.venv\Scripts\python.exe"

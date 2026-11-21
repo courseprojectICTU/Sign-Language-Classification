@@ -19,8 +19,12 @@ if "%PYTHON_EXE%"=="" (
   )
 )
 
-REM 3. Fallback duong dan mac dinh may nay
-if "%PYTHON_EXE%"=="" set "PYTHON_EXE=D:\program\python\python.exe"
+REM 3. Fallback tim python tren he thong
+if "%PYTHON_EXE%"=="" (
+  for /f "delims=" %%I in ('where python 2^>nul') do (
+    if "%PYTHON_EXE%"=="" set "PYTHON_EXE=%%I"
+  )
+)
 
 REM Kiem tra ton tai
 if not exist "%PYTHON_EXE%" (

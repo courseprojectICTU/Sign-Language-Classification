@@ -1,0 +1,30 @@
+% ==============================================================================
+% 0_LOI_MO_DAU.TEX - LỜI MỞ ĐẦU
+% ==============================================================================
+
+\chapter*{LỜI MỞ ĐẦU}
+\addcontentsline{toc}{chapter}{LỜI MỞ ĐẦU}
+
+\section*{1. Lý do chọn đề tài}
+Trong những năm gần đây, sự phát triển vượt bậc của Trí tuệ nhân tạo (AI) và Học sâu (Deep Learning) đã mở ra nhiều cơ hội to lớn trong việc giải quyết các bài toán xã hội, tiêu biểu là hỗ trợ giao tiếp cho cộng đồng người khiếm thính thông qua nhận diện ngôn ngữ ký hiệu. Tuy nhiên, một thực trạng phổ biến trong môi trường học thuật là phần lớn các mô hình AI xuất sắc chỉ dừng lại ở phạm vi nghiên cứu cục bộ (chạy trên Jupyter Notebook cá nhân) mà chưa thể tiếp cận người dùng cuối do thiếu hụt hạ tầng triển khai và quy trình phát hành chuyên nghiệp.
+
+Xuất phát từ thực tiễn trên, nhóm sinh viên chúng em đã tận dụng sản phẩm đồ án Capstone AI cuối khóa \textbf{Samsung Innovation Campus (SIC)} do thành viên tự nghiên cứu và huấn luyện để làm bài toán thực hành cốt lõi cho học phần \textbf{Điện toán đám mây}. Mục tiêu trọng tâm là vận dụng các nguyên lý tiên tiến của kỹ thuật phần mềm hiện đại: văn hóa \textbf{DevOps/MLOps}, công nghệ đóng gói \textbf{Docker Container}, kiến trúc không máy chủ \textbf{Serverless Container} trên nền tảng \textbf{Google Cloud Run}, kết hợp phân phối web qua \textbf{Cloudflare Pages} và tự động hóa toàn diện với \textbf{GitHub Actions} nhằm chuyển hóa một bài toán AI chạy cục bộ thành một dịch vụ hoạt động ổn định trên Internet với chi phí \$0.
+
+\section*{2. Mục đích và nhiệm vụ nghiên cứu}
+\begin{itemize}
+    \item \textbf{Về mặt kỹ thuật đám mây và DevOps}: Thiết lập quy trình CI/CD hoàn chỉnh, tự động hóa kiểm thử mã nguồn, đóng gói Docker Image và tự động phát hành lên môi trường Cloud khi có phiên bản mã nguồn mới.
+    \item \textbf{Về mặt kiến trúc hệ thống}: Xây dựng mô hình phân tán Decoupled Architecture tối ưu tài nguyên; giải quyết bài toán dung lượng mô hình lớn và cơ chế tự động co giãn (Autoscaling) phục vụ người dùng.
+    \item \textbf{Về mặt tối ưu chi phí}: Vận hành hệ thống ổn định, tin cậy hoàn toàn trong hạn mức miễn phí (Free Tier) của các nhà cung cấp dịch vụ đám mây hàng đầu.
+\end{itemize}
+
+\section*{3. Đối tượng và phạm vi nghiên cứu}
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu}: Pipeline nhận diện 23 ký tự chữ cái VSL từ đồ án Capstone SIC; công nghệ Docker Container; dịch vụ Google Cloud Run, Cloudflare Pages và nền tảng tự động hóa GitHub Actions.
+    \item \textbf{Phạm vi nghiên cứu}: Triển khai dịch vụ đám mây nhận ảnh tĩnh/ảnh webcam từ trình duyệt, trả về kết quả dự đoán thời gian thực; không mở rộng sang xử lý video streaming thời gian thực liên tục để bảo toàn hạn mức \$0.
+\end{itemize}
+
+\section*{4. Phương pháp nghiên cứu và Ý nghĩa thực tiễn}
+\begin{itemize}
+    \item \textbf{Phương pháp nghiên cứu}: Phương pháp thực nghiệm kết hợp chuẩn hóa kỹ thuật phần mềm (Twelve-Factor App); đo lường độ trễ mạng, hiện tượng Cold Start và mức tiêu thụ tài nguyên thực tế.
+    \item \textbf{Ý nghĩa khoa học và thực tiễn}: Đề tài là cầu nối trực quan giữa nghiên cứu Trí tuệ nhân tạo và kỹ thuật Điện toán đám mây, cung cấp quy trình mẫu (blueprint) mẫu mực cho các sinh viên ngành Công nghệ thông tin trong việc đưa các sản phẩm AI ra thế giới thực.
+\end{itemize}

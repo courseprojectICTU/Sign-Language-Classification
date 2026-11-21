@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint-and-test:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source and model
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -r requirements.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements-dev.txt') }}
+
+      - name: Install Playwright browsers
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          printf '%s\n' \
+            'Acquire::ForceIPv4 "true";' \
+            'Acquire::Retries "3";' \
+            'Acquire::http::Timeout "15";' \
+            'Acquire::https::Timeout "15";' \
+            'Acquire::http::Pipeline-Depth "0";' \
+            'Acquire::https::Pipeline-Depth "0";' | sudo tee /etc/apt/apt.conf.d/99ci-resilience >/dev/null
+
+          python -m playwright install chromium firefox
+
+          install_playwright() {
+            timeout 90 python -m playwright install --with-deps chromium firefox
+          }
+
+          switch_apt_mirror() {
+            local target_uri="$1"
+            sudo pkill -x apt-get || true
+            sleep 1
+            sudo dpkg --configure -a || true
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              printf '%s\n' "${target_uri}" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+            fi
+            sudo find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -exec sed -i -E \
+              "s#https?://[^[:space:]]+/ubuntu/?#${target_uri}#g" {} +
+            sudo apt-get clean || true
+            timeout 45 sudo apt-get -o DPkg::Lock::Timeout=30 update --fix-missing || true
+          }
+
+          verify_playwright_launch() {
+            python - <<'PY'
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as p:
+              for label, fn in (
+                  ("chromium", lambda: p.chromium.launch()),
+                  ("msedge", lambda: p.chromium.launch(channel="msedge")),
+                  ("firefox", lambda: p.firefox.launch()),
+              ):
+                  browser = fn()
+                  page = browser.new_page()
+                  page.set_content("<h1>ok</h1>")
+                  assert page.text_content("h1") == "ok"
+                  browser.close()
+                  print(f"Verified Playwright browser launch: {label}")
+          PY
+          }
+
+          installed=false
+          for mirror in "" "https://mirrors.edge.kernel.org/ubuntu/" "http://archive.ubuntu.com/ubuntu/" "http://azure.archive.ubuntu.com/ubuntu/"; do
+            if [ -n "${mirror}" ]; then
+              echo "::warning::Retrying Playwright OS deps using Ubuntu mirror: ${mirror}"
+              switch_apt_mirror "${mirror}"
+            fi
+            if install_playwright; then
+              installed=true
+              break
+            fi
+          done
+
+          if [ "${installed}" != "true" ]; then
+            echo "::warning::Ubuntu APT mirrors failed for optional --with-deps packages; verifying pre-installed browser runtime libraries directly..."
+            verify_playwright_launch
+          fi
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra
+
+      - name: Validate root Terraform
+        run: |
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate -no-color
+
+      - name: Run Ruff
+        run: ruff check src tests scripts
+
+      - name: Check formatting with Black
+        run: black --check src tests scripts
+
+      - name: Run tests
+        run: pytest tests -v
+
+  docker-build:
+    name: Build Docker image without pushing
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source and model
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Record build start time
+        shell: bash
+        run: |
+          echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build Docker image with GHA cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: vsl-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
+
+      - name: Report build duration and image size
+        shell: bash
+        run: |
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          IMAGE_SIZE_BYTES=$(docker image inspect vsl-api:ci --format='{{.Size}}')
+          IMAGE_SIZE_MB=$((IMAGE_SIZE_BYTES / 1024 / 1024))
+
+          echo "Docker build duration: ${BUILD_DURATION}s"
+          echo "Docker image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+          {
+            echo "### Docker build metrics"
+            echo "- Duration: ${BUILD_DURATION}s"
+            echo "- Image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+            echo "- Platform: linux/amd64"
+            echo "- BuildKit cache: type=gha"
+          } >> "$GITHUB_STEP_SUMMARY"

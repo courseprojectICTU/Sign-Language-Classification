@@ -1,0 +1,31 @@
+% ==============================================================================
+% CONCLUSION.TEX - KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+% ==============================================================================
+
+\chapter*{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+\addcontentsline{toc}{chapter}{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+
+\section*{1. Kết quả đạt được của đề tài}
+Trải qua quá trình nghiên cứu, thiết kế và thực nghiệm, nhóm 2 đã hoàn thành trọn vẹn các mục tiêu đề ra cho bài tập lớn môn \textbf{Điện toán đám mây}:
+\begin{itemize}
+    \item Đã chuyển đổi thành công mô hình học sâu nhận diện 23 ký tự ngôn ngữ ký hiệu tiếng Việt từ đồ án Capstone AI Samsung Innovation Campus (SIC) chạy cục bộ thành một dịch vụ chuẩn mực trên Internet.
+    \item Đã chuẩn hóa toàn bộ mã nguồn AI thành mô-đun thư viện độc lập \texttt{src/vsl}, tuân thủ phương pháp luận Twelve-Factor App và xây dựng dịch vụ RESTful API tốc độ cao với FastAPI.
+    \item Đã xây dựng bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua 100\% (32/32 tests PASSED), bảo toàn nguyên vẹn độ chính xác của mô hình học sâu.
+    \item Đã đóng gói ứng dụng bằng Docker Container tối ưu và triển khai thành công lên Google Cloud Run theo kiến trúc Serverless, kết hợp frontend tĩnh trên Cloudflare Pages với chi phí hoàn toàn \$0.
+    \item Đã thiết lập hoàn chỉnh quy trình CI/CD tự động hóa trên GitHub Actions, tự động kích hoạt kiểm thử, đóng gói Docker image và phát hành lên đám mây khi có mã nguồn mới.
+\end{itemize}
+
+\section*{2. Những hạn chế còn tồn tại}
+\begin{itemize}
+    \item Thời gian phản hồi trong lần gọi đầu tiên (Cold Start) trên Google Cloud Run còn dao động từ 8 đến 15 giây do cần thời gian tải container image và nạp mô hình TensorFlow nặng vào bộ nhớ.
+    \item Hệ thống hiện mới chỉ tập trung phân loại các ký tự tĩnh (bảng chữ cái 23 ký tự từ a đến y), chưa hỗ trợ các từ ngữ hoặc câu động phức tạp trong ngôn ngữ ký hiệu.
+    \item Giao diện người dùng hiện tại xử lý theo cơ chế chụp từng khung hình đơn lẻ từ webcam, chưa hỗ trợ luồng truyền dữ liệu liên tục (streaming) do ràng buộc tối ưu hóa tài nguyên miễn phí.
+\end{itemize}
+
+\section*{3. Hướng nghiên cứu và phát triển tiếp theo}
+\begin{itemize}
+    \item Tối ưu hóa mô hình học sâu bằng cách chuyển đổi sang định dạng TensorFlow Lite (TFLite) hoặc ONNX Runtime nhằm giảm dung lượng bộ nhớ, rút ngắn thời gian khởi động Cold Start xuống dưới 2 giây.
+    \item Cấu hình cơ chế giữ ấm container (Minimum Instances = 1) hoặc lên lịch tác vụ định kỳ (Cloud Scheduler) gửi tín hiệu Ping kiểm tra sức khỏe (/health) để duy trì container ở trạng thái sẵn sàng.
+    \item Mở rộng mô hình AI sang nhận diện chuỗi cử chỉ động kết hợp thời gian thông qua kiến trúc mạng LSTM hoặc Transformer.
+    \item Nâng cấp pipeline CI/CD với các chiến lược phát hành nâng cao như Canary Deployment hoặc Blue/Green Deployment để đảm bảo tính sẵn sàng cao tuyệt đối.
+\end{itemize}

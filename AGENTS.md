@@ -1,33 +1,192 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
-Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code. Mọi dữ kiện dưới đây được
-kiểm chứng trực tiếp từ repo (không suy đoán). Cập nhật file này khi phát hiện
-sự thật mới hoặc khi sửa các "bẫy" được liệt kê.
+Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
+**Cập nhật lần cuối: 2026-11-11** — toàn bộ dữ kiện dưới đây được đo/đọc trực tiếp
+từ repo trong phiên đó, không suy đoán. Nếu bạn phát hiện file này lệch với thực tế,
+hãy sửa nó ngay (file có tiếng Việt, lưu ý UTF-8 khi sửa).
+
+**Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
+trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md).
+Áp dụng cho **mọi** User Story, không có ngoại lệ.
+
+---
 
 ## 1. Dự án là gì
 
-Phân loại **bảng chữ cái ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) từ webcam.
-Pipeline: ảnh webcam → MediaPipe trích landmark bàn tay + mặt → sinh **heatmap
+Phân loại **bảng chữ cái ngôn ngữ ký hiệu tiếng Việt** (23 ký tự) từ webcam/ảnh.
+Pipeline: ảnh → MediaPipe trích landmark bàn tay + mặt → sinh **heatmap
 224x224x3** → CNN **ResNet50** → softmax 23 lớp.
 
-Repo: `https://github.com/tpd05/Sign-Language-Classification-v1.0.git`
-Toàn bộ code nằm trong **Jupyter Notebook** — không có file `.py`, không có test,
-không có CI. `requirements.txt` đã được tạo lại (xem mục 9) vì README có nhắc tới
-nhưng file gốc không tồn tại.
+**Repo:** `https://github.com/courseprojectICTU/Sign-Language-Classification.git`
+(remote `origin`, đã xác minh từ `.git/config`). URL cũ `tpd05/Sign-Language-Classification-v1.0`
+**không còn dùng** — đừng trích lại nó.
 
-## 2. Cấu trúc
+**Hai nguồn mô tả — chỉ một nguồn là thật:**
+
+| Nguồn | Trạng thái |
+|---|---|
+| `docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md` + `docs/architecture/ADR-001-*` | kế hoạch web hóa + CI/CD trên Azure |
+| **chính source + git** | nguồn chân lý; AGENTS.md này bám theo đó |
+
+Mã nguồn hiện tại = **package `src/vsl/` + dịch vụ FastAPI `src/vsl/service.py` (`GET /health`, `POST /predict`, `GET /version`, `CORSMiddleware` qua `VSL_ALLOWED_ORIGINS`) + frontend tĩnh `web/` + multi-stage `Dockerfile` (`linux/amd64`) + `infra/` Terraform + workflow CI PR `.github/workflows/ci.yml` + 3 notebook + 1 script Python native + CLI vận hành (`scripts/`)**.
+Đã có bộ kiểm thử tự động `tests/` (bao gồm unit test thuần NumPy cho heatmap theo US-014, hợp đồng 93 landmark US-015, đối chiếu notebook US-016, healthcheck/predict/version/CORS, Dockerfile, benchmark harness US-013, Playwright web US-022, smoke test US-017, rollback US-031, CI workflow US-026, ops contract US-035/US-038, pipeline frontend US-028 và kiểm thử Terraform US-018/US-019/US-020/US-021/US-033).
+Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (`cae-vsl-staging-std` / `vsl-api`, `https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`, `Multiple` revision mode, `min_replicas = 0`, `max_replicas = 3`) và Azure App Service (`vsl-vietnam`, `https://vsl-vietnam.azurewebsites.net`, đang được `web/config.js` trỏ tới); frontend tĩnh triển khai trên Cloudflare Pages (`https://sign-language-classification.pages.dev`). `develop` chưa có pipeline CD backend tự động; hiện có PR CI (`.github/workflows/ci.yml`, không push), CI/CD frontend Cloudflare Pages (`.github/workflows/frontend.yml`, US-028), workflow OIDC smoke test thủ công (`.github/workflows/azure-oidc-smoke.yml`) và workflow build/push ACR thủ công (`.github/workflows/acr-publish.yml`). Nhánh `feature/US-029` bổ sung CD Azure Container Apps staging (`.github/workflows/deploy-backend.yml`); đang trong quá trình review và kiểm thử.
+
+---
+
+## 2. Git — trạng thái thực tế
+
+| Mục | Giá trị (đối chiếu 2026-11-11) |
+|---|---|
+| Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
+| `origin/HEAD` | → `origin/develop` |
+| `develop` / `origin/develop` | `dc9f9cd` (`Merge pull request #50 from courseprojectICTU/feature/US-028`) |
+| Nhánh làm việc hiện tại | `feature/US-029` |
+| Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49` |
+| LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
+| `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
+| Ghi chú cục bộ | Thư mục `docs/ideas/` được ignore trong `.gitignore` (không commit/push lên GitHub) |
+
+
+### 2.1. BẪY: `git status` và `git diff` trên MSYS
+
+Trên máy Windows này, một số lệnh git diện rộng qua `sh.exe` có thể gặp bẫy:
+```
+sh.exe: *** fatal error - NtCreateDirectoryObject(\BaseNamedObjects\msys-2.0S5-...): 0xC0000022
+```
+Đây là **sandbox chặn MSYS tạo named object**.
+- **Lệnh chạy an toàn:** `git remote -v`, `git log`, `git branch -vv`, `git ls-files`, `git rev-parse`, `git hash-object`, `git --no-pager diff --numstat HEAD`.
+- **Lệnh commit:** Thêm cờ `-c core.hooksPath=.git/no-hooks` để tránh spawn hooks không cần thiết:
+  ```powershell
+  git -c core.hooksPath=.git/no-hooks commit -m "..."
+  ```
+- **Bẫy mạng TLS (schannel):** Luôn thêm `-c http.sslBackend=openssl` khi fetch/push:
+  ```powershell
+  git -c http.sslBackend=openssl push origin <branch>
+  ```
+
+---
+
+## 3. Cấu trúc thư mục
 
 ```
-data/anphabet/<ký tự>/*.csv     landmark thô, 1 file = 1 mẫu
-process_images/capture_and_process_images.ipynb   thu thập dữ liệu
-train/train_cnn_pose_keras.ipynb                  huấn luyện
-train/vsl_cnn_pose_keras.h5                       model đã train (130.7 MB, Git LFS)
+data/anphabet/<ký tự>/*.csv                     landmark thô, 1 file = 1 mẫu (1609 CSV)
+process_images/capture_and_process_images.ipynb   thu thập dữ liệu (dùng sys.path import src.vsl)
+train/train_cnn_pose_keras.ipynb                  huấn luyện (ResNet50, import src.vsl)
+train/vsl_cnn_pose_keras.h5                       model đã train (137.042.364 bytes, Git LFS)
 train/training_plot_keras.png                     biểu đồ loss/accuracy
-run_realtime.ipynb                                inference webcam
-requirements.txt                                  deps đã pin (xem mục 9)
+run_realtime.ipynb                                inference webcam qua Jupyter
+run_realtime.py                                   inference webcam native OpenCV (import src.vsl)
+run_realtime.cmd                                  launcher 1-click cho run_realtime.py
+run_notebook.cmd                                  launcher Jupyter an toàn
+pyproject.toml                                    cấu hình Ruff và Black (line-length=100, py312)
+requirements.txt                                  deps đầy đủ cho notebook + runtime, THUẦN ASCII
+requirements-runtime.txt                          deps tối giản cho Docker runtime image (US-038)
+requirements-dev.txt                              pytest, ruff, black, playwright, httpx, fastapi...
+Dockerfile                                        multi-stage Linux build ghim digest, port 8080, appuser (US-038)
+.dockerignore                                     loại trừ context nặng cho build container (US-010/US-038)
+.github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
+.github/workflows/ci.yml                          PR/push CI: Ruff, Black, pytest, Docker build no-push (US-026/US-038)
+.github/workflows/azure-oidc-smoke.yml            workflow_dispatch kiểm tra đăng nhập GitHub OIDC (US-019)
+.github/workflows/deploy-backend.yml              CD develop -> staging, main -> production; candidate smoke test rồi chuyển traffic (US-029, nhánh feature)
+.github/workflows/acr-publish.yml                 workflow_dispatch build & push image linux/amd64 qua OIDC lên vslacr3795 (US-024/US-038)
+web/index.html                                    giao diện web tĩnh tải/chụp ảnh (US-022)
+web/app.js                                        logic gọi POST /predict, camera capture, hiển thị lỗi (US-022)
+web/styles.css                                    giao diện responsive cho web/ (US-022)
+web/config.js                                     cấu hình window.VSL_CONFIG.apiBaseUrl (US-022/US-024)
+web/labels.json                                   23 nhãn sinh từ src/vsl/labels.py (US-022)
+infra/versions.tf                                 ghim Terraform và AzureRM provider
+infra/provider.tf                                 cấu hình AzureRM theo subscription
+infra/backend.tf                                  Azure Blob remote backend
+infra/registry.tf                                 cấu hình ACR dùng chung (`manage_registry` / `data.azurerm_container_registry.shared`) và cleanup (US-019/US-021)
+infra/container_app.tf                            Log Analytics, ACA Environment Consumption, UAMI pull, `LOG_LEVEL`, `tags` và `min_replicas=0` (US-020/US-021)
+infra/identity.tf                                 deployment identity, RBAC tối thiểu (`azurerm.registry`) và GitHub FIC (US-019/US-020/US-021)
+infra/budget.tf                                   Azure subscription budget $5 với cảnh báo $1/$5 (US-033)
+infra/outputs.tf                                  định danh OIDC, billing_budget_id, `image_reference` và ACA URL/FQDN/ID (US-019/US-020/US-021/US-033)
+infra/environments/{staging,production}.tfvars   biến cô lập staging/production; production chia sẻ `vslacr3795` và giữ placeholder cần xác minh (US-021)
+infra/bootstrap-azure/                            bootstrap Storage Account + private Blob container
+infra/README.md                                   hướng dẫn bootstrap và init/plan với Azure Blob state
+src/vsl/__init__.py                               re-export heatmap, labels, config
+src/vsl/config.py                                 cấu hình đường dẫn tập trung (BR-004)
+src/vsl/heatmap.py                                create_heatmap — BẢN DUY NHẤT (BR-002)
+src/vsl/labels.py                                 VIETNAMESE_ALPHABET + NUM_CLASSES — BẢN DUY NHẤT (BR-003)
+src/vsl/landmarks.py                              hợp đồng 93 cột + FACE_KEYPOINTS (BR-001)
+src/vsl/service.py                                FastAPI service + /health, /predict, /version, CORS, lifespan
+scripts/benchmark_cold_start.py                  benchmark 5 cold starts với preflight bắt buộc (US-013)
+scripts/export_onnx.py                            exporter Keras H5 sang ONNX + parity/timing check (US-011)
+scripts/generate_web_labels.py                    sinh web/labels.json từ VIETNAMESE_ALPHABET (US-022)
+scripts/smoke_test.py                             CLI kiểm tra /health, /version và tùy chọn /predict sau deploy (US-017/US-029)
+scripts/rollback.py                               CLI rollback Azure Container Apps có dry-run và guard (US-031)
+scripts/rollback.sh                               script Cloud Run cũ giữ lại cho test_ops_contract.py (legacy)
+HUONG-DAN-CHAY.md                                 hướng dẫn chạy cho người dùng
+README.md                                         tổng quan, chạy cục bộ, CI, Docker, vận hành
+AGENTS.md                                         file này (bộ nhớ dự án)
+docs/README.md                                    sơ đồ và mục lục tra cứu toàn bộ tài liệu dự án
+docs/RUNBOOK.md                                   sổ tay vận hành & xử lý sự cố ACA/CI/CORS/Rollback/Chi phí
+docs/PR_DESCRIPTION_US-038.md                     mô tả tổng hợp PR US-038
+docs/implementation/US-IMPLEMENTATION-STATUS.md   bảng trạng thái và tồn đọng sau merge
+docs/architecture/ADR-001-frontend-hosting.md     ADR chọn Cloudflare Pages kết hợp backend Azure
+docs/architecture/THONG_TIN_DE_TAI.txt            tổng quan đề tài và kiến trúc đám mây
+docs/planning/KE-HOACH-NANG-CAP-CI-CD-2-TUAN.md   kế hoạch 2 tuần / 4 mảng công việc kỹ thuật
+docs/planning/KE-HOACH-CHUYEN-DOI-HA-TANG-AZURE.md kế hoạch chuyển đổi tài liệu sang Azure
+docs/planning/product-backlog-cicd-2-tuan.xlsx    backlog (10 epic, 39 US, 63 AC, 75 task, 26 BR)
+docs/process/WORKFLOW.md                          quy trình bắt buộc cho mọi US
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.md     hướng dẫn 5 bước thẩm định PR cho Reviewer
+docs/process/QUY-TRINH-REVIEW-PULL-REQUEST.docx   bản xuất bản Word (.docx) của quy trình Reviewer
+docs/infrastructure/HO-SO-BAN-GIAO-HA-TANG.md     hồ sơ bàn giao kỹ thuật hạ tầng Azure
+docs/infrastructure/HUONG-DAN-TRIEN-KHAI-AZURE.md hướng dẫn đóng gói và triển khai Azure Container Apps
+docs/infrastructure/HUONG-DAN-CAU-HINH-TEN-MIEN-AZURE.md hướng dẫn cấu hình tên miền Azure
+docs/api/README.md                                quy ước + 9 phase + checklist API docs
+docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi api doc
+docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
+docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
+docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
+docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
+docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
+docs/reports/TAI_LIEU_BAO_CAO.doc                 tài liệu báo cáo tổng hợp môn học định dạng Word
+docs/backup_gcp_docs/                             bản sao lưu tài liệu gốc trước khi đổi sang Azure
+tests/run_ops_tests.py                            runner kiểm thử nhóm ops contract
+tests/test_ci_workflow.py                         kiểm thử workflow CI (US-026)
+tests/test_cold_start_benchmark.py                unit test harness benchmark US-013
+tests/test_config.py                              test US-003 (BR-004)
+tests/test_cors.py                                test CORS allowlist US-025
+tests/test_cors_version.py                        test tích hợp CORS và /version
+tests/test_dockerfile.py                          test Dockerfile multi-stage & digest (US-010/US-038)
+tests/test_health.py                              test US-005 (/health)
+tests/test_heatmap.py                             NumPy-only heatmap tests US-014
+tests/test_heatmap_contract.py                    golden/repository contract tests US-001
+tests/test_labels.py                              test US-002 (BR-003)
+tests/test_landmark_contract.py                   kiểm thử hợp đồng 93 cột (US-015)
+tests/test_onnx_parity.py                         kiểm thử export & parity Keras vs ONNX (US-011)
+tests/test_ops_contract.py                        kiểm thử hợp đồng CI/CD, CORS, rollback, runbook, Docker
+tests/test_pipeline_baseline.py                   hồi quy nhận diện 23/23 ký tự đúng
+tests/test_predict.py                             tests API US-006/US-007
+tests/test_requirements.py                        test US-004 (BR-005)
+tests/test_rollback.py                            test CLI rollback ACA US-031
+tests/test_service_notebook_reference.py          đối chiếu service với kết quả notebook (US-016)
+tests/test_smoke_test.py                          test CLI smoke test US-017
+tests/test_us009_input_validation.py              kiểm thử giới hạn 5 MB & định dạng JPEG/JPG/PNG (US-009)
+tests/test_us012_model_lifecycle.py               kiểm thử nạp model một lần, readiness và log duration (US-012)
+tests/test_us016_notebook_direct.py               đối chiếu inference notebook/service; hash chuẩn hóa LF
+tests/test_us018_terraform.py                     kiểm tra AzureRM provider, môi trường, Blob backend và bootstrap
+tests/test_us019_azure_terraform.py               kiểm tra Terraform ACR cleanup, RBAC và OIDC (US-019)
+tests/test_us019_secret_policy.py                 quét private key & static secret trên tree và git history
+tests/test_us020_container_app.py                 kiểm tra Terraform ACA min_replicas=0, probes và BR-016 (US-020)
+tests/test_us021_terraform.py                     kiểm tra cô lập staging/production, shared ACR và BR-016 trên root infra/ (US-021)
+tests/test_us022_web.py                           kiểm thử Playwright cho giao diện web/ (US-022)
+tests/test_us033_cost_guardrails.py               kiểm thử Terraform budget Azure, Entra ID MFA & runbook (US-033)
+tests/test_version.py                             test US-008 (/version)
+tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
+tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
+tests/_generate_service_reference.py              chuyển tiếp sang exporter trực tiếp (US-016)
+tests/_export_us016_from_notebook.py              xuất dự đoán notebook và SHA model/CSV chuẩn hóa LF
+tests/_generate_golden.py                         script sinh lại golden (không phải test)
+.venv/                                            môi trường Python 3.12.7 (~2,5 GB, gitignored)
 ```
 
-## 3. Hợp đồng dữ liệu (quan trọng nhất)
+---
+
+## 4. Hợp đồng dữ liệu (quan trọng nhất)
 
 Mỗi CSV có **1 dòng header + 1 dòng dữ liệu**, **93 cột**, thứ tự cố định:
 
@@ -37,311 +196,163 @@ Mỗi CSV có **1 dòng header + 1 dòng dữ liệu**, **93 cột**, thứ tự
 | `face_{x,y,z}_{idx}` | 30 | 10 điểm x 3, `idx` theo đúng thứ tự dưới đây |
 
 `face_keypoints = [10, 152, 234, 454, 33, 263, 1, 61, 291, 199]`
+(giống nhau ở cả 3 notebook và `run_realtime.py:97`)
 
 - Giá trị là toạ độ **chuẩn hoá 0..1** của MediaPipe.
 - Điểm thiếu (không thấy tay/mặt) được ghi `0.0` và bị `create_heatmap` **bỏ qua**
   khi `x == 0 and y == 0`.
 - `df.values.flatten()` cho ra đúng chuỗi `x,y,z` xen kẽ — **trùng khớp** với thứ tự
-  mà `run_realtime.ipynb` dựng (`hand_landmarks + face_landmarks`). Giữ nguyên
-  quy ước này, đổi thứ tự cột là hỏng model mà không báo lỗi.
+  mà code inference dựng (`hand_landmarks + face_landmarks`). Đổi thứ tự cột là hỏng
+  model mà không báo lỗi.
 
-**Tổng số mẫu thực tế:** 23 thư mục, mỗi thư mục **70 CSV**, riêng `đ` có **69**
-(thiếu `65.csv`). Tổng = 1609 mẫu.
+**Số mẫu thực tế:** 23 thư mục, mỗi thư mục **70 CSV**, riêng `đ` có **69** (thiếu `65.csv`).
+Tổng = **1609 mẫu**.
 
-## 4. Các bẫy đã xác nhận — đọc trước khi sửa
+---
+
+## 5. Các bẫy đã xác nhận — đọc trước khi sửa
 
 1. **Dữ liệu bị bỏ quên:** `load_landmarks_data()` chỉ đọc `for i in range(1, 51)`
-   → **20 file cuối (51–70) của mọi ký tự bị bỏ qua**, dù đĩa có 70 file. Thực tế
-   chỉ **1150/1609** mẫu được train. Con số 1150 = 23 x 50 chính xác vì `đ` chỉ thiếu
-   `65.csv` (nằm ngoài khoảng 1–50). README ghi "50 mẫu/ký tự" — README **sai** so với
-   dữ liệu trên đĩa.
-2. **Đường dẫn tuyệt đối hard-code** ở 3 nơi, không portable:
-   - `BASE_PATH` trong `capture_and_process_images.ipynb` và `train_cnn_pose_keras.ipynb`
-   - `MODEL_PATH` trong `run_realtime.ipynb`
-   Tất cả đều là `D:\file\project\Sign-Language-Classification-v1.0\...`.
-   **Hiện khớp đúng máy này**, nên không cần sửa khi chạy tại chỗ.
-3. **`np.eye(23)` hard-code** trong notebook train. Thêm/bớt ký tự ở
-   `VIETNAMESE_ALPHABET` mà quên sửa số này → lỗi one-hot.
-4. **`run_realtime.ipynb` yêu cầu `len(all_landmarks) == 93` chính xác.** Thiếu tay
-   (chỉ còn 30 cột mặt) hoặc thừa tay → im lặng không dự đoán gì, không có cảnh báo.
-5. **`create_heatmap` bị định nghĩa 2 lần** (train và realtime) với khác biệt: bản
-   trong notebook train có kiểm tra `len(landmarks) % 3 != 0`, bản realtime **không**.
-   Sửa công thức heatmap phải sửa **cả hai**, nếu không train/inference lệch nhau.
-6. **`preprocess_input` của ResNet50** được áp sau khi heatmap đã ở dạng `uint8 0..255`.
-   Đây là chuẩn hoá kiểu Caffe (trừ mean BGR), không phải `/255`. Đừng "sửa" thành
-   `/255` — model đã học theo mean subtraction.
-7. **Không bật `horizontal_flip`** trong `ImageDataGenerator`. Đây là **chủ ý đúng**:
-   lật ngang biến ký hiệu tay này thành ký hiệu khác. Đừng bật.
-8. **`model.save('vsl_cnn_pose_keras.h5')` ghi vào thư mục làm việc hiện tại**, không
-   phải vào `train/`. Chạy notebook từ thư mục khác sẽ tạo file ở sai chỗ.
-9. **Đánh giá không lặp lại được:** `train_test_split` có `random_state=42` nhưng
-   test set rất nhỏ (~115 mẫu) và chỉ có 1 dòng dữ liệu/tay/người quay. Con số
-   "90%" trong README **không phải** bằng chứng về khả năng tổng quát hoá.
+   (`train_cnn_pose_keras.ipynb`, cell load data) → **20 file cuối (51–70) của mọi
+   ký tự bị bỏ qua**, dù đĩa có 70 file. Thực tế chỉ **1150/1609** mẫu được train.
+2. **Đường dẫn tuyệt đối hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-003)**.
+   Đã thay thế bằng module `src/vsl/config.py` đọc từ `VSL_MODEL_PATH`, `VSL_DATA_DIR` kèm fallback
+   tương đối tự động tính từ `PROJECT_ROOT`. Toàn bộ repository sạch 100% không còn chuỗi `D:\` trong mã nguồn (BR-004).
+3. **`np.eye(23)` và `Dense(23)` hard-code:** **ĐÃ GIẢI QUYẾT TRIỆT ĐỂ (US-002)**.
+   Đã thay thế bằng `np.eye(NUM_CLASSES)` và `Dense(NUM_CLASSES)` với `NUM_CLASSES = len(VIETNAMESE_ALPHABET)`
+   suy ra tự động từ `src/vsl/labels.py`.
+4. **Cả hai đường inference yêu cầu `len(all_landmarks) == 93` chính xác.**
+   Thiếu tay hoặc thừa tay $\to$ im lặng không dự đoán (`run_realtime.py` có in cảnh báo `Tay [OK/X] | Mat [OK/X]`).
+5. **`create_heatmap` chỉ có MỘT bản duy nhất:** tại `src/vsl/heatmap.py` (US-001, commit `f83d787`).
+   Công thức: `img_size=(224,224)`, `sigma=5`, kernel `-15..15`, cộng dồn, scale 255, 3 kênh RGB, bỏ qua `z`.
+6. **`VIETNAMESE_ALPHABET` chỉ có MỘT bản duy nhất:** tại `src/vsl/labels.py` (US-002, commit `3bd486e`).
+   Kiểu `tuple` bất biến gồm đúng 23 ký tự. Toàn bộ notebook, script và test đều import từ đây.
+7. **`preprocess_input` của ResNet50:** Áp sau khi heatmap đã ở dạng `uint8 0..255`.
+   Chuẩn hoá Caffe (trừ mean BGR), **tuyệt đối không chia cho 255**.
+8. **Import trực tiếp từ `keras` thay vì `tensorflow.keras`:**
+   Trên TF 2.19 + Keras 3, `tensorflow.keras` dùng lazy-loader khiến Language Server/Pyright
+   trong IDE báo lỗi ảo `Cannot find module ...`. Đã chuẩn hoá sang `from keras.models import ...`
+   và `from keras.applications.resnet50 import ...` để code sạch cảnh báo 100%.
+9. **Không bật `horizontal_flip`** trong `ImageDataGenerator`: Lật ngang sẽ biến ký hiệu tay này
+   thành ký hiệu tay khác. Code realtime dùng `cv2.flip(image, 1)` (coi gương) là chủ ý đúng.
+10. **Lưu ý số liệu gốc:** Bộ dữ liệu thực tế có 70 CSV/ký tự (trừ `đ` có 69, tổng 1609 mẫu), không phải 50 mẫu/ký tự.
 
-## 5. Kiến trúc model (nguồn: `train_cnn_pose_keras.ipynb`)
+---
+
+## 6. Kiến trúc model (nguồn: `train_cnn_pose_keras.ipynb`)
 
 ```
 ResNet50(weights='imagenet', include_top=False, input_shape=(224,224,3))
 → GlobalAveragePooling2D
 → Dense(256, relu)
-→ Dense(23, softmax)
+→ Dense(NUM_CLASSES, softmax)
 ```
-
-Heatmap: `img_size=(224,224)`, `sigma=5`, hạt nhân `-15..15`, Gaussian
-`exp(-(j**2 + k**2) / (2 * sigma**2))`, cộng dồn (accumulate, không ghi đè), chia cho
-max, nhân 255, `np.stack([heatmap]*3, axis=2)` → 3 kênh giống hệt nhau.
-
-Lưu ý: `create_heatmap` lặp `for i in range(0, len(landmarks), 3)`, lấy `i` và `i+1`
-làm `x, y` — **bỏ qua `z`**. Cao độ bàn tay (z) không được dùng ở bước sinh heatmap.
 
 Train 2 giai đoạn:
 1. Đóng băng toàn bộ ResNet50 — Adam `lr=1e-3`, 50 epochs.
 2. Mở băng **10 layer cuối** — Adam `lr=1e-4`, 20 epochs.
 
-Cả hai dùng `EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)`,
-batch 32, loss `categorical_crossentropy`, split 80/10/10.
+Cả hai dùng `EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)`, batch 32.
 
-## 6. Thứ tự nhãn — nguồn chân lý duy nhất
+---
+
+## 7. Thứ tự nhãn — Nguồn chân lý duy nhất (BR-003)
+
+Được định nghĩa duy nhất tại `src/vsl/labels.py`:
 
 ```python
-VIETNAMESE_ALPHABET = ['a','b','c','d','đ','e','g','h','i','k','l','m','n',
-                       'o','p','q','r','s','t','u','v','x','y']
+VIETNAMESE_ALPHABET = (
+    'a', 'b', 'c', 'd', 'đ', 'e', 'g', 'h', 'i', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y'
+)
+NUM_CLASSES = len(VIETNAMESE_ALPHABET)  # = 23
 ```
 
-23 ký tự. **Không có** `f`, `j`, `w`, `z`. Có `đ`. Danh sách này lặp lại ở **cả 3
-notebook** — sửa một chỗ phải sửa cả ba, và index chính là nhãn lớp.
-
-`data/anphabet/` chứa đúng 23 thư mục khớp danh sách này.
-
-## 7. Quy ước khi làm việc trong repo này
-
-- Ưu tiên sửa **trực tiếp notebook** (JSON `.ipynb`); không tự ý tách thành `.py`
-  trừ khi được yêu cầu.
-- `train/vsl_cnn_pose_keras.h5` được **Git LFS** quản lý (xem `.gitattributes`).
-  Không commit lại file này bằng git thường.
-- Repo ~135 MB, chủ yếu là `.h5` (130.7 MB) + 1609 CSV nhỏ.
-- Git history hiện chỉ có các lần sửa README — không có nhánh phát triển.
-- Khi thay đổi pipeline landmark, phải kiểm tra **cả 3 notebook** cùng lúc
-  (thu thập → train → realtime) vì không có hàm dùng chung nào.
-
-## 8. Lưu ý về môi trường soạn thảo file
-
-File này là **UTF-8 không BOM** và chứa tiếng Việt. `Get-Content` mặc định trong
-pwsh của phiên này **đọc sai** (ra mojibake), và do đó công cụ `edit` cũng **không
-match được** `old_string` chứa ký tự ngoài ASCII. Khi cần sửa file này:
-
-- Dùng `write` để ghi lại toàn bộ, hoặc
-- Đọc/kiểm tra bằng `read`, và chỉ `edit` trên các đoạn **thuần ASCII**.
-
-Khi chạy Python in ra ký tự `đ` trên console Windows, phải đặt
-`PYTHONIOENCODING=utf-8`, nếu không sẽ gặp `UnicodeEncodeError: 'charmap' codec`.
-
-## 9. Cách chạy — đã kiểm chứng trên máy này
-
-**Ràng buộc môi trường (đã xác minh, không phải phỏng đoán):**
-
-| Yêu cầu | Kết luận |
-|---|---|
-| Python | **3.12** — Python 3.13/3.14 **không có wheel TensorFlow** |
-| mediapipe | **phải là 0.10.x** — từ 1.0.0 MediaPipe đã **xoá `mp.solutions`** |
-| numpy | **<2** (mediapipe 0.10.x ghim), đừng nâng lên 2.x |
-
-Trạng thái máy này: `conda` **không tồn tại**; env `mnist_project` mà notebook
-kernelspec trỏ tới (từng nằm ở `D:\anaconda3\envs\mnist_project`) **không có trên
-máy**. Python khả dụng: `3.14.5` (mặc định) và `3.12.7` tại `D:\program\python\python.exe`.
-
-**Tạo môi trường:**
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -U pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-**Chạy inference (nhanh nhất — model đã train sẵn):**
-
-```powershell
-.\run_notebook.cmd
-# mở run_realtime.ipynb → Run All
-```
-
-Không cần train lại. `run_realtime.ipynb` tự nạp `train/vsl_cnn_pose_keras.h5`
-(đường dẫn hard-code khớp đúng máy này). Cần webcam — máy này có camera ở index 0.
-
-**Chạy training (chỉ khi muốn train lại):**
-
-Mở `train/train_cnn_pose_keras.ipynb`. Chậm trên CPU: ResNet50 x 224x224 x ~1150 ảnh,
-50 + 20 epochs. Nên có GPU.
-
-**Thứ tự pipeline đầy đủ:**
-
-1. `process_images/capture_and_process_images.ipynb` — thu thập (mở cửa sổ
-   `cv2.imshow`, cần màn hình thật; sửa `capture_for_letter('a')` thành chữ muốn quay).
-   Lưu ý cell này ghi vào `BASE_PATH` = `data/anphabet/<chữ>/`, nhưng output cũ trong
-   notebook in ra `data\a\1.csv` (đường dẫn cũ trước khi có `anphabet`) — output đó
-   là **rác còn sót**, không phải hành vi hiện tại.
-2. `train/train_cnn_pose_keras.ipynb` — train, lưu `.h5`.
-3. `run_realtime.ipynb` — chạy realtime.
-
-**Kết quả kiểm chứng ngày 2026-10-15** (venv Python 3.12.7, TF 2.19.1, Keras 3.15.1,
-mediapipe 0.10.21):
-
-- `load_model('train/vsl_cnn_pose_keras.h5')` → OK, input `(None,224,224,3)`,
-  output `(None,23)`. Model được lưu bằng Keras 2 nhưng **vẫn nạp được bằng Keras 3**.
-- Toàn bộ pipeline heatmap + `preprocess_input` + predict trên mẫu `1.csv` của cả
-  23 ký tự → **23/23 đúng**. Đây chỉ là sanity check trên chính mẫu train, **không
-  phải** độ chính xác thực tế.
-- 3 cell đầu của `run_realtime.ipynb` chạy trong kernel Jupyter thật → **0 lỗi**.
-- `mp.solutions.hands` / `face_mesh` / `drawing_utils` đều tồn tại ở mediapipe 0.10.21;
-  **biến mất hoàn toàn** ở mediapipe 1.1.1.
-
-## 10. Môi trường `.venv` của project — trạng thái và các bẫy đã gặp
-
-**Trạng thái: `.venv` trong project ĐÃ SẴN SÀNG dùng.** Đã kiểm chứng bên trong
-chính `.venv` đó: Python 3.12.7, tensorflow 2.19.1, keras 3.15.1, mediapipe 0.10.21
-(có `mp.solutions`), opencv 4.11.0, numpy 1.26.4, pandas 3.0.6, notebook 7.6.3.
-`load_model('train/vsl_cnn_pose_keras.h5')` OK; test 23 ký tự trên mẫu `1.csv`
-cho **23/23 đúng**. **Không cần chạy `pip install` lại.**
-
-Nó được tạo bằng cách copy `site-packages` từ một venv Python 3.12.7 đã cài đủ
-(cùng base `D:\program\python`), **không** qua `pip install`, vì lý do ở mục 10.2.
-
-### 10.1. `requirements.txt` PHẢI là thuần ASCII
-
-pip đọc file requirements bằng **encoding mặc định của hệ thống** (`cp1252` trên
-Windows này), **không phải UTF-8**. Chú thích tiếng Việt trong file làm pip chết:
-
-```
-UnicodeDecodeError: 'charmap' codec can't decode byte 0x8d in position 251
-```
-
-Byte `0x8d` là một trong 5 byte không định nghĩa của cp1252, và nó xuất hiện tự
-nhiên trong chuỗi UTF-8 tiếng Việt. **Giữ `requirements.txt` thuần ASCII.**
-Giải thích tiếng Việt để ở `HUONG-DAN-CHAY.md`.
-
-### 10.2. `pip install` quay resolver rất lâu (không phải treo mạng)
-
-Triệu chứng: pip chạy hàng chục phút, **cache pip không tăng byte nào**,
-`site-packages` vẫn trống, tiến trình python ngốn **~100% một nhân CPU**.
-
-Cách phân biệt treo mạng vs resolver: đo CPU. Nếu cache đứng yên **và** CPU tăng
-~30s trong 30s → resolver backtracking. Đã gặp thật: chạy 30 phút, 0 byte tải về.
-
-Xử lý: dừng pip, thử lại với `--only-binary=:all:`.
-
-### 10.3. Không chạy hai pip cùng lúc vào một `.venv`
-
-Đã gặp thật: người dùng chạy `pip install -r requirements.txt` trong terminal
-trong khi agent cũng chạy lệnh tương tự. Hai tiến trình cùng ghi `site-packages`
-sẽ hỏng môi trường. Kiểm tra trước bằng:
-
-```powershell
-Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
-  Where-Object { $_.CommandLine -match 'pip install' } |
-  Select-Object ProcessId, CreationDate, CommandLine
-```
-
-### 10.4. Git Bash khác PowerShell
-
-Trong Git Bash, `\` là ký tự escape nên `.\.venv\Scripts\python.exe` bị ghép thành
-`..venvScriptspython.exe` → `command not found`. Dùng dấu `/`:
-
-```bash
-./.venv/Scripts/python.exe -m notebook
-```
-
-## 11. python.exe BỊ GIỚI HẠN GHI trong workspace — hệ quả quan trọng
-
-**Phát hiện then chốt (đã đo, không suy đoán):** trên máy này, `python.exe` **chỉ ghi
-được file bên trong thư mục project**. PowerShell thì ghi được mọi nơi.
-
-Bản đồ ghi file đo trực tiếp từ cùng một phiên, cùng user `doant`, không elevated:
-
-```
-FAIL   C:\Users\doant\.jupyter            PermissionError [Errno 13]
-FAIL   C:\Users\doant\AppData\Local\Temp  PermissionError [Errno 13]
-FAIL   C:\Users\doant                     PermissionError [Errno 13]
-OK     D:\file\project\Sign-Language-...  <-- chi workspace
-```
-
-**Đã loại trừ các nguyên nhân thường gặp:**
-
-| Nghi ngờ | Bằng chứng | Kết quả |
-|---|---|---|
-| ACL hỏng | `(Get-Acl ...).Sddl` | Bình thường: `doant` FullControl kế thừa, owner `doant` |
-| Read-only | `Attributes` | Chỉ `Directory` |
-| Defender Controlled Folder Access | `Get-MpPreference` | `EnableControlledFolderAccess = 0`, danh sách trống |
-| Thiếu quyền admin | `IsInRole(Administrator)` | `False` — tiến trình thường, không elevated |
-
-Đây là **confinement của môi trường**, không phải lỗi ACL hay cài đặt.
-
-### 11.1. Hệ quả bắt buộc: Jupyter phải trỏ config vào workspace
-
-Jupyter mặc định dùng `C:\Users\doant\.jupyter` (ngoài vùng cho phép) → chết ngay:
-
-```
-PermissionError: [Errno 13] Permission denied: 'C:\Users\doant\.jupyter\migrated'
-```
-
-Đã tạo sẵn `run_notebook.cmd` để xử lý. **Luôn dùng nó thay cho `python -m notebook`:**
-
-```powershell
-.\run_notebook.cmd
-```
-
-Script set `JUPYTER_CONFIG_DIR`, `JUPYTER_DATA_DIR`, `JUPYTER_RUNTIME_DIR` trỏ vào
-`.jupyter-config/`, `.jupyter-data/`, `.jupyter-runtime/` trong project (đã có trong
-`.gitignore`). Đã kiểm chứng: Jupyter khởi động được (server trả HTTP, chỉ 403 vì
-thiếu token — tức là đã chạy, không phải lỗi khởi động).
-
-### 11.2. Cảnh báo cho mọi tác vụ Python khác
-
-Bất kỳ thư viện Python nào ghi ra ngoài project sẽ hỏng theo cách khó hiểu. Ví dụ:
-cache của HuggingFace, `~/.keras`, `~/.matplotlib`, `~/.cache`. Nếu gặp
-`PermissionError` với đường dẫn trong `C:\Users\doant\...`, nguyên nhân gần như chắc
-chắn là cái này — hãy trỏ biến môi trường tương ứng vào trong project, đừng đi sửa ACL.
-
-### 11.3. Bẫy khi dọn tiến trình
-
-Đừng kill tiến trình bằng bộ lọc khớp với chính câu lệnh đang chạy. Đã gặp thật:
-`Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'run_notebook' }`
-khớp luôn shell đang thực thi lệnh đó → tự kill chính mình. Dùng `taskkill /PID <pid> /T /F`
-theo PID cụ thể.
-
-### 11.4. Vì sao launcher là `.cmd` chứ không phải `.ps1`
-
-`Get-ExecutionPolicy` trên máy này trả `RemoteSigned` (scope `CurrentUser`), nhưng
-PowerShell vẫn từ chối file `.ps1` do agent tạo:
-
-```
-.\run_notebook.ps1 : ... is not digitally signed.
-You cannot run this script on the current system.
-    + FullyQualifiedErrorId : UnauthorizedAccess
-```
-
-Đã kiểm tra: file **không** có Mark-of-the-Web (`Get-Item -Stream *` chỉ thấy `:$DATA`,
-không có `Zone.Identifier`), nên không phải nguyên nhân "downloaded from internet".
-
-**Kết luận thực dụng: dùng `.cmd`.** File `.cmd`/`.bat` không chịu sự chi phối của
-PowerShell Execution Policy, nên chạy được ngay bằng `run_notebook.cmd` — đã kiểm chứng.
-
-Nếu vẫn muốn dùng `.ps1`, phải gọi kèm cờ:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_notebook.ps1
-```
-
-### 11.5. Lỗi DLL Load Failed trên .venv\Scripts\python.exe va giai phap .pth
-
-`.venv\Scripts\python.exe` tren Windows (venvlauncher stub) bi crash khi goi C extensions
-(`_ctypes`, `cv2`, `_wmi` cua pandas) voi ma loi `0xc06d007e` va
-`ImportError: DLL load failed while importing _ctypes: A dynamic link library (DLL) initialization routine failed.`
-
-Giai phap da ap dung:
-1. File `.pth` tai `D:\program\python\Lib\site-packages\vsl_project.pth` tro truc tiep vao
-   `.venv\Lib\site-packages`. Nho do Python goc (`D:\program\python\python.exe`) nhan dien
-   toan bo thu vien ma khong gap loi DLL.
-2. Dang ky kernel toan cuc `Python 3.12 (VSL)` (`vsl_env`) cho ca Jupyter va VS Code / IDE.
-3. Cung cap launcher 1-click `run_realtime.cmd` / `run_realtime.py` chay truc tiep native
-   OpenCV khong can qua Jupyter.
-
+- Bắt buộc có `đ`. Không có `f`, `j`, `w`, `z`.
+- Dạng `tuple` bất biến (immutability) để ngăn chặn can thiệp sửa đổi runtime.
+- Index trong tuple chính là nhãn lớp đầu ra của mạng nơ-ron.
+
+---
+
+## 8. Môi trường thực thi chuẩn
+
+- Python runtime trên terminal bình thường: `.venv\Scripts\python.exe` (Python 3.12.7).
+- **Lưu ý trong sandbox agent trên máy Windows này:** `.venv\Scripts\python.exe`, `.venv\Scripts\ruff.exe`, `.venv\Scripts\black.exe` và driver `playwright/driver/node.exe` trong `.venv` có thể gặp lỗi nạp DLL (`_ctypes`/`_ssl`/`0xC0000142`). Khi đó:
+  - Chạy Python, `pytest`, và `black` bằng Python gốc `D:\program\python\python.exe` (đã liên kết `.venv\Lib\site-packages` qua `D:\program\python\Lib\site-packages\vsl_project.pth`):
+    ```powershell
+    & "D:\program\python\python.exe" -m pytest tests --ignore=tests/test_us022_web.py -v
+    & "D:\program\python\python.exe" -m black --check src tests scripts
+    ```
+  - Cài gói bổ sung vào `.venv` bằng `D:\program\python\python.exe -m pip install --prefix ".\.venv" --only-binary=:all: ...` (không cài đè `opencv-python-headless` lên môi trường webcam local nếu đang dùng `opencv-python`).
+- Lệnh chạy kiểm thử đầy đủ (trên terminal ngoài sandbox hoặc CI Linux):
+  ```powershell
+  & ".\.venv\Scripts\ruff.exe" check src tests scripts
+  & ".\.venv\Scripts\black.exe" --check src tests scripts
+  & ".\.venv\Scripts\python.exe" -m pytest tests -v
+  ```
+- Lệnh chạy FastAPI server cục bộ chuẩn:
+  ```powershell
+  & "D:\program\python\python.exe" -m uvicorn src.vsl.service:app --port 8000
+  ```
+- Khi chạy script python có in tiếng Việt ra console, luôn đặt:
+  ```powershell
+  $env:PYTHONIOENCODING = "utf-8"
+  ```
+- File `requirements.txt` và `requirements-dev.txt` bắt buộc phải giữ **thuần ASCII**.
+
+---
+
+## 9. Giới Hạn Ghi Python (Ghi Chú Lịch Sử)
+
+Ghi chú giới hạn ghi từ phiên 2026-10-19 (`C:\Users\doant\...`) chưa được xác minh trên host hiện tại.
+Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộng kết quả này sang đường dẫn ngoài repo.
+
+---
+
+## 10. Tiến độ User Stories & Lịch sử Thực hiện
+
+| Mã US | Tiêu đề | Nhánh / PR | Trạng thái | Ghi chú nghiệm thu |
+|---|---|---|---|---|
+| **US-001** | Trích xuất `create_heatmap` thành một bản dùng chung duy nhất | PR `#1`..`#4` / `develop` | PASS (2026-10-19) | `src/vsl/heatmap.py`, AC-001-01, AC-001-02 |
+| **US-002** | Trích xuất `VIETNAMESE_ALPHABET` thành nguồn chân lý duy nhất | `develop` | PASS (2026-10-25) | `src/vsl/labels.py`, AC-002-01, AC-002-02, BR-003 |
+| **US-003** | Loại bỏ đường dẫn tuyệt đối hard-code | `develop` | PASS (2026-10-26) | `src/vsl/config.py`, `VSL_MODEL_PATH`, `VSL_DATA_DIR`, BR-004 |
+| **US-004** | Chuẩn hoá `requirements.txt` cho Linux container | `develop` | PASS (2026-10-26) | `requirements.txt`, `opencv-python-headless`, BR-005 |
+| **US-005** | API `/health` phản ánh trạng thái model | PR `#9` | PASS (2026-10-26) | `src/vsl/service.py`, GET `/health`, Lifespan BR-011 |
+| **US-006** | API `/predict` nhận ảnh và chạy MediaPipe server-side | PR `#10` | PASS (2026-10-26) | `src/vsl/service.py`, POST `/predict`, 93 landmarks, `flip` |
+| **US-007** | Trả trạng thái rõ ràng khi không phát hiện tay hoặc mặt | PR `#17` | PASS (2026-11-04) | `status`: `ok`/`no_hand`/`no_face`; log WARNING UTC |
+| **US-008** | API `/version` trả model version, Git SHA và build time | PR `#18` | PASS (2026-11-04) | `GET /version`, `GIT_SHA`/Git fallback, UTC ISO 8601 |
+| **US-009** | Giới hạn kích thước (5 MB) và định dạng ảnh đầu vào (`JPEG`/`JPG`/`PNG`) | PR `#46` (`develop`) | PASS (CỔNG D, 2026-11-11) | `src/vsl/service.py` (`415`/`413`/`400`, stream chunk + magic bytes, log WARNING UTC), `tests/test_us009_input_validation.py`; đã merge `develop` |
+| **US-010** | Dockerfile Linux chạy được ở máy cục bộ | `develop` (`51fe345`) | PASS (2026-11-05) | `Dockerfile`, `.dockerignore`, healthcheck `/health` 200 |
+| **US-011** | Chuyển model Keras sang ONNX kèm kiểm chứng tương đương | PR `#38` (`develop`) | PASS (2026-11-11 — chốt Cổng D) | `scripts/export_onnx.py`, `tests/test_onnx_parity.py` (`6/6` PASS; `max_abs_diff=1.583e-06`, `23/23` argmax, H5 `137MB` -> ONNX `96MB`, `Q1` giữ runtime TF/Keras) |
+| **US-012** | Nạp model một lần ngoài request handler | PR `#32` | PASS (2026-11-08) | Đã merge `develop`; log duration khi load thành công/thất bại |
+| **US-013** | Đo và ghi lại thời gian khởi động nguội thực tế | PR `#19` | PASS (Harness & Tests) | `scripts/benchmark_cold_start.py`, `docs/api/US-013.md` |
+| **US-014** | Unit test cho `create_heatmap` chạy thuần NumPy | PR `#20` | PASS (2026-11-06) | `tests/test_heatmap.py`, input sai ném `ValueError` |
+| **US-015** | Test hợp đồng dữ liệu 93 cột | PR `#11` | PASS (2026-10-27) | `src/vsl/landmarks.py`, `tests/test_landmark_contract.py` |
+| **US-016** | Test đối chiếu dịch vụ với kết quả notebook đã biết | PR `#12`, PR `#36` | PASS (2026-10-28) | Fixture 23 mẫu có hash model/CSV chuẩn hóa LF |
+| **US-017** | Smoke test tự động sau triển khai | PR `#29` | MERGED (CLI PASS) | `scripts/smoke_test.py`; unit test pass; live deploy/CD chờ US-029 |
+| **US-018** | Khởi tạo Terraform và lưu trạng thái từ xa trên Azure | PR `#22` | PASS — STAGING | AzureRM + Blob state `vslstate2026`/`tfstate`; production placeholder |
+| **US-019** | ACR, IAM tối thiểu và GitHub Workload Identity Federation | PR `#22`, PR `#42` | PASS — STAGING APPLIED | Đã đăng ký `Microsoft.ManagedIdentity`, apply `infra/` vào `vslstate2026`, OIDC smoke test & `acr-publish.yml` (`42843489497`) chạy xanh; `azurerm_container_registry_task.cleanup` bị gói Students chặn (`TasksOperationsNotAllowed`) |
+| **US-020** | Azure Container Apps service với min-instances bằng 0 | PR `#48` (`develop`) | PASS — STAGING VERIFIED | Đã import 5 resource vào `vslstate2026`, apply `vsl-api--0000001` (`min_replicas=0`, `max_replicas=3`, `cpu=1`, `memory=2Gi`, `/health` `200`, `/version` `9a1c3aa...`), tắt revision cũ `vsl-api--lhkogbo`, Azure Monitor `Replica Count = 0.0` (12:07Z–13:06Z) & `replica list` trống |
+| **US-021** | Tách môi trường staging và production trên Azure Container Apps | `feature/US-021` / PR `#43` (`develop`) | MERGED — PASS | Thống nhất root `infra/`, shared ACR `vslacr3795`, `BR-016`, staging plan verified; đã merge `develop` (PR `#43`, `95db385`) |
+| **US-022** | Trang web tĩnh tải hoặc chụp ảnh và hiển thị kết quả | PR `#23` | MERGED — PASS | `web/` + `scripts/generate_web_labels.py` + `tests/test_us022_web.py` |
+| **US-024** | Triển khai frontend lên Cloudflare Pages | PR `#33`, PR `#37`, PR `#41` | PARTIAL (AC-024-01 LIVE OK) | `https://sign-language-classification.pages.dev` HTTP 200; live CORS/`/health`/`/version`/`POST /predict` đã pass trên cả `vsl-vietnam` (`web/config.js`) và `vsl-api` (`9a1c3aa...`); còn AC-024-02 (scale-to-zero `<1s`) và thử ảnh tay+mặt thật |
+| **US-025** | Cấu hình CORS và xử lý lỗi mạng | PR `#28` | PASS — STAGING LIVE | Strict allowlist `VSL_ALLOWED_ORIGINS=https://sign-language-classification.pages.dev,https://develop.sign-language-classification.pages.dev` đang chạy live trên Standard ACA `vsl-api` |
+| **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
+| **US-028** | Pipeline frontend với trigger theo đường dẫn và preview deployment | `feature/US-028` / PR `#50` (`develop`) | MERGED — PASS | `.github/workflows/frontend.yml`, `tests/test_frontend_workflow.py` (`6/6` PASS), `docs/api/US-028.md` (`ANALYSIS_READY`), triggers đường dẫn `web/**` (và workflow), deploy preview kèm bình luận PR không spam (`<!-- vsl-cloudflare-pages-preview -->`), route staging (`develop`) & production (`main`), secrets `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID` đã cấu hình trên GitHub Repo Secrets |
+| **US-029** | CD backend ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (đã kiểm thử cục bộ; đang review) | `.github/workflows/deploy-backend.yml` (định tuyến `develop` -> staging, `main` -> production), GitHub OIDC, smoke `/health` + `/version`, traffic rollback; staging dùng OIDC `develop` đã áp dụng, production chờ cấp phát theo US-021 |
+| **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
+| **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | PR `#35` (`develop`) | PASS — STAGING VERIFIED | Đã apply `vsl-monthly-cost-guardrail-staging` (`$5`, `20%` `$1` / `100%` `$5`, `Owner`) trên `373b1f03-330f-4302-a9e9-aa1fe793bf2e` và xác minh trên Azure Portal; Entra ID `Security defaults: Enabled`; `docs/RUNBOOK.md` Mục 7, `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` |
+| **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
+| **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
+
+---
+
+## 11. Hướng dẫn tiếp tục công việc cho phiên tiếp theo
+
+1. **Hạ tầng Azure staging sau Nhóm 4 & US-020 (2026-11-11):**
+   - `vslacr3795.azurecr.io/vsl-api:9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đang chạy trên cả App Service `vsl-vietnam` (`https://vsl-vietnam.azurewebsites.net`, target của `web/config.js`) và Standard ACA `vsl-api` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io` trên `cae-vsl-staging-std`, UAMI `id-vsl-api-pull` với `AcrPull`, `Multiple` revision mode, `vsl-api--0000001` đã đặt `min_replicas = 0`, `max_replicas = 3`, revision cũ `vsl-api--lhkogbo` đã deactivate và xác nhận scale về `0` replica khi idle).
+   - Environment Express cũ `cae-vsl-staging` đã tách `vsl-api` ra; chủ dự án có thể xóa dọn khi xác nhận không còn dùng.
+   - `azurerm_role_assignment.deployment_app` đã đồng bộ scope `azurerm_container_app.vsl_api.id` trong `staging.tfstate`; `azurerm_container_registry_task.cleanup` vẫn bị giới hạn gói Azure for Students (`TasksOperationsNotAllowed`).
+2. **US-024 / US-017 kiểm chứng end-to-end với ảnh thật:** chạy `scripts/smoke_test.py --image <ảnh tay+mặt thật>` và kiểm tra browser trực tiếp trên `https://sign-language-classification.pages.dev`; đo `AC-024-02` khi `vsl-api` đang ở `0` replica.
+3. **US-029:** workflow CD Azure Container Apps (`.github/workflows/deploy-backend.yml`) trên nhánh `feature/US-029` đồng bộ với frontend: push `develop` triển khai staging (`rg-vsl-staging` / `vsl-api`), push `main` triển khai production (`rg-vsl-prod`). Staging dùng federated credential `develop` đã áp dụng trên Azure; production được cô lập độc lập theo US-021. Workflow hiện chỉ deploy ACA `vsl-api`, không deploy App Service `vsl-vietnam`.
+4. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
