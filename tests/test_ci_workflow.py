@@ -3,6 +3,8 @@
 import re
 from pathlib import Path
 
+import yaml
+
 WORKFLOW_PATH = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"
 
 
@@ -50,6 +52,45 @@ def test_ci_records_docker_build_duration_and_image_size() -> None:
     assert "docker image inspect" in content
     assert "IMAGE_SIZE" in content
     assert "BUILD_DURATION" in content or "DURATION" in content
+
+
+def test_ci_scans_built_image_report_only_and_uploads_artifact() -> None:
+    workflow = yaml.safe_load(_workflow_text())
+    steps = workflow["jobs"]["docker-build"]["steps"]
+
+    build_index = next(
+        (i for i, step in enumerate(steps) if "docker/build-push-action" in step.get("uses", "")),
+        None,
+    )
+    scan_index = next(
+        (i for i, step in enumerate(steps) if "aquasecurity/trivy-action@" in step.get("uses", "")),
+        None,
+    )
+    upload_index = next(
+        (i for i, step in enumerate(steps) if "actions/upload-artifact@" in step.get("uses", "")),
+        None,
+    )
+
+    assert build_index is not None, "CI must build the Docker image before scanning it"
+    assert scan_index is not None, "CI must scan the built image with Trivy"
+    assert upload_index is not None, "CI must upload the Trivy report as an artifact"
+    assert build_index < scan_index < upload_index
+
+    scan = steps[scan_index]
+    scan_inputs = scan.get("with", {})
+    assert scan_inputs.get("scan-type") == "image"
+    assert scan_inputs.get("image-ref") == "vsl-api:ci"
+    assert scan_inputs.get("vuln-type") == "os,library"
+    assert scan_inputs.get("format") == "table"
+    assert scan_inputs.get("output") == "trivy-vulnerability-report.txt"
+    assert scan_inputs.get("exit-code") == "0", "CVE findings must not fail the CI job"
+
+    upload = steps[upload_index]
+    upload_inputs = upload.get("with", {})
+    assert upload.get("if") == "always()"
+    assert upload_inputs.get("name") == "trivy-vulnerability-report"
+    assert upload_inputs.get("path") == "trivy-vulnerability-report.txt"
+    assert upload_inputs.get("if-no-files-found") == "warn"
 
 
 def test_ci_playwright_install_has_apt_resilience_and_timeouts() -> None:

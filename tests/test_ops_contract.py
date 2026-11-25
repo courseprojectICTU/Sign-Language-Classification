@@ -4,6 +4,7 @@ Bao phủ các Acceptance Criteria theo yêu cầu:
 - US-023: AC-023-01 (Warm-up ping khi tải trang)
 - US-025: AC-025-01 (CORS Cloudflare Pages), AC-025-02 (Phân biệt lỗi 503 cold start)
 - US-026: AC-026-01 (CI workflow lint/test/build), AC-026-02 (CI failure blocking)
+- US-039: AC-039-01 (Trivy image report-only and artifact)
 - US-027: AC-027-01 (Loại bỏ nhánh master, bảo vệ main)
 - US-031: AC-031-01 (Rollback traffic < 5 phút), AC-031-02 (Smoke test failure triggers rollback)
 - US-035: AC-035-01 (Tài liệu README & Runbook đầy đủ 4 kịch bản)
@@ -163,6 +164,17 @@ def test_ac_026_02_ci_failure_blocking():
     assert (
         docker_job.get("needs") == "lint-and-test"
     ), "docker-build phải phụ thuộc (needs) vào lint-and-test"
+
+
+def test_us039_runbook_documents_report_only_policy():
+    content = RUNBOOK_PATH.read_text(encoding="utf-8").lower()
+
+    assert "trivy-vulnerability-report" in content
+    assert "report-only" in content
+    assert "br-026" in content
+    assert "tensorflow" in content
+    assert "không chặn merge" in content
+    assert "quyết định bằng văn bản" in content
 
 
 # -----------------------------------------------------------------------------
