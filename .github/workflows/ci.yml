@@ -170,6 +170,24 @@ jobs:
             GIT_SHA=${{ github.sha }}
             BUILD_TIME=${{ env.BUILD_TIME }}
 
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: vsl-api:ci
+          vuln-type: os,library
+          format: table
+          output: trivy-vulnerability-report.txt
+          exit-code: "0"
+
+      - name: Upload vulnerability report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-vulnerability-report
+          path: trivy-vulnerability-report.txt
+          if-no-files-found: warn
+
       - name: Report build duration and image size
         shell: bash
         run: |

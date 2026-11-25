@@ -108,6 +108,24 @@ For Docker build failures:
 3. CI build duration and image-size metrics are emitted to `$GITHUB_STEP_SUMMARY`
    only when the `docker-build` job completes.
 
+### 4.1. Trivy image vulnerability report (US-039, BR-026)
+
+After the `docker-build` job builds `vsl-api:ci`, Trivy scans OS packages and
+libraries and writes a text report. In the GitHub Actions run, download the
+`trivy-vulnerability-report` artifact and open `trivy-vulnerability-report.txt`.
+Use the run's commit SHA to identify the source revision associated with that
+report.
+
+Đây là chế độ **report-only**: Trivy dùng `exit-code: 0`, nên CVE được ghi lại
+trong report nhưng không chặn merge. Image có TensorFlow và các dependency của
+nó, vốn có thể chứa nhiều CVE đã biết; bật cổng chặn trước khi rà soát và xử lý
+các CVE có thể khiến CI luôn đỏ mà chưa cung cấp được danh sách rủi ro hữu ích.
+Vì vậy, CI xanh không chứng minh image không có lỗ hổng. Lỗi thực thi Trivy
+hoặc hạ tầng vẫn có thể làm job thất bại và cần được điều tra.
+
+Không bật blocking cho đến khi mọi CVE Critical được xử lý và chủ dự án có
+quyết định bằng văn bản, theo BR-026.
+
 ---
 
 ## 5. Smoke test thất bại & Hoàn tác thủ công (Smoke test failure & ACA rollback)
