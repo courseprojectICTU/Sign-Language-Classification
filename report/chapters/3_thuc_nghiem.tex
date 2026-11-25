@@ -5,53 +5,297 @@
 \chapter{THỰC NGHIỆM, ĐÁNH GIÁ KẾT QUẢ VÀ BÀN LUẬN}
 \label{chap:thuc_nghiem}
 
+% ==============================================================================
+% 3.1. KẾT QUẢ CHUẨN HÓA MÃ NGUỒN VÀ BỘ KIỂM THỬ TỰ ĐỘNG
+% ==============================================================================
 \section{Kết quả chuẩn hóa mã nguồn và bộ kiểm thử tự động}
 \label{sec:ket_qua_kiem_thu}
 
-\subsection{Đặc tả và kết quả bộ kiểm thử tự động toàn diện (32/32 tests passed)}
+\subsection{Tổng hợp kết quả kiểm tra chất lượng mã và bộ kiểm thử toàn diện}
 \label{subsec:dac_ta_test}
-% [Nội dung sẽ bổ sung: Bảng tổng kết các bài kiểm thử tự động: test_config.py (đường dẫn động), test_labels.py (23 nhãn bất biến), test_heatmap.py (khớp golden reference), test_requirements.py (chuẩn hóa deps Linux), test_health.py (trạng thái model), test_predict.py (dự đoán); kết quả 100% tests PASSED trên pytest.]
 
-\subsection{Đảm bảo tính tương thích và bảo toàn độ chính xác của mô hình ResNet50}
+Sau quá trình tái cấu trúc và tích hợp liên tục trên nhánh \texttt{develop}, toàn bộ mã nguồn Python trong các thư mục \texttt{src}, \texttt{tests} và \texttt{scripts} đã được kiểm tra tự động bằng hai công cụ kiểm soát chất lượng: \texttt{ruff check} đạt 100\% không có lỗi cú pháp hoặc vi phạm quy ước, và \texttt{black --check} xác nhận toàn bộ \textbf{50/50 tệp mã nguồn} tuân thủ đồng nhất chuẩn định dạng của dự án.
+
+Song song đó, nhóm đã xây dựng bộ kiểm thử tự động tại thư mục \texttt{tests/} gồm \textbf{34 tệp kiểm thử} với \textbf{189 hàm kiểm thử} (tạo thành hơn 200 ca kiểm thử thực tế trên môi trường CI Linux khi mở rộng tham số hóa). Bảng~\ref{tab:tong_hop_kiem_thu} thống kê chi tiết phạm vi bao phủ của từng nhóm kiểm thử.
+
+\begin{table}[H]
+\centering
+\caption{Thống kê phạm vi và kết quả bộ kiểm thử tự động tại thư mục \texttt{tests/}}
+\label{tab:tong_hop_kiem_thu}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{5.1cm} >{\centering\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}X}
+\toprule
+Nhóm kiểm thử & Tệp kiểm thử tiêu biểu & Số tệp / Hàm test & Nội dung xác minh cốt lõi \\
+\midrule
+Lõi AI \& Hợp đồng dữ liệu & \path{test_heatmap.py} \newline \path{test_heatmap_contract.py} \newline \path{test_landmark_contract.py} \newline \path{test_labels.py}, \path{test_config.py} \newline \path{test_pipeline_baseline.py} & 6 tệp \newline (31 hàm) & Kiểm tra 23 nhãn bất biến, 93 cột landmark, khớp golden heatmap từng điểm ảnh và nhận diện đúng 23/23 lớp chuẩn. \\
+\midrule
+Dịch vụ FastAPI, Upload Guard \& CORS & \path{test_health.py}, \path{test_predict.py} \newline \path{test_version.py}, \path{test_cors.py} \newline \path{test_cors_version.py} \newline \path{test_us009_input_validation.py} \newline \path{test_us012_model_lifecycle.py} & 7 tệp \newline (39 hàm) & Kiểm tra nạp model 1 lần trong Lifespan, giới hạn 5 MB (413), Magic Bytes JPEG/PNG (415), CORS allowlist và \texttt{/version}. \\
+\midrule
+Tối ưu ONNX \& Benchmark Harness & \path{test_onnx_parity.py} \newline \path{test_cold_start_benchmark.py} \newline \path{test_service_notebook_reference.py} \newline \path{test_us016_notebook_direct.py} & 4 tệp \newline (16 hàm) & Kiểm chứng tương đương số học Keras vs ONNX, đối chiếu trực tiếp với notebook gốc và kiểm tra hợp lệ preflight đo Cold Start. \\
+\midrule
+Container, CI/CD \& Vận hành & \path{test_dockerfile.py}, \path{test_requirements.py} \newline \path{test_ci_workflow.py} \newline \path{test_frontend_workflow.py} \newline \path{test_us029_deploy_workflow.py} \newline \path{test_smoke_test.py}, \path{test_rollback.py} \newline \path{test_ops_contract.py} \newline \path{test_us032_frontend_rollback.py} \newline \path{test_us036_agents_contract.py} & 10 tệp \newline (63 hàm) & Xác minh Dockerfile Multi-stage ghim digest, cấu hình workflow CI/CD, kịch bản \path{smoke_test.py}, \path{rollback.py} và tài liệu vận hành. \\
+\midrule
+Hạ tầng Terraform, Bảo mật \& Ngân sách & \path{test_us018_terraform.py} \newline \path{test_us019_azure_terraform.py} \newline \path{test_us019_secret_policy.py} \newline \path{test_us020_container_app.py} \newline \path{test_us021_terraform.py} \newline \path{test_us033_cost_guardrails.py} & 6 tệp \newline (29 hàm) & Kiểm tra cô lập Staging/Prod, \path{min_replicas=0}, quét không rò rỉ khóa tĩnh trong Git và kiểm tra cấu hình Budget \$5. \\
+\midrule
+Giao diện Web (Playwright E2E) & \path{test_us022_web.py} & 1 tệp \newline (11 hàm) & Kiểm thử tự động chọn ảnh, bật/tắt camera, lật ảnh, trạng thái loading, xử lý lỗi và responsive trên Chromium, Edge, Firefox. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+\subsection{Kiểm chứng bảo toàn độ chính xác AI và thử nghiệm tối ưu hóa ONNX}
 \label{subsec:bao_toan_ai}
-% [Nội dung sẽ bổ sung: Kiểm thử hồi quy đối chiếu giữa mã nguồn cũ và mã nguồn mới tái cấu trúc; xác nhận ma trận đặc trưng heatmap đầu ra trùng khớp 100% sai số số thực, đảm bảo trọng số mô hình đã huấn luyện từ SIC hoạt động chính xác nguyên bản.]
 
+Một trong những rủi ro lớn nhất khi tái cấu trúc hệ thống học sâu từ Jupyter Notebook sang dịch vụ API là sai lệch kết quả suy luận do thay đổi thư viện hoặc bước tiền xử lý. Nhóm đã giải quyết triệt để thông qua hai lớp kiểm chứng độc lập:
+\begin{enumerate}
+    \item \textbf{Đối chiếu tương đương với Notebook gốc (\texttt{US-016} \& \texttt{test\_pipeline\_baseline.py}):} Bộ kiểm thử đọc trực tiếp 23 mẫu CSV chuẩn (mỗi chữ cái 1 mẫu đại diện) theo đúng quy trình Caffe (\texttt{preprocess\_input}, giữ nguyên giá trị \texttt{0..255}), xác nhận cả dịch vụ API mới và notebook cũ cho kết quả phân loại trùng khớp \textbf{23/23 ký tự}. Đồng thời tệp tham chiếu đóng băng \path{tests/fixtures/notebook_prediction_reference.json} lưu kèm mã băm SHA-256 của mô hình và dữ liệu để phát hiện mọi sai khác ngoài ý muốn.
+    \item \textbf{Thực nghiệm chuyển đổi Keras H5 sang ONNX (\texttt{US-011}):} Nhằm đánh giá khả năng giảm kích thước artifact và tăng tốc độ khởi động/suy luận, công cụ \path{scripts/export_onnx.py} xuất tệp \path{train/vsl_cnn_pose_keras.h5} sang định dạng \texttt{ONNX} (\texttt{opset 15}) qua \texttt{SavedModel} trung gian và đo lường trên cùng tập 23 mẫu bằng \texttt{onnxruntime} (\texttt{CPUExecutionProvider}). Kết quả thực nghiệm (Bảng~\ref{tab:onnx_parity}) cho thấy sai số số học cực nhỏ (\path{max_abs_diff = 1.583e-6}, nhỏ hơn ngưỡng cho phép \texttt{1e-4}), \texttt{argmax} khớp 23/23 lớp, dung lượng mô hình giảm \textbf{29,9\%}, thời gian nạp giảm \textbf{3,29 lần} và thời gian suy luận giảm \textbf{2,08 lần} trên CPU cục bộ. Tuy nhiên, để bảo đảm tính ổn định cho bản phát hành đầu tiên \texttt{v1.0.0} (do container thực thi vẫn cần đồng bộ toolchain MediaPipe/TensorFlow), nhóm quyết định giữ nguyên Keras H5 cho container sản xuất và lưu công cụ ONNX làm nền tảng sẵn sàng nâng cấp ở giai đoạn tiếp theo.
+\end{enumerate}
 
-\section{Đánh giá quy trình CI/CD và khả năng tự động hóa}
+\begin{table}[H]
+\centering
+\caption{Kết quả đối chiếu thực nghiệm giữa mô hình Keras H5 và ONNX Runtime trên CPU}
+\label{tab:onnx_parity}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{4.5cm} >{\centering\arraybackslash}p{3.6cm} >{\centering\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}X}
+\toprule
+Chỉ tiêu đánh giá & Keras H5 (Hiện hành) & ONNX Runtime (Thử nghiệm) & Mức độ cải thiện / Đánh giá \\
+\midrule
+Kích thước tệp mô hình & 137.042.364 bytes ($\approx$ 130,7 MB) & 96.119.874 bytes ($\approx$ 91,7 MB) & Giảm 29,86\% dung lượng lưu trữ (tỷ lệ 0,7014) \\
+\midrule
+Sai số xác suất lớn nhất & Chuẩn tham chiếu & \texttt{1,583e-06} & Đạt chuẩn tương đương ($< 10^{-4}$) \\
+\midrule
+Độ khớp nhãn dự đoán (23 lớp) & 23/23 lớp & 23/23 lớp & Bảo toàn 100\% kết quả phân loại \\
+\midrule
+Thời gian nạp mô hình (CPU) & 1.099,60 ms & 333,81 ms & Nhanh hơn 3,29 lần \\
+\midrule
+Trung vị suy luận batch 23 mẫu & 1.329,40 ms & 639,15 ms & Nhanh hơn 2,08 lần \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+% ==============================================================================
+% 3.2. ĐÁNH GIÁ QUY TRÌNH CI/CD VÀ KHẢ NĂNG KHÔI PHỤC SỰ CỐ
+% ==============================================================================
+\section{Đánh giá quy trình CI/CD và khả năng khôi phục sự cố}
 \label{sec:danh_gia_cicd}
 
-\subsection{Đo lường thời gian thực thi của từng giai đoạn trong GitHub Actions Workflow}
+\subsection{Đánh giá hiệu quả vận hành các đường ống GitHub Actions}
 \label{subsec:thoi_gian_workflow}
-% [Nội dung sẽ bổ sung: Bảng thống kê thời gian chạy từng bước: Checkout code, cài đặt cache dependencies, chạy bộ test tự động (~38s), build Docker image, push Google Artifact Registry, deploy Cloud Run. Đánh giá độ trễ tổng của toàn bộ pipeline.]
 
-\subsection{Đánh giá tính ổn định khi kích hoạt qua các sự kiện Git}
+Thông qua trích xuất nhật ký thực thi thực tế từ GitHub Actions API của kho mã nguồn \path{courseprojectICTU/Sign-Language-Classification} (tính đến ngày 25/11/2026), cả ba đường ống tự động hóa đều vận hành ổn định, chính xác theo cơ chế phân luồng nhánh và tối ưu thời gian thực thi nhờ bộ nhớ đệm (Bảng~\ref{tab:cicd_metrics} và Hình~\ref{fig:ci_cd_run_summary}).
+
+\begin{table}[H]
+\centering
+\caption{Thống kê thời gian thực thi thực tế của các đường ống GitHub Actions}
+\label{tab:cicd_metrics}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{3.5cm} >{\centering\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}X}
+\toprule
+Workflow (Sự kiện) & Mã lần chạy / Nhánh tham chiếu & Thời gian thực thi & Thành phần công việc chính \\
+\midrule
+\path{ci.yml} \newline (Pull Request / Push) & \texttt{45580123108} \newline (\texttt{feature/US-039}) & \textbf{574,0 giây} \newline ($\approx$ 9 phút 34s) & \texttt{Lint and tests}: 212,0 giây (Terraform, Ruff, Black, pytest, Playwright); \texttt{Build Docker}: 357,0 giây (Buildx + GHA cache). \\
+\midrule
+\path{deploy-backend.yml} \newline (Push lên \texttt{develop}) & \texttt{44881770615} \newline (Staging \texttt{develop}) & \textbf{440,0 giây} \newline ($\approx$ 7 phút 20s) & OIDC login, build \& push ACR, tạo revision \texttt{candidate}, polling \path{smoke_test.py} và chuyển 100\% traffic. \\
+\midrule
+\path{deploy-backend.yml} \newline (Push lên \texttt{main}) & \texttt{44855497793} \newline (Release \texttt{v1.0.0}) & \textbf{427,0 giây} \newline ($\approx$ 7 phút 07s) & Phát hành phiên bản chính thức lên nhánh \texttt{main} với đầy đủ cổng kiểm thử khói tự động. \\
+\midrule
+\path{frontend.yml} \newline (Push lên \texttt{main}) & \texttt{44855497792} \newline (Cloudflare Pages) & \textbf{21,0 giây} \newline (Wrangler: 18,0s) & Bộ lọc đường dẫn \path{web/**} chỉ kích hoạt khi có sửa đổi giao diện; trên PR (kèm comment Preview URL) mất 43,0 giây. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+Kết quả đo lường thực tế khẳng định ba ưu điểm rõ rệt của thiết kế CI/CD:
+\begin{itemize}
+    \item \textbf{Tách biệt đường ống Frontend và Backend:} Nhờ bộ lọc \path{paths: ["web/**"]} trong \path{frontend.yml}, các thay đổi thuần giao diện chỉ mất \textbf{21--43 giây} để hoàn tất triển khai lên Cloudflare Pages mà không phải chờ quy trình build Docker TensorFlow kéo dài 7 phút.
+    \item \textbf{Hiệu quả bộ nhớ đệm (Caching):} Trong các lần chạy liên tiếp trên nhánh \texttt{develop}, thời gian job \texttt{Lint and tests} duy trì ổn định khoảng 3,5 phút nhờ cache gói \texttt{pip} và trình duyệt Playwright, còn Docker Buildx tận dụng lớp cache BuildKit trên GitHub Actions giúp toàn bộ chuỗi CI khép kín dưới 10 phút.
+    \item \textbf{Cơ chế hủy chạy thừa (\texttt{concurrency}):} Khi tác giả đẩy nhiều commit liên tiếp vào cùng một Pull Request, các lượt CI cũ bị tự động hủy, giúp tránh lãng phí phút chạy GitHub Actions.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{ci_cd_run_summary.png}{Ảnh chụp màn hình kết quả chạy thành công (xanh) của workflow \texttt{CI}, \texttt{Deploy backend to Azure} và bảng tổng kết Docker Build trên GitHub Actions}
+\caption{Minh chứng thực thi thành công của quy trình CI/CD trên GitHub Actions}
+\label{fig:ci_cd_run_summary}
+\end{figure}
+
+\subsection{Kết quả kiểm thử Smoke Test và diễn tập Rollback}
 \label{subsec:tinh_on_dinh_git}
-% [Nội dung sẽ bổ sung: Quy trình kích hoạt tự động theo chiến lược nhánh: Feature branches -> Pull Request kích hoạt CI -> Reviewer phê duyệt -> Merge vào develop/main kích hoạt CD triển khai tự động lên Cloud Run.]
 
+Để bảo đảm khả năng khôi phục tức thì khi có sự cố phát hành theo quy tắc nghiệp vụ \texttt{BR-022}, cả hai lớp Backend và Frontend đều được trang bị cơ chế kiểm chứng và hoàn tác độc lập:
+\begin{itemize}
+    \item \textbf{Tầng Backend (\path{scripts/smoke_test.py} \& \path{scripts/rollback.py}):} Trong luồng CD, phiên bản mới luôn được khởi chạy ở trạng thái \texttt{candidate} tách biệt và phải vượt qua kiểm thử \texttt{/health} cùng đối chiếu \texttt{git\_sha} tại \texttt{/version} trước khi chuyển 100\% lưu lượng. Công cụ \path{scripts/rollback.py} đã vượt qua 8/8 ca kiểm thử đơn vị, mặc định chạy ở chế độ chỉ đọc (\textit{dry-run}) và từ chối thực thi nếu phát hiện cấu hình chia lưu lượng bất thường hoặc sai tên revision mục tiêu. Trên môi trường Azure Staging, ứng dụng \texttt{vsl-api} đã kích hoạt thành công chế độ \texttt{Multiple} revision mode sẵn sàng cho phép chuyển 100\% traffic về phiên bản cũ chỉ bằng một lệnh Azure CLI.
+    \item \textbf{Tầng Frontend (Instant Zero-Build Rollback trên Cloudflare Pages):} Nhóm đã tiến hành diễn tập thực tế quy trình hoàn tác cho dự án \texttt{sign-language-classification} tại \path{https://sign-language-classification.pages.dev} (ghi nhận tại Mục 5.3 của \path{docs/RUNBOOK.md}). Khi chọn tính năng \textit{Rollback to this deployment} trên Cloudflare Dashboard để quay về một bản dựng lịch sử, hệ thống chuyển hướng con trỏ tên miền thành công chỉ trong khoảng \textbf{5--8 giây} (đạt tiêu chuẩn $< 10$ giây của \texttt{AC-032-01}), không cần build lại mã nguồn trên GitHub Actions và giữ trạng thái phục vụ HTTP 200 liên tục.
+\end{itemize}
 
-\section{Đánh giá hiệu năng và chi phí vận hành trên Google Cloud}
+% ==============================================================================
+% 3.3. KẾT QUẢ TRIỂN KHAI ỨNG DỤNG, HIỆU NĂNG VÀ CHI PHÍ TRÊN AZURE
+% ==============================================================================
+\section{Kết quả triển khai ứng dụng, hiệu năng và chi phí trên Azure}
 \label{sec:hieu_nang_cloud}
 
-\subsection{Đo lường hiện tượng Cold Start và độ trễ phản hồi của API trên Cloud Run}
-\label{subsec:do_cold_start}
-% [Nội dung sẽ bổ sung: Đo lường độ trễ khi khởi động instance mới từ trạng thái 0 (Cold Start: tải container image, nạp TensorFlow runtime và load trọng số ResNet50) so với trạng thái ấm (Warm Start: phản hồi trung bình dưới 500ms).]
-
-\subsection{Thử nghiệm tương tác người dùng qua Web Frontend trên Cloudflare Pages}
+\subsection{Giao diện sản phẩm thực tế và hướng dẫn sử dụng}
 \label{subsec:thu_nghiem_nguoi_dung}
-% [Nội dung sẽ bổ sung: Trải nghiệm người dùng thực tế: Người dùng mở web, cấp quyền camera, chụp ảnh cử chỉ tay; frontend gửi payload lên Cloud Run và nhận lại kết quả dự đoán kèm tỷ lệ phần trăm chính xác theo thời gian thực.]
 
-\subsection{Phân tích chi phí vận hành thực tế đối chiếu với chính sách Free Tier (\$0)}
+Hệ thống hoàn chỉnh đã được phát hành chính thức phiên bản \texttt{v1.0.0} (trên nhánh \texttt{main}) với hai điểm truy cập công khai: giao diện Web người dùng tại \path{https://sign-language-classification.pages.dev} (bản xem trước nhánh \texttt{develop} tại \path{https://develop.sign-language-classification.pages.dev}) và API Backend tại \path{https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io}.
+
+Quy trình sử dụng dành cho người dùng cuối gồm 4 bước trực quan trên trình duyệt (minh họa tại Hình~\ref{fig:web_predict_success} và Hình~\ref{fig:web_error_and_guide}):
+\begin{enumerate}
+    \item \textbf{Bước 1 — Chuẩn bị ảnh đầu vào:} Người dùng truy cập trang web (hệ thống tải trong $< 1$ giây từ Edge CDN Cloudflare), chọn \textbf{Chọn ảnh} để tải tệp JPEG/PNG từ thiết bị hoặc nhấn \textbf{Mở camera}, cấp quyền webcam và nhấn \textbf{Chụp ảnh}. Nếu ảnh chụp từ camera trước bị ngược chiều, người dùng có thể nhấn \textbf{Lật ảnh ngang} để đồng bộ góc nhìn trước khi gửi.
+    \item \textbf{Bước 2 — Gửi yêu cầu nhận diện:} Nhấn nút \textbf{Dự đoán}. Trình duyệt gửi ảnh dưới dạng \texttt{multipart/form-data} qua giao thức HTTPS tới API \texttt{POST /predict} trên Azure Container Apps, đồng thời hiển thị thông báo \textit{"Đang xử lý ảnh, vui lòng chờ..."} để giữ trải nghiệm mượt mà trong trường hợp container đang khởi động nguội.
+    \item \textbf{Bước 3 — Nhận kết quả phân loại:} Khi phát hiện đủ 93 tọa độ bàn tay và khuôn mặt, giao diện hiển thị chữ cái tiếng Việt tương ứng cùng tỷ lệ độ tin cậy (ví dụ: kiểm chứng thực tế với ảnh mẫu \texttt{web/test\_sign.jpg} trả về kết quả ký tự \texttt{'d'} với độ tin cậy \textbf{96,19\%}).
+    \item \textbf{Bước 4 — Xử lý thông báo hướng dẫn:} Nếu ảnh không chứa bàn tay hoặc thiếu khuôn mặt, API trả về trạng thái ngữ nghĩa \texttt{no\_hand} hoặc \texttt{no\_face} kèm câu nhắc bằng tiếng Việt để người dùng điều chỉnh lại khung hình; phía dưới trang web cũng liệt kê sẵn bảng 23 chữ cái hợp lệ từ \texttt{a} đến \texttt{y}.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{web_predict_success.png}{Giao diện Web tại \texttt{sign-language-classification.pages.dev} hiển thị ảnh đầu vào, nút Lật ảnh ngang và kết quả dự đoán ký tự kèm phần trăm tin cậy}
+\caption{Giao diện kết quả nhận diện thành công trên ứng dụng Web Cloudflare Pages}
+\label{fig:web_predict_success}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{web_error_and_guide.png}{Giao diện Web hiển thị thông báo hướng dẫn khi thiếu bàn tay/khuôn mặt và danh sách 23 chữ cái tiếng Việt được hỗ trợ}
+\caption{Giao diện xử lý ngoại lệ người dùng và danh sách ký tự hỗ trợ}
+\label{fig:web_error_and_guide}
+\end{figure}
+
+\subsection{Đánh giá cơ chế Scale-to-Zero và đo lường độ trễ thực tế}
+\label{subsec:do_cold_start}
+
+Cơ chế tự động co giãn về không (\textit{Scale-to-Zero}, \texttt{min\_replicas = 0}) trên Azure Container Apps giúp tiết kiệm tối đa tài nguyên tính toán nhưng tạo ra sự chênh lệch lớn giữa lần gọi đầu tiên sau thời gian rảnh (Cold Start) và các lần gọi tiếp theo (Warm Start).
+
+Để có số liệu thực chứng khách quan trên hệ thống đang chạy thật tại vùng \texttt{eastasia}, nhóm đã tiến hành đo trực tiếp các điểm cuối của dịch vụ \texttt{vsl-api} vào ngày 25/11/2026 (Bảng~\ref{tab:latency_measurements}). Trước đó, dữ liệu giám sát từ Azure Monitor (phiên kiểm chứng \texttt{US-020}) cũng xác nhận chỉ số \texttt{Replica Count = 0.0} liên tục trong khoảng thời gian không có truy cập (\texttt{12:07Z}--\texttt{13:06Z}).
+
+\begin{table}[H]
+\centering
+\caption{Kết quả đo độ trễ thực tế trên hệ thống trực tuyến Azure Container Apps và Cloudflare Pages}
+\label{tab:latency_measurements}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{4.3cm} >{\centering\arraybackslash}p{2.3cm} >{\centering\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}X}
+\toprule
+Kịch bản đo lường thực tế & Mã HTTP & Thời gian phản hồi & Diễn giải kỹ thuật \\
+\midrule
+Cold Start \texttt{GET /health} \newline (Container từ trạng thái ngủ) & 200 OK & \textbf{64.962,2 ms} \newline ($\approx$ 64,96 giây) & Cấp phát sandbox mới, kéo image ACR, nạp TensorFlow + ResNet50 (137 MB) vào RAM và vượt \path{startup_probe}. \\
+\midrule
+Warm Start \texttt{GET /health} \newline (3 lượt liên tiếp) & 200 OK & \textbf{166,9 / 161,8 / 179,6 ms} \newline (TB: 169,4 ms) & Mô hình giữ sẵn trong \path{app.state.model}, phản hồi tức thì (nhanh hơn Cold Start \textbf{383 lần}). \\
+\midrule
+Warm Start \texttt{GET /version} & 200 OK & \textbf{151,8 ms} & Trả chính xác \path{git_sha: 45aee1a...} và \path{build_time: 2026-11-21T07:46:53Z}. \\
+\midrule
+Preflight CORS \texttt{OPTIONS /predict} & 200 OK & \textbf{278,8 ms} & Trả header \texttt{Access-Control-Allow-Origin} khớp chính xác tên miền Cloudflare Pages. \\
+\midrule
+Warm \texttt{POST /predict} \newline (2 lượt gửi ảnh thực tế) & 200 OK & \textbf{687,3 ms} (lượt 1) \newline \textbf{566,8 ms} (lượt 2) & Lượt 1 khởi tạo MediaPipe Singleton; từ lượt 2 toàn bộ giải mã ảnh + MediaPipe mất $\approx$ 567 ms. \\
+\midrule
+Tải trang Web Frontend \newline (\texttt{pages.dev} — 2 lượt) & 200 OK & \textbf{710,7 ms} (lượt 1) \newline \textbf{419,7 ms} (lượt 2) & Phân phối qua Edge CDN Cloudflare ($< 1$ giây), hiển thị giao diện ngay cả khi Backend đang ngủ. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+Từ số liệu thực đo tại Bảng~\ref{tab:latency_measurements}, nhóm rút ra hai nhận định quan trọng:
+\begin{itemize}
+    \item \textbf{Ảnh hưởng thực tế của Cold Start ($\approx$ 65 giây):} Khi container chuyển về 0 bản sao, thời gian khởi động lại bao gồm quá trình cấp phát môi trường, giải nén lớp TensorFlow 2.19/MediaPipe và nạp 137 MB trọng số ResNet50. Nhờ cấu hình \path{startup_probe} trong Terraform cho phép tối đa $24 \times 5\text{s} = 120\text{s}$ và cơ chế hiển thị thông báo chờ trên giao diện web, người dùng đầu tiên không gặp lỗi ngắt kết nối \texttt{502/504}. Sau khi container thức dậy, mọi yêu cầu dự đoán tiếp theo đều đạt tốc độ phản hồi dưới \textbf{0,7 giây}.
+    \item \textbf{Chuẩn hóa công cụ đo lặp lại (\path{scripts/benchmark_cold_start.py}):} Ngoài phép đo trực tiếp, dự án đã hoàn thiện kịch bản benchmark chuẩn mực (vượt qua 10/10 ca kiểm thử) yêu cầu có bằng chứng tiền kiểm tra (\textit{preflight receipt}) xác nhận \path{active_instances == 0} hoặc \path{fresh_revision} trước khi đo 5 lượt độc lập để phục vụ đánh giá sâu hơn khi chuyển sang môi trường Production có lưu lượng cao.
+\end{itemize}
+
+\subsection{Phân tích chi phí vận hành và cơ chế bảo vệ ngân sách}
 \label{subsec:phan_tich_chi_phi}
-% [Nội dung sẽ bổ sung: Bảng tính toán chi phí chi tiết: Cloud Run (số lượng request, thời gian CPU/RAM so với hạn mức miễn phí 2 triệu request/tháng và 360.000 vCPU-giây), Artifact Registry, Cloudflare Pages. Chứng minh hệ thống hoàn toàn vận hành ở mức chi phí 0 USD/tháng.]
 
+Hệ thống vận hành trên mô hình tối ưu chi phí kết hợp giữa các dịch vụ miễn phí hoàn toàn và gói tài trợ giáo dục \textbf{Azure for Students (\$100 credit)} (Bảng~\ref{tab:cost_analysis} và Hình~\ref{fig:azure_monitor_cost}).
 
+\begin{table}[H]
+\centering
+\caption{Phân tích chi phí vận hành thực tế và các biện pháp kiểm soát ngân sách}
+\label{tab:cost_analysis}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{2.3cm}}
+\toprule
+Thành phần hạ tầng & Cơ chế tính phí / Hạn mức & Biện pháp tối ưu đã áp dụng & Chi phí thực tế \\
+\midrule
+Azure Container Apps (\texttt{vsl-api}) & Consumption: miễn phí 180.000 vCPU-s, 360.000 GiB-s, 2 triệu requests/tháng & Bật \path{min_replicas = 0} (Scale-to-Zero khi rảnh), giới hạn \path{max_replicas = 3}, tài nguyên vừa đủ 1 vCPU / 2 GiB RAM. & \textbf{0 USD} \newline (trong Free Grant) \\
+\midrule
+Azure Container Registry (\texttt{vslacr3795}) & Gói Basic SKU ($\approx$ 0,167 USD/ngày) & Dùng chung một kho ACR duy nhất cho cả Staging và Production (\path{manage_registry = false}); giới hạn giữ 3 tag mới nhất. & $\approx$ 5 USD/tháng \newline (trừ credit \$100) \\
+\midrule
+Azure Blob State \& Log Analytics & Theo dung lượng lưu trữ & Lưu trạng thái Terraform nhẹ (< 100 KB), giữ log 30 ngày, không bật diagnostic dump dư thừa. & < 0,1 USD/tháng \newline (trừ credit \$100) \\
+\midrule
+Cloudflare Pages \& GitHub Actions & Miễn phí cho dự án web tĩnh & Tối ưu \path{frontend.yml} theo bộ lọc đường dẫn, hủy các lượt CI trùng lặp trên Pull Request. & \textbf{0 USD} \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+Nhờ thiết lập tài nguyên \path{azurerm_consumption_budget_subscription.monthly} trong Terraform (\path{infra/budget.tf}), hệ thống tự động giám sát chi tiêu theo chu kỳ hàng tháng với trần cảnh báo \textbf{\$5 USD} (gửi email cảnh báo sớm ở mức \textbf{20\% = \$1 USD} và cảnh báo khẩn cấp ở mức \textbf{100\% = \$5 USD} tới chủ sở hữu tài khoản). Kết hợp với việc bật \textbf{Entra ID Security defaults (MFA)} cho toàn bộ tài khoản quản trị và danh sách cấm dịch vụ đắt đỏ (VM GPU, AKS, Application Gateway, NAT Gateway) trong Sổ tay vận hành (\path{docs/RUNBOOK.md}), nhóm bảo đảm chi phí tiền mặt bỏ ra bằng \textbf{0 VNĐ} trong suốt quá trình phát triển và vận hành.
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{azure_monitor_cost.png}{Biểu đồ \texttt{Replica Count = 0.0} trên Azure Monitor và màn hình kiểm tra \texttt{Cost analysis} / \texttt{Budget \$5} trên Azure Portal}
+\caption{Giám sát co giãn Scale-to-Zero trên Azure Monitor và kiểm soát ngân sách trên Azure Portal}
+\label{fig:azure_monitor_cost}
+\end{figure}
+
+% ==============================================================================
+% 3.4. ĐÁNH GIÁ TỔNG HỢP VÀ BÀI HỌC KINH NGHIỆM
+% ==============================================================================
 \section{Đánh giá tổng hợp và bài học kinh nghiệm}
 \label{sec:danh_gia_tong_hop}
 
-\subsection{So sánh đối chiếu hệ thống trước và sau khi áp dụng CI/CD \& Cloud Serverless}
+\subsection{Bảng so sánh hệ thống trước và sau khi nâng cấp}
 \label{subsec:so_sanh_he_thong}
-% [Nội dung sẽ bổ sung: Bảng so sánh toàn diện các chỉ tiêu kỹ thuật: Phương thức chạy (Notebook cục bộ vs Cloud Service), Khả năng truy cập (Chỉ máy cá nhân vs Toàn cầu qua Internet), Kiểm thử (Thủ công vs Tự động 32 tests), Quy trình cập nhật (Chép file tay vs CI/CD tự động 1-click).]
 
-\subsection{Các bẫy kỹ thuật và sự cố đã giải quyết trong quá trình thực hiện}
+Sự chuyển đổi toàn diện từ bộ Jupyter Notebook chạy cục bộ sang hệ thống dịch vụ đám mây tự động hóa được tổng kết qua 8 tiêu chí kỹ thuật trong Bảng~\ref{tab:so_sanh_truoc_sau}.
+
+\begin{table}[H]
+\centering
+\caption{So sánh đối chiếu hệ thống trước và sau khi áp dụng CI/CD \& Cloud Serverless}
+\label{tab:so_sanh_truoc_sau}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}p{4.8cm} >{\raggedright\arraybackslash}X}
+\toprule
+Tiêu chí kỹ thuật & Hệ thống ban đầu (SIC Capstone) & Hệ thống sau nâng cấp (v1.0.0) \\
+\midrule
+Kiến trúc phần mềm & 3 tệp Jupyter Notebook rời rạc, trùng lặp logic sinh heatmap và danh sách nhãn. & Gói thư viện \path{src/vsl/} chuẩn hóa, dịch vụ FastAPI (\texttt{/health}, \texttt{/version}, \texttt{/predict}), Frontend tĩnh SPA tách biệt. \\
+\midrule
+Quản lý cấu hình & Đường dẫn tuyệt đối gán cứng kiểu Windows (\texttt{D:\textbackslash...}), dễ gãy khi đổi máy. & Tuân thủ Twelve-Factor App qua biến môi trường (\path{VSL_MODEL_PATH}, \path{VSL_ALLOWED_ORIGINS}), chạy mọi nền tảng. \\
+\midrule
+Khả năng truy cập & Chỉ chạy cục bộ trên máy cá nhân có webcam vật lý. & Truy cập toàn cầu qua HTTPS (\path{pages.dev} + Azure ACA), hỗ trợ đa thiết bị và trình duyệt. \\
+\midrule
+Đóng gói môi trường & Phụ thuộc môi trường Anaconda/Python cài thủ công trên máy cá nhân. & Docker Multi-stage \texttt{linux/amd64} ghim mã băm SHA-256, tách \path{requirements-runtime.txt}, user non-root \texttt{appuser}. \\
+\midrule
+Kiểm thử tự động & Chưa có bất kỳ bài kiểm thử tự động nào. & 34 tệp kiểm thử / 189 hàm test (Unit, Contract 93 cột, Golden Heatmap, Playwright E2E, Terraform, Bảo mật) + \texttt{Ruff}/\texttt{Black}. \\
+\midrule
+Quy trình phát hành & Chạy tay từng cell notebook, không có quản lý phiên bản dịch vụ. & Tự động hoàn toàn qua GitHub Actions + Keyless OIDC, Candidate Smoke Test và tách biệt Staging/Production. \\
+\midrule
+Quản lý hạ tầng & Không có hạ tầng đám mây. & 100\% mã hóa bằng Terraform IaC với Azure Blob Remote State và cảnh báo ngân sách tự động \$5/tháng. \\
+\midrule
+Khôi phục sự cố & Không có phương án xử lý khi lỗi. & Backend hoàn tác qua Revision ACA (\path{rollback.py}); Frontend hoàn tác không build lại trong 5--8 giây. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+\subsection{Các bẫy kỹ thuật đã giải quyết và bài học kinh nghiệm}
 \label{subsec:bay_ky_thuat}
-% [Nội dung sẽ bổ sung: Đúc kết kinh nghiệm xử lý các bài toán hóc búa: Phụ thuộc thư viện đồ họa GUI của OpenCV trên Linux Container; xử lý cơ chế Lazy Loading của Keras 3 / TensorFlow; tối ưu dung lượng Docker image khi đóng gói model học sâu >130MB.]
+
+Trong quá trình triển khai thực tế từ mã nguồn đến hạ tầng Microsoft Azure và Cloudflare Pages, nhóm đã trực tiếp phát hiện và xử lý thành công 5 bẫy kỹ thuật quan trọng:
+\begin{enumerate}
+    \item \textbf{Bẫy định dạng Subject Claim khi cấu hình GitHub OIDC với Azure Entra ID (\texttt{AADSTS700213}):} Khi GitHub Actions tạo JWT token xác thực OIDC, trường \texttt{sub} trả về có kèm mã định danh số của tổ chức và kho chứa (\path{repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/<branch>}). Nếu khai báo kịch bản GitHub mặc định trên Azure Portal (vốn bỏ qua ID số), Azure sẽ từ chối đăng nhập. Nhóm đã khắc phục triệt để bằng cách cấu hình chứng chỉ liên kết dạng tùy biến (\textit{Other}) trong Terraform khớp chính xác với chuỗi claim thực tế.
+    \item \textbf{Bẫy chặn CORS trên nhánh xem trước (Preview URL) của Cloudflare Pages:} Mỗi nhánh trên Cloudflare Pages sinh ra một tên miền phụ riêng (như \path{develop.sign-language-classification.pages.dev}). Nếu Backend chỉ cho phép tên miền chính, toàn bộ yêu cầu kiểm thử trên Staging sẽ bị trình duyệt chặn ở bước preflight \texttt{OPTIONS}. Nhóm đã chuẩn hóa \path{VSL_ALLOWED_ORIGINS} dưới dạng danh sách phân tách dấu phẩy và tự động cập nhật trong workflow \path{deploy-backend.yml} theo từng môi trường.
+    \item \textbf{Xung đột thư viện đồ họa X11 của OpenCV trên Linux Container:} Gói \texttt{opencv-python} mặc định kéo theo các thư viện GUI không tồn tại trong môi trường headless Docker. Chuyển sang \texttt{opencv-python-headless} kết hợp cài đặt tối thiểu \texttt{libgl1}, \texttt{libglib2.0-0} ở tầng \texttt{runtime} đã giải quyết triệt để lỗi khởi động container.
+    \item \textbf{Sai lệch tiền xử lý Caffe và cơ chế nạp trễ Keras 3:} Mô hình ResNet50 gốc được huấn luyện với \texttt{preprocess\_input} dạng Caffe (trừ giá trị trung bình kênh màu BGR trên dải \texttt{0..255}); việc chia thêm cho \texttt{255} hoặc đổi thứ tự 93 tọa độ đều làm hỏng hoàn toàn dự đoán mà không ném ngoại lệ. Nhóm đã khóa chặt hợp đồng này bằng bộ kiểm thử vàng (\textit{golden tests}) và đối chiếu trực tiếp với notebook gốc.
+    \item \textbf{Giới hạn tính năng gói tài trợ giáo dục và lỗi môi trường phát triển cục bộ:} Gói Azure for Students không cho phép kích hoạt \path{azurerm_container_registry_task} (lỗi \texttt{TasksOperationsNotAllowed}) nên nhóm đã bổ sung hướng dẫn dọn dẹp tag ACR trong Runbook. Đồng thời trên máy phát triển Windows có sandbox chặn nạp DLL \texttt{\_ctypes.pyd} của Python 3.12, nhóm đã chuẩn hóa môi trường chạy \texttt{Ruff}/\texttt{Black} qua Python 3.14 độc lập để đảm bảo tính nhất quán trước khi đẩy mã lên CI.
+\end{enumerate}

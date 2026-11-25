@@ -68,3 +68,5 @@ docs/ideas/
 # Generated ONNX model artifacts (US-011)
 *.onnx
 models/*.onnx
+
+docs/jira/

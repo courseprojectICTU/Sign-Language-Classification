@@ -13,7 +13,7 @@
 
 Đề tài xuất phát từ việc sử dụng đồ án Capstone AI cuối khóa \textbf{Samsung Innovation Campus (SIC)} do thành viên trong nhóm tự nghiên cứu, thu thập dữ liệu và huấn luyện mô hình. Bài toán ban đầu tập trung vào việc nhận diện bảng chữ cái ngôn ngữ ký hiệu ngón tay tiếng Việt từ hình ảnh camera cục bộ trên máy tính cá nhân.
 
-Trong khuôn khổ học phần \textbf{Điện toán đám mây}, nhóm hướng tới mục tiêu thực hành đóng vai trò như những kỹ sư DevOps: chuyển đổi một mô hình AI từ môi trường nghiên cứu chạy cục bộ thành một dịch vụ phần mềm hoàn chỉnh, hoạt động ổn định trên mạng Internet. Hệ thống nâng cấp phải bảo đảm khả năng tự động hóa quy trình kiểm thử, đóng gói container và triển khai lên hạ tầng đám mây Serverless với chi phí vận hành bằng \$0.
+Trong khuôn khổ học phần \textbf{Điện toán đám mây}, nhóm hướng tới mục tiêu thực hành đóng vai trò như những kỹ sư DevOps: chuyển đổi một mô hình AI từ môi trường nghiên cứu chạy cục bộ thành một dịch vụ phần mềm hoàn chỉnh, hoạt động ổn định trên mạng Internet. Hệ thống nâng cấp phải bảo đảm khả năng tự động hóa quy trình kiểm thử, đóng gói container, quản lý hạ tầng bằng mã (IaC) và triển khai lên hạ tầng đám mây Serverless với chi phí tối ưu.
 
 \subsection{Các công nghệ cốt lõi và vai trò trong dự án}
 \label{subsec:vai_tro_cong_nghe}
@@ -24,25 +24,31 @@ Trong khuôn khổ học phần \textbf{Điện toán đám mây}, nhóm hướn
     \item \textbf{Phương pháp luận DevOps và quy trình CI/CD}:
     \begin{itemize}
         \item \textit{Bản chất}: DevOps là sự kết hợp giữa phát triển (Dev) và vận hành (Ops). Trọng tâm là quy trình CI/CD (Tích hợp liên tục / Triển khai liên tục) nhằm tự động hóa các khâu kiểm thử mã nguồn, dựng gói phần mềm và phát hành sản phẩm.
-        \item \textit{Vai trò trong dự án}: Nhóm sử dụng \textbf{GitHub Actions} để thiết lập đường ống tự động: mỗi khi có mã nguồn mới được đẩy lên (Git Push) hoặc tạo Pull Request, hệ thống sẽ tự động kích hoạt bộ kiểm thử tự động (\texttt{pytest}), tiến hành đóng gói Docker Image và phát hành thẳng lên Cloud mà không cần thao tác thủ công qua giao diện dòng lệnh.
+        \item \textit{Vai trò trong dự án}: Nhóm sử dụng \textbf{GitHub Actions} kết hợp xác thực không mật khẩu \textbf{OpenID Connect (OIDC)} để thiết lập đường ống tự động: mỗi khi có mã nguồn mới được đẩy lên (Git Push) hoặc tạo Pull Request, hệ thống sẽ tự động kiểm tra chất lượng mã nguồn (\texttt{Ruff}, \texttt{Black}), kích hoạt bộ kiểm thử tự động (\texttt{pytest}, Playwright), tiến hành đóng gói Docker Image và phát hành thẳng lên Microsoft Azure và Cloudflare Pages.
     \end{itemize}
 
-    \item \textbf{Công nghệ Container hóa (Docker)}:
+    \item \textbf{Công nghệ Container hóa (Docker Multi-stage)}:
     \begin{itemize}
-        \item \textit{Bản chất}: Đóng gói mã nguồn ứng dụng cùng toàn bộ môi trường thực thi, phiên bản ngôn ngữ Python và các thư viện phụ thuộc thành một đơn vị duy nhất (Docker Image).
-        \item \textit{Vai trò trong dự án}: Chuẩn hóa môi trường Python 3.11 trên nền tảng Linux Debian (\texttt{python:3.11-slim}), cài đặt sẵn các thư viện C/C++ cần thiết cho OpenCV và TensorFlow, giải quyết triệt để lỗi xung đột môi trường khi chuyển từ máy trạm Windows sang máy chủ đám mây Linux.
+        \item \textit{Bản chất}: Đóng gói mã nguồn ứng dụng cùng toàn bộ môi trường thực thi, phiên bản ngôn ngữ Python và các thư viện phụ thuộc thành một đơn vị duy nhất (Docker Image) có tính tái lập cao.
+        \item \textit{Vai trò trong dự án}: Chuẩn hóa môi trường Python 3.12 trên nền tảng Linux Debian Bookworm (\texttt{python:3.12.7-slim-bookworm} ghim mã băm digest SHA-256), cài đặt sẵn các thư viện C/C++ cần thiết cho OpenCV Headless, MediaPipe và TensorFlow 2.19, giải quyết triệt để lỗi xung đột môi trường khi chuyển từ máy trạm Windows sang máy chủ đám mây Linux.
     \end{itemize}
 
-    \item \textbf{Kiến trúc Serverless Container (Google Cloud Run)}:
+    \item \textbf{Kiến trúc Serverless Container (Microsoft Azure Container Apps)}:
     \begin{itemize}
-        \item \textit{Bản chất}: Dịch vụ chạy container không máy chủ, tự động co giãn từ 0 instance khi không có lưu lượng truy cập (Scale-to-Zero) đến nhiều instance khi có yêu cầu, người dùng chỉ trả tiền theo thời gian xử lý thực tế tính theo từng mili-giây.
-        \item \textit{Vai trò trong dự án}: Làm máy chủ Backend phục vụ API dự đoán AI. Cơ chế Scale-to-Zero kết hợp hạn mức miễn phí 2 triệu lượt gọi/tháng giúp hệ thống vận hành 24/7 trên Internet mà hoàn toàn không tốn chi phí thuê máy chủ ảo.
+        \item \textit{Bản chất}: Dịch vụ chạy container không máy chủ (Serverless Container) trên nền tảng Microsoft Azure, cho phép co giãn tự động từ 0 bản sao khi không có lưu lượng truy cập (Scale-to-Zero) đến nhiều bản sao khi có yêu cầu đồng thời, chỉ tính phí theo thời gian tài nguyên thực tế sử dụng.
+        \item \textit{Vai trò trong dự án}: Làm máy chủ Backend phục vụ API dự đoán AI (\texttt{vsl-api}), lấy image từ kho lưu trữ riêng tư \textbf{Azure Container Registry (ACR)} qua danh tính được quản lý (\textbf{UAMI}). Cơ chế Scale-to-Zero kết hợp với gói tài trợ \textbf{Azure for Students (\$100 credit)} và hạn mức miễn phí hàng tháng của Consumption profile giúp hệ thống vận hành 24/7 trên Internet với chi phí tối thiểu.
+    \end{itemize}
+
+    \item \textbf{Hạ tầng dưới dạng mã (Infrastructure as Code -- Terraform)}:
+    \begin{itemize}
+        \item \textit{Bản chất}: Phương pháp định nghĩa, cấp phát và quản lý toàn bộ tài nguyên hạ tầng đám mây thông qua các tệp cấu hình mã nguồn thay vì thao tác nhấp chuột thủ công trên giao diện quản trị.
+        \item \textit{Vai trò trong dự án}: Quản lý nhất quán toàn bộ tài nguyên Azure (Container Apps Environment, ACR, Log Analytics Workspace, Managed Identity, Azure OIDC Federated Identity và Azure Consumption Budget) giữa môi trường Staging và Production với trạng thái lưu trữ tập trung trên Azure Blob Storage.
     \end{itemize}
 
     \item \textbf{Dịch vụ lưu trữ Web tĩnh (Cloudflare Pages)}:
     \begin{itemize}
-        \item \textit{Bản chất}: Nền tảng lưu trữ và phân phối website tĩnh (HTML, CSS, JavaScript) thông qua mạng lưới máy chủ biên (Edge CDN) toàn cầu, tích hợp sẵn chứng chỉ bảo mật SSL/TLS.
-        \item \textit{Vai trò trong dự án}: Đảm nhận vai trò máy chủ Frontend phục vụ giao diện người dùng (Web Client) với tốc độ cao, băng thông không giới hạn và hoàn toàn miễn phí.
+        \item \textit{Bản chất}: Nền tảng lưu trữ và phân phối website tĩnh (HTML, CSS, JavaScript) thông qua mạng lưới máy chủ biên (Edge CDN) toàn cầu, tích hợp sẵn chứng chỉ bảo mật SSL/TLS và hỗ trợ xem trước theo nhánh (Preview Deployments).
+        \item \textit{Vai trò trong dự án}: Đảm nhận vai trò máy chủ Frontend phục vụ giao diện người dùng (Web Client) với tốc độ cao, băng thông không giới hạn, triển khai tức thì cho cả hai nhánh \texttt{develop} (Staging Preview) và \texttt{main} (Production) hoàn toàn miễn phí.
     \end{itemize}
 \end{itemize}
 
@@ -125,7 +131,7 @@ Chi tiết các thành phần kỹ thuật:
     & \to \text{Dense}(256, \text{ReLU}) \to \text{Dense}(23, \text{Softmax})
     \end{aligned}
     \end{equation}
-    Tệp trọng số mô hình đã huấn luyện là \texttt{train/vsl\_cnn\_pose\_keras.h5} có kích thước thực tế \textbf{137.042.364 bytes (~130,7 MB)}, được lưu trữ trong Git bằng Git LFS.
+    Tệp trọng số mô hình đã huấn luyện là \texttt{train/vsl\_cnn\_pose\_keras.h5} có kích thước thực tế \textbf{137.042.364 bytes ($\approx$ 130,7 MB)}, được lưu trữ trong Git bằng Git LFS.
 \end{enumerate}
 
 \subsection{Các hạn chế thực tế của hệ thống ban đầu}
@@ -152,58 +158,57 @@ Dựa trên các hạn chế đã chỉ ra, nhóm xác lập các yêu cầu k�
 \begin{itemize}
     \item \textbf{Yêu cầu chức năng}:
     \begin{itemize}
-        \item \textit{FR-01 (API \texttt{GET /health})}: Cung cấp điểm cuối kiểm tra trạng thái dịch vụ và kiểm tra tính sẵn sàng của mô hình ResNet50 trong bộ nhớ RAM.
-        \item \textit{FR-02 (API \texttt{POST /predict})}: Cung cấp điểm cuối tiếp nhận ảnh từ client, tự động thực thi pipeline MediaPipe 93 điểm mốc ở server, sinh heatmap và đưa qua mô hình ResNet50 để trả về kết quả dự đoán (chữ cái và độ tin cậy) dạng JSON.
-        \item \textit{FR-03 (Web Client)}: Cung cấp giao diện trực quan trên trình duyệt, mở camera người dùng, chụp khung hình và hiển thị kết quả phân loại tức thì.
+        \item \textit{FR-01 (API \texttt{GET /health} và \texttt{GET /version})}: Cung cấp điểm cuối kiểm tra trạng thái sức khỏe dịch vụ, tính sẵn sàng của mô hình ResNet50 trong bộ nhớ RAM và truy vết phiên bản mã nguồn đang chạy (\texttt{git\_sha}, \texttt{build\_time}).
+        \item \textit{FR-02 (API \texttt{POST /predict})}: Cung cấp điểm cuối tiếp nhận ảnh từ client, kiểm tra chặt chẽ định dạng (JPEG/PNG) và dung lượng tối đa 5 MB, tự động thực thi pipeline MediaPipe 93 điểm mốc ở server, sinh heatmap và đưa qua mô hình ResNet50 để trả về kết quả dự đoán dạng JSON.
+        \item \textit{FR-03 (Web Client)}: Cung cấp giao diện trực quan trên trình duyệt (Cloudflare Pages), hỗ trợ mở camera người dùng hoặc tải ảnh mẫu, gửi yêu cầu qua HTTPS có kiểm soát CORS và hiển thị kết quả phân loại cùng thông báo trạng thái khởi động dịch vụ.
     \end{itemize}
     \item \textbf{Yêu cầu phi chức năng}:
     \begin{itemize}
-        \item \textit{NFR-01 (Tự động hóa CI/CD)}: Quy trình chạy kiểm thử, đóng gói Docker Image và triển khai lên Cloud Run phải được tự động hóa hoàn toàn bằng GitHub Actions.
-        \item \textit{NFR-02 (Độ tin cậy kiểm thử)}: Xây dựng bộ kiểm thử tự động bao phủ toàn diện các hàm cốt lõi (nhãn, ma trận heatmap, cấu hình đường dẫn động, API endpoint), bảo đảm 100\% các ca kiểm thử vượt qua thành công trước khi phát hành.
-        \item \textit{NFR-03 (Tách biệt cấu hình)}: Tách hoàn toàn đường dẫn mô hình và dữ liệu khỏi mã nguồn thông qua biến môi trường (\texttt{VSL\_MODEL\_PATH}, \texttt{VSL\_DATA\_DIR}) để ứng dụng có thể chạy linh hoạt trên mọi môi trường.
+        \item \textit{NFR-01 (Tự động hóa CI/CD và Bảo mật Zero-Trust)}: Quy trình kiểm tra chất lượng mã, kiểm thử tự động, đóng gói Docker Image và triển khai lên Azure Container Apps / Cloudflare Pages phải được tự động hóa hoàn toàn bằng GitHub Actions thông qua xác thực \textbf{OIDC} (không lưu khóa tĩnh dài hạn).
+        \item \textit{NFR-02 (Độ tin cậy kiểm thử và Khôi phục sự cố)}: Xây dựng bộ kiểm thử tự động bao phủ toàn diện các hàm cốt lõi (nhãn, ma trận heatmap, hợp đồng 93 điểm mốc, cấu hình động, API endpoint, CORS, giao diện Playwright, hợp đồng Terraform), bảo đảm 100\% ca kiểm thử vượt qua trước khi phát hành và sẵn sàng cơ chế Rollback tức thì.
+        \item \textit{NFR-03 (Tách biệt cấu hình Twelve-Factor App)}: Tách hoàn toàn đường dẫn mô hình, dữ liệu và danh sách tên miền cho phép khỏi mã nguồn thông qua biến môi trường (\path{VSL_MODEL_PATH}, \path{VSL_DATA_DIR}, \path{VSL_ALLOWED_ORIGINS}) để ứng dụng chạy linh hoạt trên mọi môi trường.
     \end{itemize}
 \end{itemize}
 
 \clearpage
-\subsection{Kiến trúc phân tách Decoupled và tối ưu chi phí \$0}
+\subsection{Kiến trúc phân tách Decoupled và tối ưu chi phí vận hành}
 \label{subsec:kien_truc_decoupled}
 
-Để triển khai một mô hình AI nặng (>130 MB) lên Internet mà hoàn toàn không phát sinh chi phí, nhóm lựa chọn mô hình kiến trúc phân tách độc lập (Decoupled Architecture) giữa Cloudflare Pages và Google Cloud Run (Hình \ref{fig:kien_truc_tong_the}):
+Trong giai đoạn đầu khởi tạo đề tài, nhóm từng cân nhắc lựa chọn Google Cloud Run; tuy nhiên chính sách kích hoạt tài khoản tại Việt Nam yêu cầu khoản đặt cọc xác minh (800.000 VNĐ). Để bảo đảm mục tiêu tối ưu chi phí (0 VNĐ chi phí tiền mặt) và hỗ trợ đầy đủ hạ tầng làm việc nhóm, nhóm đã lựa chọn chuyển đổi nền tảng Backend sang \textbf{Microsoft Azure Container Apps (ACA)} sử dụng gói tài trợ sinh viên \textbf{Azure for Students (\$100 credit, không cần thẻ tín dụng)}.
+
+Để triển khai một mô hình AI có dung lượng lớn (>130 MB) lên Internet một cách tối ưu, hệ thống áp dụng mô hình kiến trúc phân tách độc lập (Decoupled Architecture) giữa Cloudflare Pages và Microsoft Azure Container Apps (Hình \ref{fig:kien_truc_tong_the}):
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\textwidth]{Anh1.png}
-\caption{Kiến trúc phân tách Decoupled giữa Frontend (Cloudflare Pages) và Backend (Google Cloud Run)}
+\includegraphics[width=0.82\textwidth]{Anh1_azure.jpg}
+\caption{Kiến trúc phân tách Decoupled giữa Frontend (Cloudflare Pages) và Backend (Microsoft Azure Container Apps)}
 \label{fig:kien_truc_tong_the}
 \end{figure}
 
-Giải pháp này mang lại 3 ưu điểm kỹ thuật vượt trội:
+Giải pháp kiến trúc này mang lại 3 ưu điểm kỹ thuật vượt trội:
 \begin{enumerate}
-    \item \textbf{Bảo đảm tính nhất quán của dữ liệu điểm mốc (Zero Landmark Divergence)}: Thay vì chạy MediaPipe trên trình duyệt bằng JavaScript (vốn phụ thuộc vào phần cứng WebGL từng thiết bị và dễ làm lệch tọa độ so với môi trường Python lúc huấn luyện), trình duyệt chỉ gửi ảnh thô lên server. Backend Cloud Run chạy MediaPipe bằng Python, bảo đảm quy trình trích xuất hoàn toàn trùng khớp 100\% với lúc train.
-    \item \textbf{Tận dụng bộ nhớ RAM lớn của Cloud Run}: Cloud Run cho phép cấp phát tới 1--2 GB RAM hoàn toàn miễn phí, giải quyết được bài toán nạp mô hình TensorFlow ResNet50 (137 MB) và MediaPipe vào bộ nhớ mà không bị giới hạn 250 MB như FaaS truyền thống.
-    \item \textbf{Vận hành ổn định với chi phí \$0}: Bảng \ref{tab:free_tier_limits} tóm tắt chính sách Bậc miễn phí (Free Tier) hàng tháng của các dịch vụ được sử dụng:
+    \item \textbf{Bảo đảm tính nhất quán của dữ liệu điểm mốc (Zero Landmark Divergence)}: Thay vì chạy MediaPipe trên trình duyệt bằng JavaScript (vốn phụ thuộc vào phần cứng WebGL từng thiết bị và dễ làm lệch tọa độ so với môi trường Python lúc huấn luyện), trình duyệt chỉ gửi ảnh thô lên server. Backend trên Azure Container Apps chạy MediaPipe bằng Python, bảo đảm quy trình trích xuất hoàn toàn trùng khớp 100\% với môi trường huấn luyện.
+    \item \textbf{Tận dụng bộ nhớ RAM lớn và khả năng co giãn linh hoạt của ACA}: Azure Container Apps gói Consumption cho phép cấp phát tài nguyên \textbf{1,0 vCPU và 2,0 GiB RAM} cho mỗi container bản sao, giải quyết triệt để bài toán nạp mô hình TensorFlow ResNet50 (137 MB) và MediaPipe vào bộ nhớ mà không bị giới hạn 250 MB như các nền tảng FaaS truyền thống, đồng thời tự động đưa số bản sao về 0 (\texttt{min\_replicas = 0}) khi không có truy cập.
+    \item \textbf{Kiểm soát ngân sách chặt chẽ và tối ưu chi phí}: Bảng \ref{tab:free_tier_limits} tổng hợp cấu hình, hạn mức miễn phí và nguồn tài trợ của các dịch vụ đám mây được sử dụng trong dự án.
 \end{enumerate}
 
 \begin{table}[H]
 \centering
-\caption{Hạn mức miễn phí hàng tháng (Free Tier) của các dịch vụ được lựa chọn}
+\caption{Các dịch vụ hạ tầng và chính sách tối ưu chi phí vận hành}
 \label{tab:free_tier_limits}
-\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.8cm}}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{2.1cm}}
 \toprule
-Dịch vụ & Vai trò kiến trúc & Hạn mức miễn phí hàng tháng (Free Tier) & Chi phí \\
+Dịch vụ & Vai trò kiến trúc & Hạn mức miễn phí / Chính sách tài trợ & Chi phí thực tế \\
 \midrule
-Google Cloud Run & Máy chủ Backend Serverless Container & 2.000.000 lượt yêu cầu (requests)\newline 360.000 GB-giây RAM\newline 180.000 vCPU-giây tính toán & 0 USD \\
+Azure Container Apps (Consumption) & Máy chủ Backend Serverless Container (\texttt{vsl-api}) & Miễn phí hàng tháng 180.000 vCPU-giây, 360.000 GiB-giây, 2.000.000 HTTP requests đầu tiên; Scale-to-Zero & 0 USD (trong Free Grant / \$100 credit) \\
 \midrule
-Google Artifact Registry & Kho lưu trữ Docker Images & 500 MB dung lượng lưu trữ Image OCI & 0 USD \\
+Azure Container Registry (Basic) & Kho lưu trữ Docker Image riêng tư (\texttt{vslacr3795}) & Lưu trữ tới 10 GiB; trừ vào gói tài trợ Azure for Students (\$100 credit) kèm cảnh báo ngân sách \$5/tháng & $\approx$ 0,167 USD/ngày (từ credit) \\
 \midrule
-Cloudflare Pages & Máy chủ lưu trữ Frontend tĩnh & Băng thông truyền tải không giới hạn\newline Cấp phát chứng chỉ SSL/TLS tự động & 0 USD \\
+Cloudflare Pages & Máy chủ lưu trữ Frontend tĩnh & Băng thông truyền tải không giới hạn, Preview deployments theo nhánh, chứng chỉ SSL/TLS tự động & 0 USD \\
 \midrule
-GitHub Actions & Nền tảng tự động hóa CI/CD & 2.000 phút chạy máy ảo Linux mỗi tháng cho kho mã nguồn công khai & 0 USD \\
+GitHub Actions & Nền tảng tự động hóa CI/CD & 2.000 phút chạy máy ảo Linux mỗi tháng (kho mã nguồn công khai không giới hạn phút chạy) & 0 USD \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Nhờ cơ chế Scale-to-Zero của Cloud Run và chính sách băng thông miễn phí của Cloudflare Pages, hệ thống hoàn toàn đáp ứng mục tiêu hoạt động ổn định trên Internet mà không phát sinh bất kỳ khoản phí nào cho nhóm sinh viên.
-
-\section{Tóm tắt chương 1}
-Chương 1 đã làm rõ bối cảnh đề tài, vai trò của từng công nghệ trong dự án và phân tích chi tiết pipeline của mô hình AI nhận diện 23 ký tự ngôn ngữ ký hiệu tiếng Việt từ đồ án Capstone SIC. Chương cũng đã chỉ ra 5 hạn chế lớn của hệ thống chạy cục bộ ban đầu, từ đó xác lập các yêu cầu chức năng, phi chức năng và đề xuất giải pháp kiến trúc phân tách Decoupled giữa Cloudflare Pages và Google Cloud Run nhằm tối ưu chi phí \$0. Đây là cơ sở tiền đề để thực hiện thiết kế chi tiết và xây dựng hệ thống trong Chương 2.
+Nhờ cơ chế Scale-to-Zero của Azure Container Apps, hàng rào cảnh báo ngân sách tự động \$5/tháng thiết lập qua Terraform và chính sách miễn phí băng thông của Cloudflare Pages, hệ thống hoàn toàn đáp ứng mục tiêu hoạt động ổn định trên Internet mà không phát sinh chi phí tiền mặt cho nhóm sinh viên.

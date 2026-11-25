@@ -18,3 +18,44 @@ Mô tả
 + Frontend: Giao diện web chạy trên Cloudflare Pages.
 - Quy trình CI/CD: Dùng GitHub Actions tự động chạy test, đóng gói Docker image và deploy lên Microsoft Azure mỗi khi có mã nguồn mới.
 - Mục tiêu: Học đóng vai trò như người DevOps triển khai ứng dụng chạy ổn định trên Internet.
+
+
+Lưu ý về chọn mini-project:
+
+1. Nội dung Mini project
+- Mini project có thể là một website (thương mại điện tử, web app,..), có thể là một ứng dụng mobile, IoT (cho phép truy cập qua Internet), hoặc đơn giản là một bài tập môn học máy, học sâu
+
+- Các bạn tủy chọn mini project, nhưng hãy chắc chắn rằng nó không quá đơn giản (ví dụ web tĩnh, template web site,...) --> Hãy đảm bảo rằng mini project là sản phẩm sau quá trình phân tích thiết kế hệ thống
+
+- Mini project nên có đủ nội dung công việc để có thể phân phối đồng đều cho các thành viên trong nhóm
+
+2. Dịch vụ public cloud
+
+- Nên chọn những nhà cung cấp dịch vụ vừa và nhỏ cho phép chúng ta dùng thử dịch vụ của họ, và dịch vụ được lựa chọn phải phù hợp với bài toán
+
+- Nên cẩn thận khi add thẻ (nếu dịch vụ yêu cầu) và theo dõi chặt chẽ quá trình sử dụng dịch vụ để đảm bảo kiểm soát được việc tính phí (nếu có)
+
+- Trước khi làm theo bất cứ hướng dẫn nào có liên quan (facebook, youtube,...) hãy xem kĩ và xem hết hướng dẫn trước khi bắt đầu
+
+Yêu cầu tại buổi trình bày báo cáo
+
+A. Báo cáo
+- Trình bày theo quy định chung. Có thể tham khảo mẫu trình bày tại https://docs.google.com/document/d/1EEr5p1hp46VBLuG1wmw51AvIj29QLIkd/edit?tab=t.0
+- Báo cáo có tổng độ dài khoảng 20 trang A4 với 07 phần chính:
+1. Mô tả bài toán/ vấn đề mà mini project giải quyết (Input, Output, nội hàm của bài toán);
+2. Dịch vụ được lựa chọn (các thông tin cơ bản về dịch vụ, giao diện và tính năng được cung cấp bới dịch vụ đã lựa chọn (sau khi login tài khoản), tính hợp lý của dịch vụ được lựa chọn với bài toán/vấn đề);
+3. Phân công công việc trong nhóm;
+4. Kế hoạch dự kiến hoàn thành mini project (các bước thực hiện, nội dung từng bước, kết quả dự kiến, thời gian)
+5. Các bước chi tiết để triển khai (deploy) được bài toán/ vấn đề nghiên cứu lên dịch vụ Cloud đã chọn (hướng dẫn chi tiết kèm hình ảnh có minh họa rõ ràng)
+6. Kết quả sau khi triển khai (Trình bày các giao diện, tính năng, chức năng, hướng dẫn sử dụng đối với sản phẩm của bài toán/ vấn đề nghiên cứu)
+7. Kết luận và hướng phát triển
+B. Demo
+- Các bước triển khai chi tiết của bài toán/ vấn đề nghiên cứu đã chọn lên dịch vụ Cloud đã chọn
+- Các giao diện, tính năng, chức năng của sản phẩm sau khi triển khai lên dịch vụ Cloud
+Hướng dẫn trình bày Mini-project
+Lưu ý khi trình bày demo
+Mỗi nhóm khi trình bày bắt buộc cần làm rõ mấy vấn đề sau:
+- Nêu được bài toán/ vấn đề nghiên cứu (input, output, nội hàm/ hướng giải quyết)
+- Các bước triển khai chi tiết của bài toán/ vấn đề nghiên cứu đã chọn lên dịch vụ Cloud đã chọn
+- Các giao diện, tính năng, chức năng của sản phẩm sau khi triển khai lên dịch vụ Cloud
+- Kết luận và hướng phát triển

@@ -2,20 +2,24 @@
 % CONFIG.TEX - CẤU HÌNH ĐỊNH DẠNG BÁO CÁO THEO QUY CHUẨN ICTU
 % ==============================================================================
 
-\usepackage[utf8]{inputenc}
-\usepackage[vietnamese]{babel}
-
-% 1. Cấu hình Font chữ Times New Roman
+\usepackage{fix-cm}
 \usepackage{iftex}
 \ifPDFTeX
+    \usepackage[utf8]{inputenc}
     \usepackage[T5,T1]{fontenc}
-    \usepackage{mathptmx} % Times New Roman cho pdfLaTeX
+    \usepackage[vietnamese]{babel}
+    \usepackage{mathptmx} % Font họ Times cho pdfLaTeX
+    \renewcommand{\sfdefault}{\rmdefault}
+    \renewcommand{\ttdefault}{\rmdefault}
 \else
     \usepackage{fontspec}
-    \setmainfont{Times New Roman} % Times New Roman hệ thống cho XeLaTeX / LuaLaTeX
+    \setmainfont{Times New Roman}
+    \setsansfont{Times New Roman}
+    \setmonofont{Times New Roman}
+    \usepackage[vietnamese]{babel}
 \fi
 
-% 2. Cỡ chữ 13pt (Quy định: Times New Roman cỡ chữ 13)
+% 2. Cỡ chữ 13pt mặc định toàn tài liệu (Quy định: Times New Roman cỡ chữ 13)
 \usepackage{scrextend}
 \changefontsizes[17pt]{13pt}
 
@@ -114,8 +118,21 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{calc}
+\usetikzlibrary{calc, arrows.meta, positioning, shapes.geometric, fit, backgrounds}
+\usepackage{xurl}
 \usepackage{hyperref}
+\urlstyle{same}
+\makeatletter
+\g@addto@macro\UrlBreaks{\do\_\do\:\do\@\do\-}
+\makeatother
+
+% Tắt hoàn toàn cơ chế tự động ngắt từ bằng dấu gạch nối (-) trên toàn bộ văn bản
+\AtBeginDocument{%
+    \pretolerance=10000%
+    \hyphenpenalty=10000%
+    \tolerance=2000%
+    \emergencystretch=3em%
+}
 
 \hypersetup{
     colorlinks=true,
@@ -128,11 +145,11 @@
     pdftitle={Báo cáo Bài tập lớn: Quy trình CI/CD và Triển khai hệ thống nhận diện ngôn ngữ ký hiệu tiếng Việt}
 }
 
-% Cấu hình hiển thị code
+% Cấu hình hiển thị code (dùng Times New Roman đồng bộ toàn báo cáo)
 \lstset{
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue}\bfseries,
-    stringstyle=\color{red},
+    basicstyle=\normalfont\fontsize{11pt}{14pt}\selectfont,
+    keywordstyle=\bfseries,
+    stringstyle=\itshape,
     commentstyle=\color{gray}\itshape,
     numbers=left,
     numberstyle=\tiny\color{gray},
@@ -147,4 +164,31 @@
     captionpos=b,
     breaklines=true,
     breakatwhitespace=false
+}
+
+% Macro chèn ảnh chụp màn hình: tự động hiển thị ảnh nếu tệp tồn tại trong figures/,
+% nếu chưa có tệp sẽ hiển thị khung chờ tiêu chuẩn kèm tên tệp cần bổ sung.
+\newcommand{\screenshotplaceholder}[2]{%
+    \IfFileExists{figures/#1}{%
+        \includegraphics[width=0.92\textwidth]{#1}%
+    }{%
+        \begin{tikzpicture}
+            \node[
+                draw=gray!70,
+                dashed,
+                line width=0.9pt,
+                rounded corners=4pt,
+                fill=gray!6,
+                minimum width=0.90\textwidth,
+                minimum height=4.4cm,
+                align=center,
+                text width=0.82\textwidth,
+                font=\normalfont\fontsize{11pt}{14pt}\selectfont
+            ] {
+                \textbf{[KHUNG CHỜ ẢNH CHỤP MÀN HÌNH THỰC TẾ]}\\[6pt]
+                #2\\[6pt]
+                \textit{Đường dẫn tệp dự kiến:} \texttt{\detokenize{report/figures/#1}}
+            };
+        \end{tikzpicture}%
+    }%
 }

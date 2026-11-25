@@ -16,71 +16,696 @@
 }
 
 \appendixsection{Đặc tả kỹ thuật Dockerfile cho dịch vụ AI Serverless}{app:dockerfile}
-\begin{lstlisting}[language=bash, caption={Cấu hình Dockerfile tối ưu kích thước cho Google Cloud Run}]
-# Build stage: Base Python 3.11 Slim
-FROM python:3.11-slim
+\begin{lstlisting}[language=bash, caption={Cấu hình Dockerfile Multi-stage tối ưu và bảo mật cho Azure Container Apps (Dockerfile)}]
+# syntax=docker/dockerfile:1.7
 
-# Thiet lap bien moi truong
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
+FROM --platform=linux/amd64 python:3.12.7-slim-bookworm@sha256:60d9996b6a8a3689d36db740b49f4327be3be09a21122bd02fb8895abb38b50d AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m venv "$VIRTUAL_ENV"
+
+# Install dependencies before source so code-only changes reuse this layer.
+COPY requirements-runtime.txt ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements-runtime.txt
+
+
+FROM --platform=linux/amd64 python:3.12.7-slim-bookworm@sha256:60d9996b6a8a3689d36db740b49f4327be3be09a21122bd02fb8895abb38b50d AS runtime
+
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=""
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH" \
     PORT=8080
 
-# Cai dat thu vien he thong cho OpenCV Headless va MediaPipe
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+ENV GIT_SHA=${GIT_SHA} \
+    BUILD_TIME=${BUILD_TIME}
 
 WORKDIR /app
 
-# Cai dat Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    libgl1 \
+    libglib2.0-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Sao chep ma nguon va trong so mo hinh
-COPY src/ /app/src/
-COPY train/vsl_cnn_pose_keras.h5 /app/train/vsl_cnn_pose_keras.h5
+COPY --from=builder /opt/venv /opt/venv
+COPY src ./src
+COPY train/vsl_cnn_pose_keras.h5 ./train/vsl_cnn_pose_keras.h5
 
-# Cau hinh tai khoan non-root bao mat
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+RUN useradd --system --uid 10001 --create-home appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
-# Expose cong va chay Uvicorn server
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS http://localhost:8080/health || exit 1
+
 CMD ["uvicorn", "src.vsl.service:app", "--host", "0.0.0.0", "--port", "8080"]
 \end{lstlisting}
 
 \appendixsection{Cấu hình luồng CI/CD tự động hóa trên GitHub Actions}{app:github_actions}
-\begin{lstlisting}[language=bash, caption={Workflow CI tự động chạy kiểm thử trên GitHub Actions (.github/workflows/ci.yml)}]
-name: CI Pipeline - Lint and Automated Tests
+\begin{lstlisting}[language=bash, caption={Workflow CI kiểm tra Terraform, Ruff, Black, pytest và build thử Docker image (.github/workflows/ci.yml)}]
+name: CI
 
 on:
-  push:
-    branches: [ develop, main ]
   pull_request:
-    branches: [ develop, main ]
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  lint-and-test:
+    name: Lint and tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout Source Code
+      - name: Checkout source and model
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Setup Python Runtime
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r requirements-dev.txt -r requirements.txt
 
-      - name: Run Test Suite
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements-dev.txt') }}
+
+      - name: Install Playwright browsers
+        timeout-minutes: 15
+        shell: bash
         run: |
-          pytest tests -v
+          printf '%s\n' \
+            'Acquire::ForceIPv4 "true";' \
+            'Acquire::Retries "3";' \
+            'Acquire::http::Timeout "15";' \
+            'Acquire::https::Timeout "15";' \
+            'Acquire::http::Pipeline-Depth "0";' \
+            'Acquire::https::Pipeline-Depth "0";' | sudo tee /etc/apt/apt.conf.d/99ci-resilience >/dev/null
+
+          python -m playwright install chromium firefox
+
+          install_playwright() {
+            timeout 90 python -m playwright install --with-deps chromium firefox
+          }
+
+          switch_apt_mirror() {
+            local target_uri="$1"
+            sudo pkill -x apt-get || true
+            sleep 1
+            sudo dpkg --configure -a || true
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              printf '%s\n' "${target_uri}" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+            fi
+            sudo find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -exec sed -i -E \
+              "s#https?://[^[:space:]]+/ubuntu/?#${target_uri}#g" {} +
+            sudo apt-get clean || true
+            timeout 45 sudo apt-get -o DPkg::Lock::Timeout=30 update --fix-missing || true
+          }
+
+          verify_playwright_launch() {
+            python - <<'PY'
+          from playwright.sync_api import sync_playwright
+
+          with sync_playwright() as p:
+              for label, fn in (
+                  ("chromium", lambda: p.chromium.launch()),
+                  ("msedge", lambda: p.chromium.launch(channel="msedge")),
+                  ("firefox", lambda: p.firefox.launch()),
+              ):
+                  browser = fn()
+                  page = browser.new_page()
+                  page.set_content("<h1>ok</h1>")
+                  assert page.text_content("h1") == "ok"
+                  browser.close()
+                  print(f"Verified Playwright browser launch: {label}")
+          PY
+          }
+
+          installed=false
+          for mirror in "" "https://mirrors.edge.kernel.org/ubuntu/" "http://archive.ubuntu.com/ubuntu/" "http://azure.archive.ubuntu.com/ubuntu/"; do
+            if [ -n "${mirror}" ]; then
+              echo "::warning::Retrying Playwright OS deps using Ubuntu mirror: ${mirror}"
+              switch_apt_mirror "${mirror}"
+            fi
+            if install_playwright; then
+              installed=true
+              break
+            fi
+          done
+
+          if [ "${installed}" != "true" ]; then
+            echo "::warning::Ubuntu APT mirrors failed for optional --with-deps packages; verifying pre-installed browser runtime libraries directly..."
+            verify_playwright_launch
+          fi
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra
+
+      - name: Validate root Terraform
+        run: |
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate -no-color
+
+      - name: Run Ruff
+        run: ruff check src tests scripts
+
+      - name: Check formatting with Black
+        run: black --check src tests scripts
+
+      - name: Run tests
+        run: pytest tests -v
+
+  docker-build:
+    name: Build Docker image without pushing
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source and model
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Record build start time
+        shell: bash
+        run: |
+          echo "BUILD_START=$(date +%s)" >> "$GITHUB_ENV"
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build Docker image with GHA cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: vsl-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ env.BUILD_TIME }}
+
+      - name: Report build duration and image size
+        shell: bash
+        run: |
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          IMAGE_SIZE_BYTES=$(docker image inspect vsl-api:ci --format='{{.Size}}')
+          IMAGE_SIZE_MB=$((IMAGE_SIZE_BYTES / 1024 / 1024))
+
+          echo "Docker build duration: ${BUILD_DURATION}s"
+          echo "Docker image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+          {
+            echo "### Docker build metrics"
+            echo "- Duration: ${BUILD_DURATION}s"
+            echo "- Image size: ${IMAGE_SIZE_MB} MiB (${IMAGE_SIZE_BYTES} bytes)"
+            echo "- Platform: linux/amd64"
+            echo "- BuildKit cache: type=gha"
+          } >> "$GITHUB_STEP_SUMMARY"
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Workflow CD phát hành Backend qua OIDC, triển khai bản candidate, smoke test và chuyển traffic lên Azure Container Apps (.github/workflows/deploy-backend.yml)}]
+name: Deploy backend to Azure (Staging & Production)
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aca-${{ github.ref_name }}-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, smoke-test, and promote ACA revision (${{ github.ref_name }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME }}
+      AZURE_ACR_NAME: ${{ vars.AZURE_ACR_NAME }}
+      IMAGE_REPOSITORY: vsl-api
+      GIT_SHA: ${{ github.sha }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Determine target deployment environment
+        id: target-env
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            target_env="production"
+            rg="${{ vars.AZURE_PROD_RESOURCE_GROUP || vars.AZURE_RESOURCE_GROUP || 'rg-vsl-staging' }}"
+            app="${{ vars.AZURE_PROD_CONTAINER_APP_NAME || vars.AZURE_CONTAINER_APP_NAME || 'vsl-api' }}"
+          else
+            target_env="staging"
+            rg="${{ vars.AZURE_STAGING_RESOURCE_GROUP || vars.AZURE_RESOURCE_GROUP || 'rg-vsl-staging' }}"
+            app="${{ vars.AZURE_STAGING_CONTAINER_APP_NAME || vars.AZURE_CONTAINER_APP_NAME || 'vsl-api' }}"
+          fi
+          echo "TARGET_ENV=${target_env}" >> "$GITHUB_ENV"
+          echo "AZURE_RESOURCE_GROUP=${rg}" >> "$GITHUB_ENV"
+          echo "AZURE_CONTAINER_APP_NAME=${app}" >> "$GITHUB_ENV"
+          echo "Target Environment: ${target_env} (Resource Group: ${rg}, Container App: ${app})"
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in \
+            AZURE_CLIENT_ID \
+            AZURE_TENANT_ID \
+            AZURE_SUBSCRIPTION_ID \
+            AZURE_RESOURCE_GROUP \
+            AZURE_CONTAINER_APP_NAME \
+            AZURE_ACR_NAME; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Required GitHub Actions variable ${name} is not configured."
+              exit 1
+            fi
+          done
+          if [[ "$TARGET_ENV" == "production" ]]; then
+            echo "::notice::Branch 'main' targeted for Production deployment. Staging environment is isolated and untouched."
+          else
+            echo "::notice::Branch 'develop' targeted for Staging deployment. Production environment is isolated and untouched."
+          fi
+
+      - name: Sign in to Azure with GitHub OIDC
+        id: azure-login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Container Apps CLI extension
+        shell: bash
+        run: az extension add --name containerapp --upgrade
+
+      - name: Build and push image to ACR
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          login_server="${AZURE_ACR_NAME}.azurecr.io"
+          image="${login_server}/${IMAGE_REPOSITORY}:${GIT_SHA}"
+          az acr login --name "$AZURE_ACR_NAME"
+          docker build \
+            --platform linux/amd64 \
+            --build-arg "GIT_SHA=${GIT_SHA}" \
+            --build-arg "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --tag "$image" \
+            .
+          docker push "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy candidate revision without stable traffic
+        id: candidate
+        shell: bash
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+        run: |
+          set -euo pipefail
+          az containerapp revision set-mode \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --mode multiple
+
+          revisions="$(az containerapp revision list \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --output json)"
+          previous_revision="$(jq -r \
+            '[.[] | select(.properties.active == true and .properties.trafficWeight == 100) | .name]
+             | if length == 1 then .[0] else empty end' <<< "$revisions")"
+          if [[ -z "$previous_revision" ]]; then
+            echo "::error::Expected exactly one active revision with 100% traffic; refusing deployment."
+            exit 1
+          fi
+
+          suffix="r${GITHUB_RUN_ID}"
+          if [[ "$TARGET_ENV" == "production" ]]; then
+            default_origins="https://sign-language-classification.pages.dev"
+          else
+            default_origins="https://sign-language-classification.pages.dev,https://develop.sign-language-classification.pages.dev"
+          fi
+          allowed_origins="${{ vars.VSL_ALLOWED_ORIGINS || '' }}"
+          if [[ -z "$allowed_origins" ]]; then
+            allowed_origins="$default_origins"
+          fi
+          az containerapp update \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --image "$IMAGE" \
+            --revision-suffix "$suffix" \
+            --set-env-vars "VSL_ALLOWED_ORIGINS=${allowed_origins}" \
+            --only-show-errors
+
+          revision="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.latestRevisionName \
+            --output tsv)"
+          if [[ -z "$revision" || "$revision" == "$previous_revision" ]]; then
+            echo "::error::Azure did not create a distinct candidate revision."
+            exit 1
+          fi
+          echo "previous_revision=$previous_revision" >> "$GITHUB_OUTPUT"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+
+          provisioned=false
+          for attempt in $(seq 1 30); do
+            state="$(az containerapp revision show \
+              --name "$AZURE_CONTAINER_APP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --subscription "$AZURE_SUBSCRIPTION_ID" \
+              --revision "$revision" \
+              --query properties.provisioningState \
+              --output tsv)"
+            if [[ "$state" == "Provisioned" ]]; then
+              provisioned=true
+              break
+            fi
+            if [[ "$state" == "Failed" ]]; then
+              echo "::error::Candidate revision ${revision} failed provisioning."
+              exit 1
+            fi
+            sleep 10
+          done
+          if [[ "$provisioned" != true ]]; then
+            echo "::error::Candidate revision ${revision} did not provision within 5 minutes."
+            exit 1
+          fi
+
+          label="candidate"
+          az containerapp revision label add \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --revision "$revision" \
+            --label "$label" \
+            --yes
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+          fqdn="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)"
+          if [[ -z "$fqdn" ]]; then
+            echo "::error::Container App ingress FQDN is not configured."
+            exit 1
+          fi
+
+          if [[ "$fqdn" == "${AZURE_CONTAINER_APP_NAME}."* ]]; then
+            env_domain="${fqdn#"${AZURE_CONTAINER_APP_NAME}."}"
+            candidate_fqdn="${AZURE_CONTAINER_APP_NAME}---${label}.${env_domain}"
+          else
+            candidate_fqdn="${label}.${fqdn}"
+          fi
+          echo "candidate_url=https://${candidate_fqdn}" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-test candidate revision
+        shell: bash
+        env:
+          CANDIDATE_URL: ${{ steps.candidate.outputs.candidate_url }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if python scripts/smoke_test.py \
+              --url "$CANDIDATE_URL" \
+              --expected-sha "$GIT_SHA"; then
+              exit 0
+            fi
+            if [[ "$attempt" -lt 30 ]]; then
+              echo "Candidate is not ready yet (attempt ${attempt}/30); retrying in 10 seconds."
+              sleep 10
+            fi
+          done
+          echo "::error::Candidate health/version smoke test failed; stable traffic was not changed."
+          exit 1
+
+      - name: Shift traffic only after smoke test passes
+        shell: bash
+        env:
+          PREVIOUS_REVISION: ${{ steps.candidate.outputs.previous_revision }}
+          CANDIDATE_REVISION: ${{ steps.candidate.outputs.revision }}
+        run: |
+          set -euo pipefail
+          restore_previous() {
+            if ! az containerapp ingress traffic set \
+              --name "$AZURE_CONTAINER_APP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --subscription "$AZURE_SUBSCRIPTION_ID" \
+              --revision-weight "${PREVIOUS_REVISION}=100" "${CANDIDATE_REVISION}=0" \
+              --only-show-errors; then
+              echo "::error::Automatic traffic rollback failed; inspect the Container App immediately."
+              return 1
+            fi
+            echo "Restored 100% traffic to ${PREVIOUS_REVISION}."
+          }
+
+          promotion_attempted=false
+          promotion_verified=false
+          rollback_on_failure() {
+            local exit_code=$?
+            trap - EXIT
+            if [[ "$exit_code" -ne 0 && "$promotion_attempted" == true && "$promotion_verified" != true ]]; then
+              restore_previous || true
+            fi
+            exit "$exit_code"
+          }
+          trap rollback_on_failure EXIT
+
+          promotion_attempted=true
+          az containerapp ingress traffic set \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --revision-weight "${CANDIDATE_REVISION}=100" \
+            --only-show-errors
+
+          traffic="$(az containerapp revision list \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --output json)"
+          active_revision="$(jq -r \
+            '[.[] | select(.properties.active == true and .properties.trafficWeight == 100) | .name]
+             | if length == 1 then .[0] else empty end' <<< "$traffic")"
+          if [[ "$active_revision" != "$CANDIDATE_REVISION" ]]; then
+            echo "::error::Traffic verification failed; restoring the previous revision on exit."
+            exit 1
+          fi
+
+          service_fqdn="$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)"
+          if ! python scripts/smoke_test.py \
+            --url "https://${service_fqdn}" \
+            --expected-sha "$GIT_SHA"; then
+            echo "::error::Post-promotion verification failed; restoring the previous revision on exit."
+            exit 1
+          fi
+
+          promotion_verified=true
+          echo "Promoted ${CANDIDATE_REVISION} to 100% traffic."
+
+      - name: Remove temporary candidate label
+        if: always() && steps.candidate.outputs.label != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          az containerapp revision label remove \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --label "${{ steps.candidate.outputs.label }}" \
+            --only-show-errors
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Workflow CI/CD triển khai Frontend tĩnh và Preview URL lên Cloudflare Pages (.github/workflows/frontend.yml)}]
+name: Frontend CI/CD (Cloudflare Pages)
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "web/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  deployments: write
+
+concurrency:
+  group: pages-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy-pages:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Validate Cloudflare configuration
+        shell: bash
+        run: |
+          if [[ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]]; then
+            echo "::error::Required secret CLOUDFLARE_API_TOKEN is missing or empty."
+            exit 1
+          fi
+          if [[ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+            echo "::error::Required secret CLOUDFLARE_ACCOUNT_ID is missing or empty."
+            exit 1
+          fi
+
+      - name: Determine target deployment branch
+        id: branch
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "DEPLOY_BRANCH=${{ github.head_ref }}" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "DEPLOY_BRANCH=main" >> "$GITHUB_ENV"
+          else
+            echo "DEPLOY_BRANCH=develop" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy frontend to Cloudflare Pages
+        id: wrangler-pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web --project-name=sign-language-classification --branch=${{ env.DEPLOY_BRANCH }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment Preview URL on Pull Request
+        if: github.event_name == 'pull_request' && steps.wrangler-pages.outputs.deployment-url != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = "<!-- vsl-cloudflare-pages-preview -->";
+            const previewUrl = "${{ steps.wrangler-pages.outputs.pages-deployment-alias-url || steps.wrangler-pages.outputs.deployment-url }}";
+            const commitUrl = "${{ steps.wrangler-pages.outputs.deployment-url }}";
+            const body = `${marker}
+            ### [Preview] Cloudflare Pages Preview Deployment
+
+            | Name | Link |
+            |---|---|
+            | **Latest Commit** | \`${context.sha.substring(0, 7)}\` |
+            | **Preview URL** | [${previewUrl}](${previewUrl}) |
+            | **Commit-Specific Deployment** | [${commitUrl}](${commitUrl}) |
+
+            *Deploys automatically when files under \`web/\` are updated.*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => comment.body.includes(marker));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
 \end{lstlisting}

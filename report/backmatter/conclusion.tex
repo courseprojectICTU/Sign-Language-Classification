@@ -6,26 +6,26 @@
 \addcontentsline{toc}{chapter}{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
 
 \section*{1. Kết quả đạt được của đề tài}
-Trải qua quá trình nghiên cứu, thiết kế và thực nghiệm, nhóm 2 đã hoàn thành trọn vẹn các mục tiêu đề ra cho bài tập lớn môn \textbf{Điện toán đám mây}:
+Trải qua quá trình nghiên cứu, thiết kế và thực nghiệm theo kế hoạch nâng cấp hệ thống, Nhóm 2 đã hoàn thành các mục tiêu trọng tâm của bài tập lớn môn \textbf{Điện toán đám mây}:
 \begin{itemize}
-    \item Đã chuyển đổi thành công mô hình học sâu nhận diện 23 ký tự ngôn ngữ ký hiệu tiếng Việt từ đồ án Capstone AI Samsung Innovation Campus (SIC) chạy cục bộ thành một dịch vụ chuẩn mực trên Internet.
-    \item Đã chuẩn hóa toàn bộ mã nguồn AI thành mô-đun thư viện độc lập \texttt{src/vsl}, tuân thủ phương pháp luận Twelve-Factor App và xây dựng dịch vụ RESTful API tốc độ cao với FastAPI.
-    \item Đã xây dựng bộ kiểm thử tự động toàn diện đạt tỷ lệ vượt qua 100\% (32/32 tests PASSED), bảo toàn nguyên vẹn độ chính xác của mô hình học sâu.
-    \item Đã đóng gói ứng dụng bằng Docker Container tối ưu và triển khai thành công lên Google Cloud Run theo kiến trúc Serverless, kết hợp frontend tĩnh trên Cloudflare Pages với chi phí hoàn toàn \$0.
-    \item Đã thiết lập hoàn chỉnh quy trình CI/CD tự động hóa trên GitHub Actions, tự động kích hoạt kiểm thử, đóng gói Docker image và phát hành lên đám mây khi có mã nguồn mới.
+    \item Đã chuyển đổi thành công hệ thống nhận diện 23 ký tự bảng chữ cái ngôn ngữ ký hiệu tiếng Việt (VSL) từ đồ án Capstone AI Samsung Innovation Campus (SIC) chạy cục bộ thành ứng dụng web hoạt động trực tuyến và phát hành phiên bản chính thức \texttt{v1.0.0}.
+    \item Đã tái cấu trúc toàn bộ mã nguồn lõi AI thành gói thư viện \path{src/vsl/} tuân thủ chuẩn Twelve-Factor App (\path{landmarks.py}, \path{labels.py}, \path{heatmap.py}, \path{config.py}), loại bỏ hoàn toàn đường dẫn cứng cục bộ và xây dựng dịch vụ RESTful API bằng FastAPI (\texttt{GET /health}, \texttt{GET /version}, \texttt{POST /predict}) kèm cơ chế bảo vệ dung lượng \mbox{$\le 5$ MB}, kiểm tra magic bytes tệp ảnh và cấu hình CORS đa môi trường.
+    \item Đã xây dựng bộ kiểm thử tự động toàn diện gồm \textbf{34 tệp với 189 hàm kiểm thử} tại thư mục \path{tests/} (bao phủ hợp đồng 93 điểm mốc, 23 nhãn bất biến, đối chiếu đầu ra trực tiếp với notebook gốc, xuất và kiểm chứng tương đương ONNX Runtime, cấu trúc Dockerfile, cấu hình Terraform, kiểm tra không rò rỉ bí mật trong Git, smoke test, rollback và kiểm thử giao diện Playwright E2E), đồng thời kiểm tra chất lượng mã với \texttt{Ruff} và \texttt{Black} đạt chuẩn.
+    \item Đã đóng gói dịch vụ backend bằng \textbf{Dockerfile Multi-stage} (ghim SHA-256 ảnh nền \path{python:3.12.7-slim-bookworm}, tách tầng \texttt{builder}/\texttt{runtime}, chạy dưới tài khoản \texttt{appuser} UID \texttt{10001}), mã hóa hạ tầng \textbf{Microsoft Azure} (ACR, Azure Container Apps chế độ \textbf{Scale-to-Zero} \texttt{min\_replicas = 0}, Log Analytics, ngân sách \texttt{\$5/tháng}) bằng \textbf{Terraform} kết hợp xác thực không mật khẩu \textbf{GitHub OIDC}, phối hợp với giao diện tĩnh trên \textbf{Cloudflare Pages} mà không phát sinh chi phí tiền mặt ngoài hạn mức tài trợ \textbf{Azure for Students} (\$100 credit).
+    \item Đã thiết lập hoàn chỉnh ba đường ống \textbf{CI/CD trên GitHub Actions} (\path{ci.yml}, \path{deploy-backend.yml}, \path{frontend.yml}) hỗ trợ kiểm thử tự động mọi Pull Request, triển khai bản sửa đổi \texttt{candidate} cô lập lưu lượng kèm \path{smoke_test.py} trước khi chuyển 100\% traffic, cùng công cụ rollback cho cả backend Azure Container Apps (\path{scripts/rollback.py}) và frontend Cloudflare Pages.
 \end{itemize}
 
 \section*{2. Những hạn chế còn tồn tại}
 \begin{itemize}
-    \item Thời gian phản hồi trong lần gọi đầu tiên (Cold Start) trên Google Cloud Run còn dao động từ 8 đến 15 giây do cần thời gian tải container image và nạp mô hình TensorFlow nặng vào bộ nhớ.
-    \item Hệ thống hiện mới chỉ tập trung phân loại các ký tự tĩnh (bảng chữ cái 23 ký tự từ a đến y), chưa hỗ trợ các từ ngữ hoặc câu động phức tạp trong ngôn ngữ ký hiệu.
-    \item Giao diện người dùng hiện tại xử lý theo cơ chế chụp từng khung hình đơn lẻ từ webcam, chưa hỗ trợ luồng truyền dữ liệu liên tục (streaming) do ràng buộc tối ưu hóa tài nguyên miễn phí.
+    \item Thời gian phản hồi ở lần khởi động nguội (\textbf{Cold Start}) trên Azure Container Apps khi container thức dậy từ trạng thái 0 bản sao đo thực tế đạt \textbf{64.962,2 ms} ($\approx$ 64,96 giây) do phải cấp phát môi trường, giải nén TensorFlow 2.19/MediaPipe và nạp 137 MB trọng số mô hình Keras \texttt{.h5} vào RAM (tuy nhiên ở trạng thái ấm \textbf{Warm Start}, thời gian phản hồi trung bình \texttt{GET /health} đạt 169,4 ms và \texttt{POST /predict} đạt dưới 0,7 giây).
+    \item Mô hình AI hiện mới hỗ trợ phân loại 23 ký tự tĩnh từ ảnh chụp đơn lẻ hoặc từng khung hình cắt từ webcam, chưa nhận diện được chuỗi từ vựng hay câu giao tiếp động liên tục theo ngữ cảnh thời gian.
+    \item Dù đã hoàn thiện công cụ xuất và đối chiếu mô hình sang ONNX (\path{scripts/export_onnx.py}) và khai báo cấu hình cô lập Staging/Production trong Terraform, container phát hành thực tế vẫn đang sử dụng trực tiếp tệp trọng số Keras \texttt{.h5}, đồng thời chưa hoàn tất kích hoạt quy tắc cảnh báo lỗi HTTP 5xx trên Azure Log Analytics và cổng phê duyệt thủ công trước khi phát hành nhánh Production.
 \end{itemize}
 
 \section*{3. Hướng nghiên cứu và phát triển tiếp theo}
 \begin{itemize}
-    \item Tối ưu hóa mô hình học sâu bằng cách chuyển đổi sang định dạng TensorFlow Lite (TFLite) hoặc ONNX Runtime nhằm giảm dung lượng bộ nhớ, rút ngắn thời gian khởi động Cold Start xuống dưới 2 giây.
-    \item Cấu hình cơ chế giữ ấm container (Minimum Instances = 1) hoặc lên lịch tác vụ định kỳ (Cloud Scheduler) gửi tín hiệu Ping kiểm tra sức khỏe (/health) để duy trì container ở trạng thái sẵn sàng.
-    \item Mở rộng mô hình AI sang nhận diện chuỗi cử chỉ động kết hợp thời gian thông qua kiến trúc mạng LSTM hoặc Transformer.
-    \item Nâng cấp pipeline CI/CD với các chiến lược phát hành nâng cao như Canary Deployment hoặc Blue/Green Deployment để đảm bảo tính sẵn sàng cao tuyệt đối.
+    \item Chuyển đổi tầng suy luận của dịch vụ API trong \path{Dockerfile} sang sử dụng trực tiếp \textbf{ONNX Runtime} thay cho TensorFlow/Keras đầy đủ nhằm giảm đáng kể kích thước container image, mức tiêu thụ RAM và rút ngắn thời gian Cold Start.
+    \item Bổ sung cơ chế giữ ấm container theo khung giờ sử dụng cao điểm hoặc tác vụ ping định kỳ hợp lý, đồng thời hoàn thiện bộ cảnh báo giám sát lỗi 5xx trên \textbf{Azure Monitor / Log Analytics} và cổng phê duyệt thủ công (\textit{manual approval gate}) cho môi trường Production trên GitHub Actions.
+    \item Mở rộng bài toán AI sang nhận diện chuỗi cử chỉ động liên tục bằng kiến trúc mạng hồi quy/biến đổi thời gian (LSTM hoặc Transformer) kết hợp tăng cường dữ liệu đầy đủ cả 1.609 mẫu hiện có.
+    \item Nghiên cứu đưa mô hình nhẹ hóa (ONNX Web / MediaPipe JS) thực thi một phần tiền xử lý ngay trên trình duyệt khách nhằm giảm băng thông gửi ảnh và tối ưu trải nghiệm thời gian thực.
 \end{itemize}

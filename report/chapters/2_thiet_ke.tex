@@ -5,61 +5,418 @@
 \chapter{THIẾT KẾ GIẢI PHÁP VÀ XÂY DỰNG HỆ THỐNG}
 \label{chap:thiet_ke}
 
+% ==============================================================================
+% 2.1. TỔ CHỨC NHÓM VÀ KẾ HOẠCH TRIỂN KHAI DỰ ÁN
+% ==============================================================================
+\section{Tổ chức nhóm và kế hoạch triển khai dự án}
+\label{sec:to_chuc_ke_hoach}
+
+\subsection{Phân công nhiệm vụ các thành viên Nhóm 2}
+\label{subsec:phan_cong_nhom}
+
+Để bảo đảm tiến độ nâng cấp từ mã nguồn nghiên cứu cục bộ thành một hệ thống dịch vụ đám mây hoàn chỉnh, Nhóm 2 phân chia công việc theo 4 mảng kỹ thuật phối hợp chặt chẽ, tương ứng với 39 User Story (tổng cộng 72 điểm ước lượng Story Points) quản lý trên bảng công việc Jira của dự án. Chi tiết phân công nhiệm vụ của từng thành viên được trình bày trong Bảng~\ref{tab:phan_cong_nhom}.
+
+\begin{table}[H]
+\centering
+\caption{Bảng phân công công việc của các thành viên Nhóm 2 theo Jira}
+\label{tab:phan_cong_nhom}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.8cm}}
+\toprule
+Thành viên & Mảng phụ trách chính & Nhóm công việc \& Mã User Story đảm nhiệm & Khối lượng \\
+\midrule
+Trần Phương Đoàn & Lõi AI, API cốt lõi, ACA Serverless \& Pipeline Frontend &
+\textbullet\ Tách lõi dùng chung (\texttt{US-001}..\texttt{US-004}): \texttt{heatmap}, \texttt{labels}, \texttt{config}, \texttt{requirements}. \newline
+\textbullet\ Dịch vụ API chính (\texttt{US-005}, \texttt{US-006}, \texttt{US-009}): \path{/health}, \path{/predict}, kiểm soát upload 5 MB. \newline
+\textbullet\ Hạ tầng ACA \path{min_replicas=0} (\texttt{US-020}), CI/CD Frontend (\texttt{US-028}), Rollback Frontend (\texttt{US-032}) và chuẩn hóa bộ nhớ dự án (\texttt{US-036}). &
+11 US \newline (20 pts) \\
+\midrule
+Hà Văn Dũng & Mở rộng API, Đóng gói Container, CD Backend \& Ngân sách &
+\textbullet\ Mở rộng API \& tối ưu Runtime (\texttt{US-007}, \texttt{US-008}, \texttt{US-010}, \texttt{US-011}, \texttt{US-013}): trạng thái thiếu landmark, \path{/version}, Dockerfile cục bộ, xuất ONNX, benchmark Cold Start. \newline
+\textbullet\ Unit test NumPy (\texttt{US-014}), tách môi trường Staging/Prod (\texttt{US-021}), CD Backend (\texttt{US-029}), Budget \$5 \& MFA (\texttt{US-033}), Demo (\texttt{US-037}). &
+10 US \newline (19 pts) \\
+\midrule
+Nguyễn Đức Dương & Terraform IaC, ACR, Bảo mật OIDC \& Giao diện Web &
+\textbullet\ Vòng đời mô hình \& hợp đồng kiểm thử (\texttt{US-012}, \texttt{US-015}, \texttt{US-016}): Lifespan nạp model, hợp đồng 93 cột, đối chiếu notebook. \newline
+\textbullet\ Khởi tạo Terraform Remote State, ACR, IAM \& GitHub OIDC (\texttt{US-018}, \texttt{US-019}). \newline
+\textbullet\ Web Frontend \& Cloudflare Pages (\texttt{US-022}, \texttt{US-024}), phê duyệt Prod (\texttt{US-030}), cảnh báo Log (\texttt{US-034}), quét bảo mật (\texttt{US-039}). &
+10 US \newline (19 pts) \\
+\midrule
+Dương Vũ Duy & Tối ưu Docker Build, CI, CORS \& Vận hành Rollback &
+\textbullet\ Tối ưu Dockerfile Multi-stage (\texttt{US-038}), thiết lập CI tự động (\texttt{US-026}) và bảo vệ nhánh \texttt{main} (\texttt{US-027}). \newline
+\textbullet\ Warm-up ping (\texttt{US-023}), cấu hình CORS \& xử lý lỗi mạng (\texttt{US-025}). \newline
+\textbullet\ Smoke test (\texttt{US-017}), Rollback ACA (\texttt{US-031}) và tài liệu Runbook vận hành (\texttt{US-035}). &
+8 US \newline (14 pts) \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+\subsection{Kế hoạch thực hiện dự án trong 2 tuần}
+\label{subsec:ke_hoach_2_tuan}
+
+Dự án được hoạch định và thực thi theo lộ trình 2 tuần làm việc liên tục (10 ngày kỹ thuật trọng tâm), chia thành hai giai đoạn rõ rệt: Tuần 1 tập trung chuẩn hóa mã nguồn AI, đóng gói container và đưa dịch vụ lên môi trường Staging; Tuần 2 tập trung hoàn thiện Hạ tầng dưới dạng mã (IaC), tự động hóa quy trình CI/CD và diễn tập vận hành. Lộ trình chi tiết cùng sản phẩm đầu ra dự kiến từng mốc được tổng hợp tại Bảng~\ref{tab:ke_hoach_2_tuan}.
+
+\begin{table}[H]
+\centering
+\caption{Kế hoạch triển khai hệ thống trong 2 tuần (10 ngày kỹ thuật)}
+\label{tab:ke_hoach_2_tuan}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\bfseries\centering\arraybackslash}p{1.6cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.8cm}}
+\toprule
+Giai đoạn & Nội dung công việc chính & Chi tiết thực hiện theo mảng kỹ thuật & Kết quả dự kiến (Milestone) \\
+\midrule
+Tuần 1 \newline (Ngày 1--3) & Chuẩn hóa lõi AI và xây dựng API FastAPI & Tách \path{src/vsl/} (\texttt{heatmap}, \texttt{labels}, \texttt{config}, \texttt{landmarks}); xây dựng \path{/health}, \path{/version}, \path{/predict}; thiết kế giao diện web; thiết lập hợp đồng 93 cột và đối chiếu notebook. & Toàn bộ module lõi dùng chung hoàn thành; API nhận diện chạy chính xác cục bộ. \\
+\midrule
+Tuần 1 \newline (Ngày 4--5) & Đóng gói Docker và dựng môi trường Staging & Xây dựng Dockerfile Linux đa tầng; triển khai tài nguyên Azure (ACR, ACA Staging); thiết lập Smoke Test và đo lường Cold Start. & Container chạy ổn định cổng 8080; dịch vụ Backend hoạt động trực tuyến trên Azure Staging. \\
+\midrule
+Tuần 2 \newline (Ngày 6--8) & Tự động hóa IaC, CI/CD và triển khai Frontend & Mã hóa hạ tầng bằng Terraform; thiết lập xác thực OIDC; triển khai Web tĩnh trên Cloudflare Pages; hoàn thiện CORS, kiểm thử Playwright và workflow \path{ci.yml}, \path{frontend.yml}, \path{deploy-backend.yml}. & Quy trình CI chặn lỗi trên PR; Frontend \& Backend giao tiếp thông suốt qua HTTPS. \\
+\midrule
+Tuần 2 \newline (Ngày 9--10) & Giám sát chi phí, diễn tập Rollback và bàn giao & Thiết lập Azure Budget \$5 và Log Analytics; diễn tập kịch bản Rollback ACA và Cloudflare Pages; hoàn thiện tài liệu Runbook và báo cáo nghiệm thu. & Hệ thống vận hành ổn định, đạt kiểm chứng chi phí và hoàn tất bàn giao \path{v1.0.0}. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+% ==============================================================================
+% 2.2. ĐẶC TẢ DỊCH VỤ ĐÁM MÂY VÀ CÔNG CỤ TRIỂN KHAI
+% ==============================================================================
+\section{Đặc tả dịch vụ đám mây và công cụ triển khai}
+\label{sec:dac_ta_dich_vu}
+
+\subsection{Nền tảng Backend trên Microsoft Azure}
+\label{subsec:nen_tang_azure}
+
+Sau khi đăng nhập tài khoản tài trợ \textbf{Azure for Students} trên cổng quản trị \textbf{Azure Portal} (\path{portal.azure.com}), toàn bộ tài nguyên phục vụ hệ thống Backend được quy hoạch tập trung trong nhóm tài nguyên (Resource Group) \path{rg-vsl-staging} tại vùng dữ liệu \texttt{eastasia} (Hong Kong — có độ trễ mạng về Việt Nam thấp, khoảng 25--35 ms).
+
+Các dịch vụ Microsoft Azure được lựa chọn bao gồm:
+\begin{itemize}
+    \item \textbf{Azure Container Apps (ACA -- Standard Consumption):} Là dịch vụ chạy microservice/container không máy chủ được quản lý hoàn toàn trên nền tảng Kubernetes ẩn danh. Sau khi đăng nhập Azure Portal, giao diện quản trị ứng dụng \texttt{vsl-api} (thuộc môi trường \path{cae-vsl-staging-std}) cung cấp các tính năng then chốt: quản lý đa phiên bản (\textit{Revisions} ở chế độ \texttt{Multiple}), phân chia tỷ trọng lưu lượng (\textit{Traffic Splitting}), cấu hình biến môi trường/Secrets, xem luồng nhật ký trực tiếp (\textit{Log stream}) và giám sát chỉ số bản sao (\textit{Replica Count}). Dịch vụ cho phép cấp phát \texttt{1,0 vCPU} và \texttt{2,0 GiB RAM} đáp ứng trọn vẹn dung lượng mô hình TensorFlow ResNet50 (137 MB), đồng thời hỗ trợ tự động co giãn về \texttt{0} bản sao khi rảnh rỗi (\textit{Scale-to-Zero}).
+    \item \textbf{Azure Container Registry (ACR -- Basic SKU):} Kho lưu trữ Docker Image riêng tư \path{vslacr3795.azurecr.io}, cho phép quản trị các kho chứa (\textit{Repositories}) và thẻ phiên bản (\textit{Tags}) gắn theo mã băm \texttt{Git SHA}. Tính năng tích hợp danh tính quản lý (\textit{Managed Identity}) giúp ACA kéo image an toàn mà không cần truyền mật khẩu tĩnh.
+    \item \textbf{Log Analytics Workspace \& Azure Cost Management:} Không gian nhật ký \texttt{Log Analytics} (\path{workspace-rgvslstaging8EBp}) thu thập toàn bộ log chuẩn đầu ra (\texttt{stdout}/\texttt{stderr}) của container trong 30 ngày phục vụ truy vết sự cố. Song song đó, công cụ \textit{Cost Management + Billing} theo dõi mức tiêu thụ theo thời gian thực trên gói \$100 credit và kích hoạt cảnh báo ngân sách tự động.
+    \item \textbf{Microsoft Entra ID (OIDC Federation):} Cung cấp cơ chế chứng thực liên kết (\textit{Federated Identity Credentials}) cho phép GitHub Actions đăng nhập trực tiếp vào Azure thông qua token JWT ngắn hạn thay cho mật khẩu tĩnh truyền thống.
+\end{itemize}
+
+Hình~\ref{fig:azure_portal_aca} và Hình~\ref{fig:azure_portal_acr} minh họa giao diện quản trị thực tế các tài nguyên Backend sau khi đăng nhập vào Microsoft Azure Portal.
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{azure_portal_aca.png}{Giao diện tổng quan Resource Group \texttt{rg-vsl-staging} và dịch vụ Azure Container Apps \texttt{vsl-api} trên Azure Portal}
+\caption{Giao diện quản trị dịch vụ Azure Container Apps (\texttt{vsl-api}) trên Azure Portal}
+\label{fig:azure_portal_aca}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{azure_portal_acr_revisions.png}{Giao diện quản lý Revision, Traffic Splitting trên ACA và kho ảnh \texttt{vslacr3795} trong ACR}
+\caption{Giao diện quản trị phiên bản Revision và Azure Container Registry (\texttt{vslacr3795})}
+\label{fig:azure_portal_acr}
+\end{figure}
+
+\subsection{Nền tảng Frontend Cloudflare Pages và GitHub Actions}
+\label{subsec:nen_tang_cloudflare_github}
+
+Đối với lớp giao diện người dùng và hệ thống tự động hóa, nhóm lựa chọn hai nền tảng chuyên dụng có độ tương thích cao với mô hình phát triển hiện đại:
+\begin{itemize}
+    \item \textbf{Cloudflare Pages Dashboard:} Sau khi đăng nhập bảng điều khiển Cloudflare (\path{dash.cloudflare.com}), dự án \path{sign-language-classification} cung cấp các tính năng quản lý trực quan: theo dõi lịch sử triển khai theo từng commit và từng nhánh (\textit{Production} ứng với \texttt{main} tại \path{sign-language-classification.pages.dev} và \textit{Preview} ứng với \texttt{develop} tại \path{develop.sign-language-classification.pages.dev}), xem nhật ký build, kiểm soát tên miền tùy chỉnh, chứng chỉ SSL/TLS tự động và đặc biệt là tính năng \textbf{Rollback tức thì (Instant Rollback)} về bất kỳ bản dựng thành công trước đó chỉ bằng một cú nhấp chuột.
+    \item \textbf{GitHub Actions \& Variables:} Nền tảng CI/CD tích hợp trực tiếp tại kho lưu trữ mã nguồn \path{courseprojectICTU/Sign-Language-Classification}. Giao diện tab \textit{Actions} cho phép quan sát tiến trình từng Job (Lint, Test, Build Docker, Deploy), kiểm tra báo cáo tổng kết (\textit{Job Summary} ghi nhận thời gian build và kích thước image), đồng thời tách biệt rạch ròi các biến định danh công khai (\textit{Actions Variables}: \path{AZURE_CLIENT_ID}, \path{AZURE_TENANT_ID}, \path{AZURE_SUBSCRIPTION_ID}) với các mã thông báo triển khai Frontend (\textit{Actions Secrets}: \path{CLOUDFLARE_API_TOKEN}, \path{CLOUDFLARE_ACCOUNT_ID}).
+\end{itemize}
+
+Hình~\ref{fig:cloudflare_dashboard} và Hình~\ref{fig:github_workflows} thể hiện giao diện quản trị thực tế trên Cloudflare Pages và GitHub Actions.
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{cloudflare_pages_dashboard.png}{Giao diện bảng điều khiển Cloudflare Pages của dự án \texttt{sign-language-classification} hiển thị danh sách Deployments}
+\caption{Giao diện quản trị triển khai Frontend trên Cloudflare Pages Dashboard}
+\label{fig:cloudflare_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\screenshotplaceholder{github_actions_workflows.png}{Giao diện tab Actions trên GitHub hiển thị các luồng \texttt{CI}, \texttt{Deploy backend to Azure} và \texttt{Frontend CI/CD}}
+\caption{Giao diện theo dõi các đường ống tự động hóa trên GitHub Actions}
+\label{fig:github_workflows}
+\end{figure}
+
+% ==============================================================================
+% 2.3. TÁI CẤU TRÚC MÃ NGUỒN AI VÀ XÂY DỰNG DỊCH VỤ RESTFUL API
+% ==============================================================================
 \section{Tái cấu trúc mã nguồn AI và xây dựng dịch vụ RESTful API}
 \label{sec:refactor_ai_api}
 
-\subsection{Chuẩn hóa module trích xuất MediaPipe và thuật toán Gaussian Heatmap}
+\subsection{Chuẩn hóa hợp đồng điểm mốc, nhãn và thuật toán Gaussian Heatmap}
 \label{subsec:chuan_hoa_heatmap}
-% [Nội dung sẽ bổ sung: Trích xuất hàm create_heatmap thành module duy nhất src/vsl/heatmap.py; công thức tạo ma trận điểm nhiệt Gaussian 2D với bán kính 15px, sigma=5 trên lưới 224x224x3; chuẩn hóa hợp đồng dữ liệu 93 tọa độ.]
 
-\subsection{Độc lập hóa cấu hình và nguồn chân lý nhãn theo Twelve-Factor App}
+Để chấm dứt tình trạng sao chép mã rải rác giữa các tệp Jupyter Notebook, toàn bộ logic xử lý lõi AI được hợp nhất thành gói thư viện Python chuẩn mực tại thư mục \path{src/vsl/}:
+\begin{itemize}
+    \item \textbf{Hợp đồng dữ liệu 93 điểm mốc (\path{src/vsl/landmarks.py}):} Định nghĩa nguồn chân lý duy nhất \texttt{FACE\_KEYPOINTS = (10, 152, 234, 454, 33, 263, 1, 61, 291, 199)}. Quy định nghiêm ngặt cấu trúc vector đầu vào dài đúng 93 số thực (\texttt{TOTAL\_LANDMARK\_COORDS = 93}), bao gồm 63 tọa độ bàn tay (21 khớp $\times\ 3$ trục $x, y, z$) đứng trước và 30 tọa độ khuôn mặt (10 điểm $\times\ 3$ trục) đứng sau, kèm hàm kiểm tra hợp lệ \path{validate_landmark_columns()}.
+    \item \textbf{Nguồn chân lý 23 nhãn chữ cái (\path{src/vsl/labels.py}):} Đóng băng danh sách 23 ký tự VSL (\texttt{'a'} đến \texttt{'y'}, có \texttt{'đ'}, loại bỏ \texttt{'f'}, \texttt{'j'}, \texttt{'w'}, \texttt{'z'}) dưới dạng kiểu dữ liệu bất biến \texttt{tuple} trong \path{VIETNAMESE_ALPHABET}, đồng thời tính tự động \texttt{NUM\_CLASSES = len(VIETNAMESE\_ALPHABET)} thay thế hoàn toàn các con số \texttt{23} gán cứng trước đây.
+    \item \textbf{Thuật toán sinh bản đồ nhiệt duy nhất (\path{src/vsl/heatmap.py}):} Chuẩn hóa hàm \path{create_heatmap()} là bản thực thi duy nhất được dùng chung cho cả quá trình huấn luyện, kiểm thử và dịch vụ API. Hàm nhận vector tọa độ chuẩn hóa $(x, y, z)$, bỏ qua trục $z$ và các điểm khuyết \texttt{(0, 0)}, chiếu tọa độ lên lưới ảnh $224 \times 224$ với hàm nhân Gaussian $\sigma = 5$ trong bán kính $[-15, 15]$ pixel, cộng dồn tích lũy, chuẩn hóa về dải \texttt{uint8} $[0, 255]$ và nhân bản thành ma trận 3 kênh RGB \texttt{(224, 224, 3)}. Ngoài ra, hàm kiểm tra đầu vào chặt chẽ để ném ngoại lệ \texttt{ValueError} khi gặp dữ liệu sai kích thước hoặc giá trị vô hạn (\texttt{NaN}/\texttt{Inf}).
+\end{itemize}
+
+\subsection{Tách biệt cấu hình theo chuẩn Twelve-Factor App}
 \label{subsec:cau_hinh_va_nhan}
-% [Nội dung sẽ bổ sung: Xóa bỏ 100% đường dẫn hard-code D:\; xây dựng module cấu hình tập trung src/vsl/config.py đọc từ biến môi trường VSL_MODEL_PATH và VSL_DATA_DIR; đóng băng danh sách nhãn cố định src/vsl/labels.py gồm đúng 23 ký tự.]
 
-\subsection{Xây dựng dịch vụ FastAPI với các endpoint kiểm tra sức khỏe và suy luận}
+Nhằm bảo đảm ứng dụng có thể di chuyển linh hoạt từ máy trạm Windows sang môi trường container Linux và các máy chủ đám mây, mô-đun \path{src/vsl/config.py} áp dụng triệt để nguyên lý thứ ba của phương pháp luận \textbf{Twelve-Factor App} (lưu trữ cấu hình trong biến môi trường):
+\begin{itemize}
+    \item Xóa bỏ 100\% các đường dẫn tuyệt đối gán cứng kiểu Windows (\texttt{D:\textbackslash ...}) khỏi mã nguồn và các tệp notebook.
+    \item Hàm \path{get_model_path()} ưu tiên đọc đường dẫn trọng số mô hình từ biến môi trường \path{VSL_MODEL_PATH}; nếu biến này chưa được thiết lập, hệ thống tự động suy diễn đường dẫn tương đối \texttt{<PROJECT\_ROOT>/train/vsl\_cnn\_pose\_keras.h5} dựa trên vị trí tệp nguồn.
+    \item Tương tự, \path{get_data_dir()} ưu tiên đọc biến \path{VSL_DATA_DIR} với giá trị dự phòng \texttt{<PROJECT\_ROOT>/data/anphabet}. Toàn bộ các notebook huấn luyện và kịch bản chạy cục bộ (\path{run_realtime.py}) đều được cập nhật để nhập trực tiếp từ \path{src.vsl}.
+\end{itemize}
+
+\subsection{Thiết kế dịch vụ FastAPI và hợp đồng giao tiếp API}
 \label{subsec:xay_dung_fastapi}
-% [Nội dung sẽ bổ sung: Thiết kế dịch vụ FastAPI trong src/vsl/service.py; quản lý vòng đời nạp model Keras ResNet50 qua lifespan handler; hiện thực hóa GET /health (kiểm tra trạng thái model) và POST /predict (nhận ảnh, giải mã base64/binary, chạy pipeline).]
 
+Dịch vụ API được xây dựng bằng khung ứng dụng \textbf{FastAPI} tại \path{src/vsl/service.py} (chạy trên máy chủ ASGI \textbf{Uvicorn}), tuân thủ quy trình xử lý chuẩn hóa như minh họa tại Hình~\ref{fig:fastapi_pipeline}.
 
-\section{Đóng gói Container với Docker}
+\begin{figure}[H]
+\centering
+\begin{singlespace}
+\resizebox{0.97\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.3cm and 1.6cm,
+    box/.style={draw=blue!60!black, fill=blue!6, rounded corners=4pt, minimum height=1.7cm, text width=2.9cm, align=center, font=\small, inner sep=6pt},
+    guard/.style={draw=orange!70!black, fill=orange!8, rounded corners=4pt, minimum height=1.7cm, text width=2.9cm, align=center, font=\small, inner sep=6pt},
+    ai/.style={draw=teal!70!black, fill=teal!8, rounded corners=4pt, minimum height=1.7cm, text width=2.9cm, align=center, font=\small, inner sep=6pt},
+    arr/.style={->, >=Stealth, thick}
+]
+    \node (startup) [draw=purple!70!black, fill=purple!8, rounded corners=4pt, minimum height=1.7cm, text width=3.1cm, align=center, font=\small, inner sep=6pt] {\textbf{Lifespan Startup}\\ Nạp ResNet50 (.h5)\\ 1 lần vào RAM};
+    \node (req) [box, right=2.6cm of startup] {\textbf{Client Request}\\ \texttt{POST /predict}\\ (Multipart + CORS)};
+    \node (val) [guard, right=of req] {\textbf{Kiểm tra đầu vào}\\ MIME, Magic Bytes\\ Giới hạn $\le 5$ MB};
+    \node (mp) [ai, below=1.2cm of val] {\textbf{MediaPipe Python}\\ Trích xuất 93 điểm\\ (63 tay + 30 mặt)};
+    \node (hm) [ai, left=of mp] {\textbf{Gaussian Heatmap}\\ Lưới $224\times224\times3$\\ Caffe \texttt{preprocess}};
+    \node (pred) [box, left=of hm] {\textbf{ResNet50 Inference}\\ Softmax 23 lớp\\ Trả JSON kết quả};
+
+    \draw[arr, dashed] (startup.east) -- node[above=3pt, font=\scriptsize, align=center] {Nạp sẵn\\ \texttt{app.state.model}} (req.west);
+    \draw[arr] (req.east) -- (val.west);
+    \draw[arr] (val.south) -- node[right=3pt, font=\scriptsize] {Hợp lệ} (mp.north);
+    \draw[arr] (mp.west) -- node[above=3pt, font=\scriptsize] {Đủ 93 điểm} (hm.east);
+    \draw[arr] (hm.west) -- (pred.east);
+\end{tikzpicture}%
+}
+\end{singlespace}
+\caption{Kiến trúc vòng đời nạp mô hình và đường ống xử lý yêu cầu bên trong dịch vụ FastAPI}
+\label{fig:fastapi_pipeline}
+\end{figure}
+
+Các quyết định thiết kế kỹ thuật trọng tâm trong \path{src/vsl/service.py} bao gồm:
+\begin{enumerate}
+    \item \textbf{Nạp mô hình một lần duy nhất qua Lifespan (\texttt{lifespan} handler):} Trọng số ResNet50 (137 MB) chỉ được nạp một lần duy nhất khi container khởi động và lưu vào \path{app.state.model}, giúp loại bỏ độ trễ nạp lại mô hình trên mỗi request, đồng thời ghi nhận chỉ số thời gian nạp (\path{load_duration_ms}) vào nhật ký hệ thống. Bộ xử lý MediaPipe Hands và FaceMesh cũng được khởi tạo theo mẫu Singleton (\path{_get_mediapipe_processors()}) để tái sử dụng đồ thị suy luận giữa các lần gọi.
+    \item \textbf{Kiểm tra an toàn dữ liệu tải lên (Upload Guard):} Hàm \path{_read_validated_image_upload()} đọc luồng dữ liệu theo từng khối 64 KB (\path{UPLOAD_CHUNK_BYTES}), từ chối sớm bằng mã \texttt{HTTP 413} nếu dung lượng vượt quá 5 MB (\texttt{5 * 1024 * 1024} bytes), kiểm tra đồng thời header \texttt{Content-Type} (\path{image/jpeg}, \path{image/jpg}, \path{image/png}) và chữ ký nhị phân đầu tệp (\textit{Magic Bytes}: \texttt{\textbackslash xff\textbackslash xd8\textbackslash xff} hoặc \texttt{\textbackslash x89PNG\textbackslash r\textbackslash n\textbackslash x1a\textbackslash n}) để trả về \texttt{HTTP 415} với các tệp giả mạo định dạng.
+    \item \textbf{Phản hồi ngữ nghĩa rõ ràng khi thiếu điểm mốc:} Khác với phiên bản cục bộ giữ im lặng khi không thấy tay hoặc mặt, \texttt{POST /predict} phân biệt chính xác ba trạng thái \texttt{status}: \texttt{"ok"}, \texttt{"no\_hand"} và \texttt{"no\_face"} cùng thông báo hướng dẫn bằng tiếng Việt, hỗ trợ tùy chọn tham số \path{flip=true/false} (lật gương cho ảnh webcam) và \path{top_k} (mặc định 3 gợi ý xác suất cao nhất). Đồng thời áp dụng chuẩn tiền xử lý Caffe (\path{preprocess_input}, tuyệt đối không chia 255) để bảo toàn 100\% tương thích số học với mô hình đã huấn luyện.
+    \item \textbf{Kiểm soát truy cập khác nguồn (CORS) chặt chẽ:} Hàm \path{_configured_cors_origins()} phân tích danh sách tên miền cho phép từ biến môi trường \path{VSL_ALLOWED_ORIGINS} (ngăn cách bằng dấu phẩy), chủ động từ chối cấu hình ký tự đại diện \texttt{*}, đường dẫn phụ hoặc thông tin xác thực nhằm bảo đảm an toàn khi giao tiếp với các tên miền Cloudflare Pages.
+\end{enumerate}
+
+Đặc tả chi tiết các điểm cuối API của dịch vụ được tổng hợp tại Bảng~\ref{tab:api_endpoints}.
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả các điểm cuối giao tiếp của dịch vụ FastAPI (\texttt{src/vsl/service.py})}
+\label{tab:api_endpoints}
+\begin{singlespace}
+\fontsize{10.5pt}{13pt}\selectfont
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{>{\ttfamily\bfseries\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.2cm}}
+\toprule
+Endpoint & Mục đích sử dụng & Dữ liệu đầu vào / Tham số & Mã trạng thái \& Phản hồi \\
+\midrule
+GET /health & Kiểm tra sức khỏe container (ACA Probes, Smoke Test, Warm-up) & Không yêu cầu tham số & \texttt{200 OK} (\texttt{model\_loaded: true}) hoặc \texttt{503} khi model chưa sẵn sàng. \\
+\midrule
+GET /version & Truy vết phiên bản mã nguồn và thời điểm đóng gói & Không yêu cầu tham số & \texttt{200 OK} trả về \path{model_version}, \path{git_sha}, \path{build_time} (UTC). \\
+\midrule
+POST /predict & Phân loại ký hiệu tay VSL từ ảnh tải lên & \path{multipart/form-data} (\texttt{file}), query \path{top_k} (\path{1..23}), \texttt{flip} (\texttt{bool}) & \texttt{200 OK} (\texttt{ok} / \path{no_hand} / \path{no_face}); \texttt{400}/\texttt{413}/\texttt{415}/\texttt{503} khi lỗi đầu vào hoặc hệ thống. \\
+\bottomrule
+\end{tabularx}
+\end{singlespace}
+\end{table}
+
+% ==============================================================================
+% 2.4. ĐÓNG GÓI CONTAINER TỐI ƯU ĐA TẦNG VỚI DOCKER
+% ==============================================================================
+\section{Đóng gói Container tối ưu đa tầng với Docker}
 \label{sec:dong_goi_docker}
 
-\subsection{Chiến lược lựa chọn Base Image tối ưu kích thước cho môi trường Linux}
+\subsection{Chiến lược lựa chọn Base Image và tối ưu phụ thuộc runtime}
 \label{subsec:chon_base_image}
-% [Nội dung sẽ bổ sung: Đánh giá giữa Ubuntu, Debian Slim và Alpine Linux; lựa chọn python:3.11-slim hoặc python:3.12-slim để cân bằng giữa dung lượng tải và tính tương thích của bánh xe C-extension.]
 
-\subsection{Xử lý phụ thuộc thư viện Deep Learning và OpenCV Headless}
-\label{subsec:xu_ly_phu_thuoc}
-% [Nội dung sẽ bổ sung: Tách biệt requirements.txt sạch chuẩn ASCII; thay thế opencv-python bằng opencv-python-headless nhằm loại bỏ phụ thuộc thư viện đồ họa GUI X11; tối ưu hóa cài đặt TensorFlow và MediaPipe trên Linux.]
+Khi đóng gói một ứng dụng học sâu sử dụng TensorFlow, MediaPipe và OpenCV trên môi trường Linux Container, việc lựa chọn Base Image và quản lý thư viện phụ thuộc quyết định trực tiếp đến tính ổn định và dung lượng gói phát hành:
+\begin{itemize}
+    \item \textbf{Lựa chọn Debian Slim ghim mã băm (Digest Pinning):} Thay vì sử dụng Alpine Linux (dùng thư viện \texttt{musl libc} thường gặp lỗi không tương thích hoặc phải biên dịch lại từ mã nguồn các gói bánh xe \texttt{manylinux} của TensorFlow và MediaPipe) hay Ubuntu đầy đủ có kích thước lớn, nhóm lựa chọn ảnh nền \textbf{\path{python:3.12.7-slim-bookworm}} chỉ định kiến trúc \path{--platform=linux/amd64} và ghim cố định mã băm SHA-256 (\path{@sha256:60d9996b...}) trong \texttt{Dockerfile}. Việc ghim digest bảo đảm mọi lần build trên GitHub Actions hay máy cục bộ đều tái lập chính xác một môi trường hệ điều hành duy nhất.
+    \item \textbf{Tách biệt phụ thuộc Runtime tối giản (\path{requirements-runtime.txt}):} Môi trường huấn luyện ban đầu chứa nhiều thư viện phân tích dữ liệu nặng không cần thiết khi suy luận (như \texttt{jupyter}, \texttt{matplotlib}, \texttt{pandas}, \texttt{scikit-learn}, \texttt{pytest}, \texttt{playwright}). Nhóm đã tách riêng tệp \path{requirements-runtime.txt} thuần mã ASCII chỉ ghim đúng 10 thư viện trực tiếp phục vụ API suy luận (bao gồm \path{tensorflow==2.19.1}, \path{keras==3.15.1}, \path{mediapipe==0.10.21}, \path{numpy==1.26.4}, \path{opencv-python-headless==4.11.0.86}, \path{fastapi==0.162.0}, \path{uvicorn==0.54.0}). Đặc biệt, việc thay thế \texttt{opencv-python} bằng \textbf{\path{opencv-python-headless}} loại bỏ các phụ thuộc giao diện đồ họa X11 không tồn tại trên container Linux, chỉ giữ lại các thư viện chia sẻ mức tối thiểu (\texttt{libgl1}, \path{libglib2.0-0}, \texttt{libgomp1}, \texttt{libsm6}, \texttt{libxext6}, \texttt{libxrender1}).
+    \item \textbf{Lọc ngữ cảnh đóng gói (\path{.dockerignore}):} Tệp \path{.dockerignore} được thiết lập để loại bỏ thư mục dữ liệu thô (\path{data/}), môi trường ảo (\path{.venv/}), kho kiểm thử (\path{tests/}), hạ tầng (\path{infra/}) và tài liệu (\path{docs/}, \path{report/}), tránh làm phình to ngữ cảnh gửi tới Docker Daemon khi build.
+\end{itemize}
 
-\subsection{Cấu hình Dockerfile tối ưu đa tầng và thiết lập bảo mật tiến trình}
+\subsection{Kiến trúc Dockerfile Multi-stage và bảo mật tiến trình}
 \label{subsec:cau_hinh_dockerfile}
-% [Nội dung sẽ bổ sung: Cấu trúc Dockerfile; cơ chế caching layer hiệu quả của Docker; thiết lập tài khoản non-root chạy ứng dụng Uvicorn bên trong container nhằm nâng cao an toàn an ninh đám mây.]
 
+Nhằm loại bỏ hoàn toàn trình biên dịch C/C++ và bộ nhớ đệm cài đặt khỏi image chạy thực tế, \texttt{Dockerfile} được thiết kế theo mô hình \textbf{Multi-stage Build} gồm 2 tầng độc lập (Hình~\ref{fig:docker_multistage}):
+\begin{enumerate}
+    \item \textbf{Tầng biên dịch (\texttt{builder}):} Cài đặt gói \path{build-essential}, tạo môi trường ảo Python độc lập tại \path{/opt/venv} và cài đặt thư viện từ tệp \path{requirements-runtime.txt} kết hợp tính năng cache lớp của BuildKit (\path{--mount=type=cache,target=/root/.cache/pip}). Nhờ đặt lệnh \texttt{COPY} \path{requirements-runtime.txt} trước \texttt{COPY src}, mọi thay đổi chỉ trên mã nguồn ứng dụng đều tái sử dụng lại toàn bộ lớp thư viện TensorFlow/MediaPipe đã được cache.
+    \item \textbf{Tầng thực thi (\texttt{runtime}):} Khởi tạo lại từ ảnh sạch \path{python:3.12.7-slim-bookworm}, chỉ cài đặt các thư viện chia sẻ hệ thống cần thiết và \texttt{curl} phục vụ kiểm tra sức khỏe, sau đó sao chép duy nhất thư mục \path{/opt/venv} từ tầng \texttt{builder} cùng mã nguồn \path{src/} và tệp trọng số \path{train/vsl_cnn_pose_keras.h5}. Các tham số \path{GIT_SHA} và \path{BUILD_TIME} được truyền qua chỉ thị \texttt{ARG}/\texttt{ENV} phục vụ endpoint \path{/version}.
+    \item \textbf{Thiết lập an toàn tiến trình và Healthcheck:} Thay vì chạy dưới quyền quản trị \texttt{root}, image tạo tài khoản hệ thống không đặc quyền \textbf{\texttt{appuser}} (\texttt{UID 10001}), chuyển quyền sở hữu \path{/app} và chuyển ngữ cảnh thực thi sang \texttt{USER appuser}. Container mở cổng \texttt{8080}, khai báo chỉ thị \texttt{HEALTHCHECK} kiểm tra \path{http://localhost:8080/health} mỗi 30 giây và khởi chạy Uvicorn qua \texttt{CMD}. Toàn văn cấu hình \texttt{Dockerfile} được trình bày chi tiết tại Phụ lục~\ref{app:dockerfile}.
+\end{enumerate}
 
-\section{Thiết kế kiến trúc hạ tầng Cloud Serverless}
+\begin{figure}[H]
+\centering
+\begin{singlespace}
+\resizebox{0.96\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    stage/.style={draw=blue!60!black, fill=blue!4, rounded corners=5pt, inner sep=10pt},
+    stepbox/.style={draw=black!60, fill=white, rounded corners=3pt, text width=5.6cm, align=left, font=\footnotesize, inner sep=6pt},
+    arr/.style={->, >=Stealth, thick}
+]
+    % Builder stage
+    \node (b1) [stepbox] {\textbf{1.} Base: \path{python:3.12.7-slim-bookworm} (SHA-256)};
+    \node (b2) [stepbox, below=0.35cm of b1] {\textbf{2.} Cài đặt \path{build-essential} \& tạo \path{/opt/venv}};
+    \node (b3) [stepbox, below=0.35cm of b2] {\textbf{3.} BuildKit pip cache cài \path{requirements-runtime.txt}};
+
+    \begin{scope}[on background layer]
+        \node (builder_bg) [stage, fit=(b1)(b2)(b3), label={[font=\small\bfseries, text=blue!70!black, yshift=3pt]above:Tầng 1: Builder Stage}] {};
+    \end{scope}
+
+    % Runtime stage
+    \node (r1) [stepbox, right=3.4cm of b1] {\textbf{1.} Base sạch \path{python:3.12.7-slim-bookworm}};
+    \node (r2) [stepbox, below=0.35cm of r1] {\textbf{2.} Cài lib chia sẻ (\texttt{libgl1}, \path{libglib2.0-0}, \texttt{curl})};
+    \node (r3) [stepbox, below=0.35cm of r2] {\textbf{3.} Copy \path{/opt/venv}, \path{src/}, \path{vsl_cnn_pose_keras.h5}};
+    \node (r4) [stepbox, below=0.35cm of r3] {\textbf{4.} Chạy \texttt{appuser} (UID 10001), cổng \texttt{8080}, \texttt{HEALTHCHECK}};
+
+    \begin{scope}[on background layer]
+        \node (runtime_bg) [stage, draw=teal!65!black, fill=teal!4, fit=(r1)(r2)(r3)(r4), label={[font=\small\bfseries, text=teal!75!black, yshift=3pt]above:Tầng 2: Runtime Stage}] {};
+    \end{scope}
+
+    \draw[arr, blue!70!black] (builder_bg.east |- b3) -- node[above=3pt, font=\scriptsize\bfseries, align=center] {COPY\\ \texttt{/opt/venv}} (runtime_bg.west |- r3);
+\end{tikzpicture}%
+}
+\end{singlespace}
+\caption{Kiến trúc đóng gói Docker Multi-stage loại bỏ công cụ biên dịch ở tầng thực thi}
+\label{fig:docker_multistage}
+\end{figure}
+
+% ==============================================================================
+% 2.5. TRIỂN KHAI HẠ TẦNG DẠNG MÃ (IAC) VÀ ỨNG DỤNG TRÊN CLOUD
+% ==============================================================================
+\section{Triển khai hạ tầng dưới dạng mã (IaC) và ứng dụng trên Cloud}
 \label{sec:kien_truc_cloud}
 
-\subsection{Cấu hình dịch vụ Backend trên Google Cloud Run}
-\label{subsec:google_cloud_run}
-% [Nội dung sẽ bổ sung: Thiết lập Cloud Run Service; cơ chế Autoscaling co giãn tự động từ 0 đến N instance (Scale-to-Zero khi không có tải); phân bổ tài nguyên tối ưu: 1 vCPU, 2GB RAM; phân tích hiện tượng và kỹ thuật xử lý Cold Start.]
+\subsection{Tự động hóa hạ tầng Microsoft Azure với Terraform}
+\label{subsec:terraform_azure}
 
-\subsection{Triển khai dịch vụ Frontend trên Cloudflare Pages}
+Toàn bộ tài nguyên đám mây trên Microsoft Azure được định nghĩa và cấp phát tự động bằng \textbf{Terraform} trong thư mục \path{infra/}, bảo đảm khả năng tái tạo hạ tầng đồng nhất và kiểm soát thay đổi thông qua mã nguồn. Các thành phần kiến trúc cốt lõi của \path{infra/} được tổ chức thành các tệp chuyên biệt:
+\begin{itemize}
+    \item \textbf{Quản lý trạng thái từ xa (\path{infra/backend.tf} \& \path{infra/bootstrap-azure/}):} Sử dụng \texttt{backend "azurerm"} để lưu trữ tệp trạng thái (\path{terraform.tfstate}) tập trung trong Azure Storage Account riêng tư (\texttt{vslstate2026}), giúp các thành viên nhóm và quy trình CI/CD dùng chung một nguồn trạng thái đồng bộ thay vì lưu cục bộ.
+    \item \textbf{Kho lưu trữ dùng chung và cô lập môi trường (\path{infra/registry.tf}, \path{infra/environments/}):} Cấu hình \path{azurerm_container_registry.vsl} (\texttt{vslacr3795}, SKU \texttt{Basic}) thông qua biến điều khiển \path{manage_registry}. Trên môi trường Staging (\path{staging.tfvars}), Terraform trực tiếp quản lý ACR dùng chung tại \path{rg-vsl-staging}; trên môi trường Production (\path{production.tfvars}), cờ \texttt{manage\_registry = false} cho phép tham chiếu lại chính kho \texttt{vslacr3795} qua khối dữ liệu \path{data.azurerm_container_registry.shared} mà không nhân bản chi phí kho chứa. Hai tệp biến môi trường tách biệt hoàn toàn cấu hình \path{LOG_LEVEL} (\texttt{INFO} cho Staging, \texttt{WARNING} cho Production), tên nhóm tài nguyên và danh sách nguồn gốc CORS được phép.
+    \item \textbf{Cấu hình Azure Container Apps tối ưu chi phí (\path{infra/container_app.tf}):} Triển khai không gian nhật ký \path{azurerm_log_analytics_workspace.vsl} (lưu 30 ngày) gắn với \path{azurerm_container_app_environment.vsl} sử dụng hồ sơ \texttt{Consumption}. Ứng dụng \path{azurerm_container_app.vsl_api} được thiết lập ở chế độ \texttt{revision\_mode = "Multiple"} (lưu tối đa 100 revision không hoạt động để sẵn sàng Rollback), cấp phát \texttt{1,0 vCPU}, \texttt{2Gi} bộ nhớ, \texttt{termination\_grace\_period\_seconds = 60} và quy tắc co giãn \path{http_scale_rule} với \textbf{\texttt{min\_replicas = 0}} và \texttt{max\_replicas = 3}. Để xử lý đặc thù mô hình AI khởi động chậm, Terraform khai báo đồng bộ ba đầu dò HTTP trên đường dẫn \path{/health:8080}: \path{startup_probe} (cho phép tối đa 24 lần thử mỗi 5 giây trước khi đánh dấu lỗi khởi động), \path{readiness_probe} (chu kỳ 10 giây) và \path{liveness_probe} (chu kỳ 30 giây).
+    \item \textbf{Hàng rào kiểm soát ngân sách tự động (\path{infra/budget.tf}):} Tài nguyên \path{azurerm_consumption_budget_subscription.monthly} thiết lập mức trần theo dõi hàng tháng là \textbf{\$5 USD} trên Subscription, tự động gửi cảnh báo email tới chủ sở hữu tài khoản (\texttt{Owner}) tại hai ngưỡng thực chi \textbf{20\% (\$1 USD)} và \textbf{100\% (\$5 USD)} nhằm bảo vệ toàn vẹn hạn mức \$100 credit của gói Azure for Students.
+\end{itemize}
+
+Các bước triển khai hạ tầng từ mã nguồn Terraform lên Microsoft Azure được tóm tắt theo trình tự chuẩn hóa:
+\begin{enumerate}
+    \item Khởi tạo Storage Account lưu state qua mô-đun \path{infra/bootstrap-azure/}.
+    \item Chạy \texttt{terraform -chdir=infra init} kết nối với Azure Blob Remote Backend.
+    \item Kiểm tra trước kế hoạch thay đổi tài nguyên bằng \texttt{terraform -chdir=infra plan -var-file=environments/staging.tfvars}.
+    \item Áp dụng cấu hình lên Azure bằng \texttt{terraform apply} sau khi được thành viên kiểm duyệt, sau đó trích xuất các định danh đầu ra (\path{github_oidc_client_id}, \path{github_oidc_tenant_id}, \path{container_app_url}) qua \texttt{terraform output}.
+\end{enumerate}
+
+\subsection{Định danh bảo mật Keyless OIDC và Managed Identity}
+\label{subsec:bao_mat_oidc}
+
+Hệ thống loại bỏ hoàn toàn rủi ro rò rỉ khóa bí mật tĩnh dài hạn (không lưu \texttt{clientSecret} hay mật khẩu ACR trong GitHub Secrets) bằng hai lớp định danh được quản lý trong \path{infra/identity.tf} và \path{infra/container_app.tf}:
+\begin{itemize}
+    \item \textbf{Xác thực GitHub Actions bằng OpenID Connect (OIDC):} Terraform khởi tạo ứng dụng Entra ID (\path{azuread_application.github_deploy}) cùng các chứng chỉ định danh liên kết (\textit{Federated Identity Credentials}) cho hai nhánh \texttt{develop} và \texttt{main} với nhà phát hành \path{https://token.actions.githubusercontent.com} và đối tượng \path{api://AzureADTokenExchange}. Đáng chú ý, trường \texttt{subject} được cấu hình khớp chính xác theo định dạng \path{repo:courseprojectICTU@343123217/Sign-Language-Classification@1421059989:ref:refs/heads/develop} (và nhánh \texttt{main}) để tương thích với JWT claim thực tế từ GitHub. Service Principal chỉ được gán đúng hai quyền tối thiểu theo nguyên tắc đặc quyền ít nhất (\textit{Principle of Least Privilege}): \textbf{\texttt{AcrPush}} trên phạm vi ACR và \textbf{\texttt{Container Apps Contributor}} trên phạm vi \texttt{vsl-api}.
+    \item \textbf{Kéo Image nội bộ qua User-Assigned Managed Identity (UAMI):} Dịch vụ \texttt{vsl-api} được gắn danh tính quản lý \path{id-vsl-api-pull} (\path{azurerm_user_assigned_identity.vsl_api_pull}) chỉ nắm giữ duy nhất vai trò \textbf{\texttt{AcrPull}} trên kho \texttt{vslacr3795}, giúp việc kéo Docker image giữa ACA và ACR diễn ra hoàn toàn nội bộ và tự động xoay vòng mã xác thực.
+\end{itemize}
+
+\subsection{Xây dựng và triển khai Web Frontend trên Cloudflare Pages}
 \label{subsec:cloudflare_pages}
-% [Nội dung sẽ bổ sung: Kiến trúc Single Page Application (SPA); lưu trữ và phân phối trên mạng lưới máy chủ biên (Edge Network) của Cloudflare; tự động hóa chứng chỉ SSL/TLS; cấu hình giao tiếp HTTPS an toàn với API Cloud Run.]
 
+Giao diện người dùng tại thư mục \path{web/} được thiết kế theo kiến trúc ứng dụng một trang tĩnh thuần túy (HTML5, CSS3 và JavaScript ES6+ không phụ thuộc framework nặng), gồm 5 tệp cốt lõi: \path{index.html}, \path{styles.css}, \path{app.js}, \path{config.js} và \path{labels.json} (tệp 23 nhãn được sinh tự động từ \path{src/vsl/labels.py} thông qua \path{scripts/generate_web_labels.py}):
+\begin{itemize}
+    \item \textbf{Luồng tương tác phía trình duyệt (\path{web/app.js}):} Cho phép người dùng tải lên tệp ảnh từ thiết bị hoặc bật webcam trực tiếp qua API \path{navigator.mediaDevices.getUserMedia()}, chụp khung hình lên thẻ \texttt{<canvas>}, tùy chọn lật gương ảnh ngang (\path{flip=true/false}) và gửi yêu cầu \texttt{fetch} \texttt{POST /predict} tới địa chỉ backend khai báo tập trung trong \path{window.VSL_CONFIG.apiBaseUrl} (\path{https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io}). Giao diện hiển thị rõ ràng trạng thái đang tải (đặc biệt hữu ích khi container đang khởi động nguội), ký tự dự đoán, tỷ lệ tin cậy và thông điệp hướng dẫn tiếng Việt khi thiếu tay (\path{no_hand}), thiếu mặt (\path{no_face}) hoặc lỗi kết nối mạng/CORS.
+    \item \textbf{Phân phối qua mạng biên Cloudflare Pages:} Toàn bộ thư mục \path{web/} được triển khai lên dự án \path{sign-language-classification} trên Cloudflare Pages, tự động cấp phát chứng chỉ HTTPS/TLS và ánh xạ tên miền theo nhánh (\path{develop.sign-language-classification.pages.dev} cho Staging và \path{sign-language-classification.pages.dev} cho Production). Để tránh lỗi chặn CORS preflight trên môi trường thử nghiệm nhánh \texttt{develop}, biến \path{VSL_ALLOWED_ORIGINS} ở Backend được cấu hình liệt kê đồng thời cả hai tên miền này.
+\end{itemize}
 
+% ==============================================================================
+% 2.6. XÂY DỰNG QUY TRÌNH TỰ ĐỘNG HÓA CI/CD VỚI GITHUB ACTIONS
+% ==============================================================================
 \section{Xây dựng quy trình tự động hóa CI/CD với GitHub Actions}
 \label{sec:quy_trinh_cicd}
 
-\subsection{Thiết kế luồng CI (Continuous Integration): Linting và kiểm thử tự động}
+Kiến trúc tự động hóa của dự án gồm 3 đường ống độc lập phối hợp chặt chẽ trong thư mục \path{.github/workflows/}: kiểm thử tích hợp liên tục (\path{ci.yml}), triển khai liên tục Backend không gián đoạn (\path{deploy-backend.yml}) và triển khai Frontend theo đường dẫn (\path{frontend.yml}). Toàn cảnh luồng tự động hóa được minh họa tại Hình~\ref{fig:cicd_pipeline}.
+
+\begin{figure}[H]
+\centering
+\begin{singlespace}
+\resizebox{0.97\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.9cm and 0.9cm,
+    trigger/.style={draw=gray!70!black, fill=gray!10, rounded corners=4pt, text width=2.7cm, align=center, font=\footnotesize\bfseries, minimum height=1.8cm, inner sep=6pt},
+    ci/.style={draw=blue!65!black, fill=blue!7, rounded corners=4pt, text width=3.2cm, align=center, font=\footnotesize, minimum height=1.8cm, inner sep=6pt},
+    cd/.style={draw=teal!70!black, fill=teal!7, rounded corners=4pt, text width=3.2cm, align=center, font=\footnotesize, minimum height=1.8cm, inner sep=6pt},
+    fe/.style={draw=orange!75!black, fill=orange!8, rounded corners=4pt, text width=5.6cm, align=center, font=\footnotesize, minimum height=1.3cm, inner sep=6pt},
+    arr/.style={->, >=Stealth, thick}
+]
+    % Hàng 1: Luồng CI
+    \node (pr) [trigger] {Pull Request /\\ Push (\texttt{develop}, \texttt{main})};
+    \node (ci1) [ci, right=0.9cm of pr] {\textbf{CI Quality Gate}\\ \texttt{terraform validate}\\ \texttt{ruff} \& \texttt{black}};
+    \node (ci2) [ci, right=0.8cm of ci1] {\textbf{CI Test Suite}\\ \texttt{pytest} + Playwright\\ (Chromium/Firefox)};
+    \node (ci3) [ci, right=0.8cm of ci2] {\textbf{CI Docker Verify}\\ Build \texttt{amd64} no-push\\ BuildKit GHA cache};
+
+    % Hàng 2: Luồng CD Backend (cách đủ rộng để đặt đường nối ở hành lang giữa)
+    \node (merge) [trigger, below=2.3cm of pr] {Merge vào nhánh\\ \texttt{develop} / \texttt{main}};
+    \node (cd1) [cd, right=0.9cm of merge] {\textbf{OIDC \& Build}\\ Đăng nhập Azure JWT\\ Push ACR (\path{GIT_SHA})};
+    \node (cd2) [cd, right=0.8cm of cd1] {\textbf{Candidate Revision}\\ Deploy nhãn \texttt{candidate}\\ (0\% traffic chính)};
+    \node (cd3) [cd, right=0.8cm of cd2] {\textbf{Smoke \& Promote}\\ \path{smoke_test.py} PASS\\ Chuyển 100\% traffic};
+
+    % Hàng 3: Luồng CD Frontend
+    \node (fepath) [fe, below=1.2cm of cd2] {\textbf{Frontend CD (theo đường dẫn \texttt{web/**})}\\ Wrangler deploy lên Cloudflare Pages $\to$ Bình luận Preview URL trên PR};
+
+    % Các mũi tên nối
+    \draw[arr] (pr) -- (ci1);
+    \draw[arr] (ci1) -- (ci2);
+    \draw[arr] (ci2) -- (ci3);
+    \draw[arr, dashed] (ci3.south) -- ++(0,-0.85cm) -| node[pos=0.25, fill=white, inner sep=3pt, font=\scriptsize\bfseries] {Đạt mọi kiểm tra} (merge.north);
+    \draw[arr] (merge) -- (cd1);
+    \draw[arr] (cd1) -- (cd2);
+    \draw[arr] (cd2) -- (cd3);
+    \draw[arr] (merge.south) |- (fepath.west);
+\end{tikzpicture}%
+}
+\end{singlespace}
+\caption{Quy trình tự động hóa CI/CD hoàn chỉnh cho Backend (Azure) và Frontend (Cloudflare Pages)}
+\label{fig:cicd_pipeline}
+\end{figure}
+
+\subsection{Luồng CI kiểm tra chất lượng mã nguồn và kiểm thử tự động}
 \label{subsec:luong_ci}
-% [Nội dung sẽ bổ sung: Thiết kế file workflow .github/workflows/ci.yml; các bước tự động kích hoạt khi có Pull Request: kiểm tra mã nguồn, cài đặt môi trường ảo và chạy toàn diện bộ kiểm thử tự động bằng pytest.]
 
-\subsection{Thiết kế luồng CD (Continuous Deployment): Đóng gói và phát hành tự động}
+Workflow \path{.github/workflows/ci.yml} được kích hoạt tự động trên mọi Pull Request hướng tới \texttt{develop} hoặc \texttt{main} và các lần đẩy mã lên \texttt{develop}. Để tiết kiệm tài nguyên runner, cơ chế \texttt{concurrency} tự động hủy các lượt chạy cũ nếu có commit mới đẩy thêm vào cùng một Pull Request. Quy trình gồm 2 công việc nối tiếp nhau:
+\begin{enumerate}
+    \item \textbf{Công việc \texttt{lint-and-test}:} Tải mã nguồn kèm trọng số mô hình từ Git LFS (\texttt{lfs: true}), thiết lập Python 3.12 kèm bộ nhớ đệm \texttt{pip} và bộ nhớ đệm trình duyệt Playwright (\texttt{\textasciitilde/.cache/ms-playwright}), tích hợp cơ chế tự động chuyển đổi máy chủ gương Ubuntu APT nhằm tránh lỗi nghẽn mạng khi cài đặt thư viện hệ điều hành cho Chromium/Firefox. Sau đó thực thi tuần tự 5 cổng kiểm tra bắt buộc: kiểm tra định dạng \texttt{terraform fmt -check}, xác thực cú pháp \texttt{terraform validate}, kiểm tra lỗi tĩnh \texttt{ruff check}, kiểm tra định dạng \texttt{black --check} và chạy toàn bộ bộ kiểm thử \texttt{pytest tests -v}.
+    \item \textbf{Công việc \texttt{docker-build}:} Chỉ chạy khi \texttt{lint-and-test} vượt qua toàn bộ. Thiết lập Docker Buildx để build thử nghiệm image kiến trúc \path{linux/amd64} với tham số \texttt{push: false}, sử dụng bộ đệm GitHub Actions (\texttt{cache-from: type=gha}) và ghi thống kê thời gian build cùng kích thước image vào bảng tổng kết \texttt{\$GITHUB\_STEP\_SUMMARY}.
+\end{enumerate}
+
+\subsection{Luồng CD Backend phát hành an toàn lên Azure Container Apps}
 \label{subsec:luong_cd}
-% [Nội dung sẽ bổ sung: Thiết kế luồng CD .github/workflows/cd.yml; tự động kích hoạt khi merge vào nhánh develop/main; xác thực với Google Cloud qua Service Account Key / Workload Identity Federation; tự động build Docker Image, gắn thẻ commit SHA, push lên Google Artifact Registry và ra lệnh Cloud Run cập nhật bản phát hành mới.]
 
-\subsection{Quản lý biến môi trường và bí mật bảo mật}
-\label{subsec:quan_ly_bi_mat}
-% [Nội dung sẽ bổ sung: Quản trị các giá trị bí mật nhạy cảm (GCP_PROJECT_ID, GCP_SA_KEY) qua GitHub Encrypted Secrets; phân quyền tối thiểu (Principle of Least Privilege) cho Service Account trong GCP IAM.]
+Workflow \path{.github/workflows/deploy-backend.yml} tự động phân luồng môi trường triển khai theo nhánh mục tiêu (\texttt{develop} triển khai lên \textbf{Staging}, \texttt{main} triển khai lên \textbf{Production} với tài nguyên cô lập) và áp dụng chiến lược phát hành \textbf{Candidate Smoke Test \& Zero-Downtime Traffic Shift}:
+\begin{enumerate}
+    \item \textbf{Xác thực không mật khẩu OIDC \& Đóng gói ACR:} Sử dụng quyền \texttt{id-token: write} với hành động \path{azure/login@v2} kết hợp 3 biến công khai (\path{AZURE_CLIENT_ID}, \path{AZURE_TENANT_ID}, \path{AZURE_SUBSCRIPTION_ID}). Sau khi đăng nhập ACR qua \texttt{az acr login}, hệ thống build image truyền \path{GIT_SHA} và \path{BUILD_TIME}, rồi đẩy lên \texttt{vslacr3795.azurecr.io/vsl-api:<GIT\_SHA>}.
+    \item \textbf{Tạo Revision ứng viên cô lập:} Bảo đảm ACA đang ở chế độ \texttt{multiple}, ghi nhận tên revision đang phục vụ 100\% lưu lượng hiện tại (\path{previous_revision}), sau đó chạy \texttt{az containerapp update} với hậu tố định danh \texttt{--revision-suffix r\$\{GITHUB\_RUN\_ID\}} và gán nhãn \textbf{\texttt{candidate}}. Lúc này, phiên bản mới được cấp phát một URL tách biệt (\texttt{https://vsl-api---candidate.<env\_domain>}) mà hoàn toàn chưa nhận bất kỳ lưu lượng thực nào từ người dùng cuối.
+    \item \textbf{Kiểm thử khói (Smoke Test) và Chuyển lưu lượng có bảo vệ:} Kịch bản \path{scripts/smoke_test.py} liên tục kiểm tra \path{/health} (\path{model_loaded=true}) và \path{/version} (\path{git_sha} khớp tuyệt đối với commit vừa build) trên URL \texttt{candidate}. Chỉ khi Smoke Test vượt qua, workflow mới thực thi lệnh \texttt{az containerapp ingress traffic set} chuyển 100\% lưu lượng sang phiên bản mới. Nếu bước chuyển hoặc kiểm tra sau chuyển gặp bất kỳ lỗi nào, hàm bảo vệ \path{restore_previous()} lập tức khôi phục 100\% lưu lượng về \path{previous_revision} để tránh gián đoạn dịch vụ.
+\end{enumerate}
+
+\subsection{Luồng CI/CD Frontend theo đường dẫn trên Cloudflare Pages}
+\label{subsec:luong_cd_frontend}
+
+Nhằm tránh lãng phí thời gian triển khai lại giao diện web khi chỉ có mã nguồn Backend hoặc tài liệu thay đổi, workflow \path{.github/workflows/frontend.yml} cấu hình bộ lọc đường dẫn \texttt{paths: ["web/**", ".github/workflows/frontend.yml"]}:
+\begin{itemize}
+    \item Xác thực triển khai bằng hai biến secret trên GitHub là \texttt{CLOUDFLARE\_\allowbreak API\_\allowbreak TOKEN} và \texttt{CLOUDFLARE\_\allowbreak ACCOUNT\_\allowbreak ID}, đồng thời tự động xác định tên nhánh triển khai mục tiêu (\path{head_ref} cho PR, \texttt{develop} hoặc \texttt{main} khi push).
+    \item Sử dụng hành động chính thức \path{cloudflare/wrangler-action@v3} thực thi lệnh \texttt{pages deploy web --project-name=sign-language-classification} để đẩy thẳng tệp tĩnh lên Edge CDN Cloudflare.
+    \item Khi sự kiện là Pull Request, bước \path{actions/github-script@v7} tự động đăng hoặc cập nhật một bình luận chứa liên kết \textbf{Preview URL} ngay trong trang thảo luận PR để kiểm thử viên và giảng viên có thể mở kiểm chứng trực tiếp giao diện mới trước khi gộp nhánh.
+\end{itemize}
+Toàn văn mã nguồn cấu hình các workflow CI/CD tiêu biểu được trình bày tại Phụ lục~\ref{app:github_actions}.
