@@ -306,6 +306,9 @@ sẽ gọi Action Group gửi email. Kỳ vọng AC-034-01 là email được nh
   terraform -chdir=infra plan -var-file="environments/staging.tfvars"
   ```
 
+- Xác nhận subscription đã đăng ký provider `Microsoft.Insights`. Nếu chưa,
+  subscription administrator phải đăng ký provider; đây là thao tác cấp
+  subscription, cần phê duyệt riêng và không nằm trong Terraform plan US-034.
 - Trước khi apply, dùng Log Analytics để xác nhận `ContainerAppConsoleLogs_CL`,
   tên cột `Log_s` và định dạng Uvicorn access log thực tế. Dừng nếu query không
   trích được status code hoặc plan đề xuất thay đổi/xóa Container App.
@@ -321,6 +324,16 @@ sẽ gọi Action Group gửi email. Kỳ vọng AC-034-01 là email được nh
 - Nếu email không tới, kiểm tra query result, Action Group receiver, alert
   history và độ trễ ingest trước khi sửa ngưỡng. Không hạ threshold để che lỗi
   truy vấn hoặc email.
+
+**Bằng chứng staging (2026-11-25):** `Microsoft.Insights` đã Registered; fresh
+Terraform plan chỉ thêm Action Group và scheduled query alert (`2 to add, 0 to
+change, 0 to destroy`). Canary riêng trả `100/100` HTTP 500 trong `17.61s`;
+Log Analytics đếm đủ 100 lỗi 5xx. Alert `vsl-server-error-5xx-staging` được
+quan sát ở trạng thái `Fired` lúc `08:05:13Z`; Action Group và receiver đều
+`Enabled`, alert action `isSuppressed=false`. Canary đã deactivate (0 replica),
+traffic vẫn 100% vào revision ổn định, và `/health` trả 200 sau cold-start retry.
+Mailbox nhóm chưa được kiểm tra trực tiếp; chủ dự án cần xác nhận email receipt
+trước khi AC-034-01 được ghi nhận PASS.
 
 ---
 

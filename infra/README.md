@@ -170,6 +170,13 @@ format before applying. Review the plan for staging-only Action Group and alert
 resources; do not run `terraform apply` without owner approval. Production does
 not create these resources.
 
+`Microsoft.Insights` was confirmed `Registered` on the staging subscription on
+2026-11-25 before the approved plan was applied. If a target subscription does
+not have this provider registered, a subscription administrator must register
+it; this is a subscription-level operation outside this Terraform plan and
+requires separate authorization. The Terraform identity cannot register
+providers.
+
 For AC-034-01, use an approved temporary staging canary revision that produces
 HTTP 500 responses without receiving normal traffic. One hundred 5xx responses
 must occur within five minutes and the email must arrive within ten minutes.
