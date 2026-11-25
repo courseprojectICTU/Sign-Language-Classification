@@ -37,6 +37,7 @@ docs/
 │   ├── US-019_PR_Description_Cap_Nhat.md # Báo cáo cập nhật PR US-019 (ACR, RBAC, OIDC)
 │   ├── US-022-BAO-CAO-API-CORS.md     # Báo cáo đối chiếu hợp đồng API/CORS cho frontend (US-022)
 │   ├── US-022-BAO-CAO-THUC-HIEN.md    # Báo cáo thực hiện và kiểm thử Playwright (US-022)
+│   ├── US-030-BAO-CAO-THUC-HIEN.md    # Báo cáo cổng phê duyệt production (US-030)
 │   └── TAI_LIEU_BAO_CAO.doc           # Báo cáo tổng hợp môn học định dạng Word
 └── backup_gcp_docs/                   # Bản sao lưu tài liệu gốc trước khi chuyển đổi hạ tầng
 ```
@@ -80,4 +81,5 @@ docs/
 - [US-019_PR_Description_Cap_Nhat.md](reports/US-019_PR_Description_Cap_Nhat.md): Báo cáo thay đổi, test evidence và trạng thái nghiệm thu PR US-019.
 - [US-022-BAO-CAO-API-CORS.md](reports/US-022-BAO-CAO-API-CORS.md): Phân tích tích hợp frontend `web/` với backend API và CORS.
 - [US-022-BAO-CAO-THUC-HIEN.md](reports/US-022-BAO-CAO-THUC-HIEN.md): Báo cáo triển khai và kết quả kiểm thử Playwright cho `US-022`.
+- [US-030-BAO-CAO-THUC-HIEN.md](reports/US-030-BAO-CAO-THUC-HIEN.md): Báo cáo cổng phê duyệt production, kiểm tra staging cùng SHA và các bước xác minh còn chờ trên GitHub.
 - [TAI_LIEU_BAO_CAO.doc](reports/TAI_LIEU_BAO_CAO.doc): Tài liệu báo cáo hoàn chỉnh đồ án môn học Điện toán đám mây.
