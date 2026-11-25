@@ -1,8 +1,8 @@
 # Báo Cáo Thực Hiện — US-030
 
-> **User Story:** US-030 — Cổng phê duyệt thủ công cho production  
-> **Epic:** EPC-08 — Triển khai liên tục & Hoàn tác  
-> **Nhánh:** `feature/US-030-prod-approval`  
+> **User Story:** US-030 — Cổng phê duyệt thủ công cho production
+> **Epic:** EPC-08 — Triển khai liên tục & Hoàn tác
+> **Nhánh:** `feature/US-030-prod-approval`
 > **Trạng thái:** `LOCAL PASS — chờ cấu hình GitHub Environment và xác minh thủ công`
 
 ## 1. Phạm vi
