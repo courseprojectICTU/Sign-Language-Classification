@@ -137,3 +137,4 @@ Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test
 | [`US-034.md`](US-034.md) | US-034 | Cảnh báo Azure Log Analytics cho lỗi 5xx | `ANALYSIS_READY` (đã duyệt; staging; chờ nghiệm thu live) |
 
 | [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |
+| [`US-039.md`](US-039.md) | US-039 | Quét lỗ hổng bảo mật cho image trong CI | `ANALYSIS_READY` (public API: N/A; đã duyệt) |
