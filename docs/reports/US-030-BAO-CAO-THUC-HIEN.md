@@ -12,9 +12,9 @@ phụ thuộc US-029 và thực hiện BR-017. Theo xác nhận của chủ dự
 phải có một staging deployment thành công cho **đúng cùng Git SHA** trước khi
 chờ duyệt; cổng Environment nằm trước mọi bước của job production.
 
-Không có endpoint, CLI hay API công khai mới. **API docs: N/A** — thay đổi chỉ
-điều khiển GitHub Actions và GitHub Environment; chủ dự án đã xác nhận phạm vi
-N/A trước khi viết test.
+Không có endpoint, CLI hay API công khai mới. **Public API: N/A** — theo yêu cầu
+bổ sung, [`docs/api/US-030.md`](../api/US-030.md) ghi hợp đồng workflow và GitHub
+Environment, không định nghĩa API ứng dụng.
 
 ## 2. Thay đổi
 
@@ -52,7 +52,7 @@ thay đổi tài nguyên Azure trong phiên này.
 | `& ".\.venv\Scripts\python.exe" -m pytest tests -q` | **223 passed, 9 warnings** |
 | `& ".\.venv\Scripts\python.exe" -c "import yaml; from pathlib import Path; yaml.load(Path('.github/workflows/deploy-backend.yml').read_text(encoding='utf-8'), Loader=yaml.BaseLoader); print('Workflow YAML syntax parsed')"` | **Workflow YAML syntax parsed** |
 
-## 5. Commit cục bộ
+## 5. Commit triển khai cục bộ trước khi bổ sung hợp đồng API
 
 | Commit | Nội dung |
 |---|---|

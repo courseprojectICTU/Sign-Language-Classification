@@ -42,7 +42,7 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 | `origin/HEAD` | → `origin/develop` |
 | `develop` / `origin/develop` | `45aee1a` (`Merge pull request #59 from courseprojectICTU/feature/US-036`) |
 | `main` / `origin/main` | `bf6c257` (`Release v1.0.0: Merge develop into main`, tag `v1.0.0`) |
-| Nhánh làm việc hiện tại | `feature/US-030-prod-approval` (`dbf75d1`, local, chưa push) |
+| Nhánh làm việc hiện tại | `feature/US-030-prod-approval` (local, chưa push) |
 | Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-032` (PR #57, PR #58), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49`, `#56` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
@@ -142,6 +142,7 @@ docs/api/_TEMPLATE.md                             bộ khung 17 mục cho mỗi 
 docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ tầng theo từng User Story
 docs/api/US-032.md                                hợp đồng API/CLI rollback frontend Cloudflare Pages (US-032)
 docs/api/US-036.md                                hợp đồng cập nhật bộ nhớ dự án AGENTS.md (US-036)
+docs/api/US-030.md                                hợp đồng workflow staging cùng SHA và cổng Environment (US-030)
 docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
 docs/reports/US-032-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-032
 docs/reports/US-036-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-036
@@ -362,7 +363,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
 | **US-028** | Pipeline frontend với trigger theo đường dẫn và preview deployment | `feature/US-028` / PR `#50` (`develop`) | MERGED — PASS | `.github/workflows/frontend.yml`, `tests/test_frontend_workflow.py` (`6/6` PASS), `docs/api/US-028.md` (`ANALYSIS_READY`), triggers đường dẫn `web/**` (và workflow), deploy preview kèm bình luận PR không spam (`<!-- vsl-cloudflare-pages-preview -->`), route staging (`develop`) & production (`main`), secrets `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID` đã cấu hình trên GitHub Repo Secrets |
 | **US-029** | CD backend ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (đã kiểm thử cục bộ; đang review) | `.github/workflows/deploy-backend.yml` (định tuyến `develop` -> staging, `main` -> production), GitHub OIDC, smoke `/health` + `/version`, traffic rollback; staging dùng OIDC `develop` đã áp dụng, production chờ cấp phát theo US-021 |
-| **US-030** | Cổng phê duyệt thủ công cho production | `feature/US-030-prod-approval` | LOCAL PASS — chờ cấu hình GitHub Environment/live verification | TSK-057; preflight yêu cầu staging success cùng SHA; `environment: production`; 223 tests pass. Required reviewers và audit approval chưa xác minh; chưa push/deploy |
+| **US-030** | Cổng phê duyệt thủ công cho production | `feature/US-030-prod-approval` | LOCAL PASS — chờ duyệt hợp đồng API, cấu hình GitHub Environment/live verification | TSK-057; `docs/api/US-030.md`, preflight yêu cầu staging success cùng SHA, `environment: production`; 223 tests pass. Required reviewers và audit approval chưa xác minh; chưa push/deploy |
 | **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
 | **US-032** | Rollback frontend Cloudflare Pages về deployment trước | PR `#57`, PR `#58` (`develop`) | MERGED — PASS | `docs/api/US-032.md` (`ANALYSIS_READY`), `tests/test_us032_frontend_rollback.py` (`2/2` PASS), `docs/RUNBOOK.md` Mục 5.3 (Dashboard/Wrangler CLI zero-build rollback < 10s, `BR-022`) |
 | **US-036** | Cập nhật AGENTS.md theo cấu trúc mới | `feature/US-036` | IN PROGRESS (TSK-067) | Cập nhật AGENTS.md đồng bộ cấu trúc, mốc Git 2026-11-21, bẫy kỹ thuật OIDC/Black/CORS và môi trường Python 3.14; `tests/test_us036_agents_contract.py` |
