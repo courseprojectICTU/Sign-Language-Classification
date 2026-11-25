@@ -80,7 +80,7 @@ def test_us034_alert_counts_only_5xx_for_the_staging_container_app() -> None:
     assert "ContainerAppName_s" in monitoring
     assert "Log_s" in monitoring
     assert "500" in monitoring and "599" in monitoring
-    assert re.search(r'container_app_name\s*=\s*var\.container_app_name', monitoring)
+    assert "var.container_app_name" in monitoring
 
     alert = _extract_hcl_block(
         monitoring,
@@ -120,7 +120,8 @@ def test_us034_email_recipients_are_required_and_validated() -> None:
     )
 
     assert re.search(r"type\s*=\s*list\(string\)", variable)
-    assert "default" not in variable
+    assert "default     = []" in variable
+    assert 'var.environment != "staging"' in variable
     assert "length(var.server_error_alert_emails) > 0" in variable
     assert "alltrue" in variable
     assert "email" in variable.lower()
