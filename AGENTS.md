@@ -42,6 +42,7 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
 | `develop` / `origin/develop` | `45aee1a` (đồng bộ local với `origin/develop`) |
+| Baseline metadata US-036 (đối chiếu 2026-11-21) | `8d3f15e` (`Merge pull request #58 from courseprojectICTU/feature/US-032`; tổ tiên của `develop` hiện tại) |
 | `main` / `origin/main` | `bf6c257` (`Release v1.0.0: Merge develop into main`, tag `v1.0.0`) |
 | Nhánh làm việc hiện tại | `feature/US-039` — đã push `origin/feature/US-039`; chưa có PR |
 | Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-032` (PR #57, PR #58), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49`, `#56` |
