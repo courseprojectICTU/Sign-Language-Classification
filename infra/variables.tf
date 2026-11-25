@@ -101,6 +101,23 @@ variable "budget_alert_emails" {
   }
 }
 
+variable "server_error_alert_emails" {
+  description = "Team email addresses for the staging HTTP 5xx alert; supplied outside the repository."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = (
+      (var.environment != "staging" || length(var.server_error_alert_emails) > 0)
+      && alltrue([
+        for email in var.server_error_alert_emails :
+        can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", email))
+      ])
+    )
+    error_message = "server_error_alert_emails must contain valid email addresses and at least one recipient for staging."
+  }
+}
+
 variable "log_analytics_workspace_name" {
   description = "Log Analytics Workspace name for Container Apps logs."
   type        = string

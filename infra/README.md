@@ -148,3 +148,31 @@ az account get-access-token --tenant "<tenant-id>" --resource "https://managemen
 az account get-access-token --resource "https://graph.microsoft.com" --output none
 terraform -chdir=infra plan -lock=false -var-file="environments/staging.tfvars"
 ```
+
+## Staging HTTP 5xx alert (US-034)
+
+`monitoring.tf` creates a Log Analytics scheduled query alert and email Action
+Group only when `environment = "staging"`. The query reads Uvicorn access logs
+from `ContainerAppConsoleLogs_CL`, counts HTTP status codes `500–599`, and fires
+at `100` or more matching records in a five-minute window. The alert is evaluated
+every five minutes and uses the existing staging Log Analytics Workspace.
+
+Provide at least one group recipient through the operator environment; do not
+add email addresses to `.tfvars` or source control:
+
+```powershell
+$env:TF_VAR_server_error_alert_emails = '["<group-email>"]'
+terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+```
+
+Check the workspace's actual `ContainerAppConsoleLogs_CL` schema and access-log
+format before applying. Review the plan for staging-only Action Group and alert
+resources; do not run `terraform apply` without owner approval. Production does
+not create these resources.
+
+For AC-034-01, use an approved temporary staging canary revision that produces
+HTTP 500 responses without receiving normal traffic. One hundred 5xx responses
+must occur within five minutes and the email must arrive within ten minutes.
+Deactivate/remove the canary afterward and verify normal staging traffic and
+`/health`. A non-existent route returns 404 and must not be used to test this
+alert.

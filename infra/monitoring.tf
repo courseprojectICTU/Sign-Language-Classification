@@ -8,6 +8,26 @@ locals {
   KQL
 }
 
+resource "azurerm_monitor_action_group" "server_error" {
+  count = var.environment == "staging" ? 1 : 0
+
+  name                = "vsl-server-error-${var.environment}"
+  resource_group_name = var.resource_group_name
+  short_name          = "vsl5xx"
+  location            = "global"
+  tags                = local.common_tags
+
+  dynamic "email_receiver" {
+    for_each = var.server_error_alert_emails
+
+    content {
+      name                    = "server-error-${email_receiver.key}"
+      email_address           = email_receiver.value
+      use_common_alert_schema = true
+    }
+  }
+}
+
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "server_error" {
   count = var.environment == "staging" ? 1 : 0
 
@@ -32,4 +52,8 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "server_error" {
   enabled                 = true
   auto_mitigation_enabled = true
   tags                    = local.common_tags
+
+  action {
+    action_groups = [azurerm_monitor_action_group.server_error[0].id]
+  }
 }
