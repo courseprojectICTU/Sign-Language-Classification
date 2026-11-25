@@ -332,8 +332,8 @@ Log Analytics đếm đủ 100 lỗi 5xx. Alert `vsl-server-error-5xx-staging` �
 quan sát ở trạng thái `Fired` lúc `08:05:13Z`; Action Group và receiver đều
 `Enabled`, alert action `isSuppressed=false`. Canary đã deactivate (0 replica),
 traffic vẫn 100% vào revision ổn định, và `/health` trả 200 sau cold-start retry.
-Mailbox nhóm chưa được kiểm tra trực tiếp; chủ dự án cần xác nhận email receipt
-trước khi AC-034-01 được ghi nhận PASS.
+Chủ dự án xác nhận email tới nhóm trong 10 phút và nghiệm thu AC-034-01 PASS
+ngày 2026-11-25; thời điểm nhận thư chính xác không được ghi lại.
 
 ---
 

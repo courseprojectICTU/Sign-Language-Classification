@@ -1,12 +1,12 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
-**Cập nhật lần cuối: 2026-11-25** — US-034 đã apply staging với plan `2 to add,
-0 to change, 0 to destroy`; alert đã fire từ canary gồm 100 response 500. Action
-Group/receiver đang enabled và notification không bị suppress; nhóm email chưa
-được kiểm tra trực tiếp trong mailbox. Canary đã deactivate (0 replica), traffic
-vẫn 100% vào revision ổn định và `/health` trả 200. Nếu bạn phát hiện file này
-lệch với thực tế, hãy sửa nó ngay (file có tiếng Việt, lưu ý UTF-8).
+**Cập nhật lần cuối: 2026-11-25** — US-034 staging đã nghiệm thu PASS: plan
+`2 to add, 0 to change, 0 to destroy`; canary tạo 100 response 500, alert đã
+fire và chủ dự án xác nhận email tới nhóm trong 10 phút. Canary đã deactivate
+(0 replica), traffic vẫn 100% vào revision ổn định và `/health` trả 200. Nếu
+bạn phát hiện file này lệch với thực tế, hãy sửa nó ngay (file có tiếng Việt,
+lưu ý UTF-8).
 Ghi chú lịch sử: bản cập nhật US-036 ngày `2026-11-21` dùng baseline `8d3f15e`;
 baseline hiện hành được đối chiếu lại ở Mục 2.
 
@@ -372,7 +372,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-032** | Rollback frontend Cloudflare Pages về deployment trước | PR `#57`, PR `#58` (`develop`) | MERGED — PASS | `docs/api/US-032.md` (`ANALYSIS_READY`), `tests/test_us032_frontend_rollback.py` (`2/2` PASS), `docs/RUNBOOK.md` Mục 5.3 (Dashboard/Wrangler CLI zero-build rollback < 10s, `BR-022`) |
 | **US-036** | Cập nhật AGENTS.md theo cấu trúc mới | `feature/US-036` | IN PROGRESS (TSK-067) | Cập nhật AGENTS.md đồng bộ cấu trúc, mốc Git 2026-11-21, bẫy kỹ thuật OIDC/Black/CORS và môi trường Python 3.14; `tests/test_us036_agents_contract.py` |
 | **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | PR `#35` (`develop`) | PASS — STAGING VERIFIED | Đã apply `vsl-monthly-cost-guardrail-staging` (`$5`, `20%` `$1` / `100%` `$5`, `Owner`) trên `373b1f03-330f-4302-a9e9-aa1fe793bf2e` và xác minh trên Azure Portal; Entra ID `Security defaults: Enabled`; `docs/RUNBOOK.md` Mục 7, `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` |
-| **US-034** | Cảnh báo Azure Log Analytics cho lỗi 5xx | `feature/US-034` | STAGING DEPLOYED; ALERT FIRED; MAILBOX RECEIPT PENDING | Provider `Microsoft.Insights` Registered; fresh targeted plan `2 to add, 0 to change, 0 to destroy` và apply cùng kết quả. Canary trả `100/100` HTTP 500 trong `17.61s`; Log Analytics đếm 100 lỗi 5xx; alert `vsl-server-error-5xx-staging` ở trạng thái Fired được thấy lúc `08:05:13Z`, Action Group enabled và `isSuppressed=false`. Canary đã deactivate (0 replica), traffic vẫn 100% revision ổn định, `/health` trả 200; full suite `225 passed, 9 warnings`, Terraform fmt/validate, Ruff/Black PASS. Chưa kiểm tra trực tiếp mailbox nhóm. |
+| **US-034** | Cảnh báo Azure Log Analytics cho lỗi 5xx | `feature/US-034` | PASS — STAGING VERIFIED; AC-034-01 ACCEPTED | Provider `Microsoft.Insights` Registered; fresh targeted plan `2 to add, 0 to change, 0 to destroy` và apply cùng kết quả. Canary trả `100/100` HTTP 500 trong `17.61s`; Log Analytics đếm 100 lỗi 5xx; alert `vsl-server-error-5xx-staging` ở trạng thái Fired được thấy lúc `08:05:13Z`, Action Group enabled và `isSuppressed=false`; chủ dự án xác nhận email tới nhóm trong 10 phút và nghiệm thu AC-034-01. Canary đã deactivate (0 replica), traffic vẫn 100% revision ổn định, `/health` trả 200; full suite `225 passed, 9 warnings`, Terraform fmt/validate, Ruff/Black PASS. |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
 
@@ -385,7 +385,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
    - **Staging:** Backend `vsl-api` trên `cae-vsl-staging-std` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`) với `min_replicas = 0` (scale-to-zero khi idle). Frontend preview tại `https://develop.sign-language-classification.pages.dev`.
    - **CD Pipelines:** `.github/workflows/deploy-backend.yml` (backend ACA) và `.github/workflows/frontend.yml` (frontend Cloudflare Pages) đã hỗ trợ tự động hóa theo nhánh `develop` (staging) và `main` (production).
 2. **US-032 (Đã hoàn thành):** Cơ chế Instant Rollback frontend về deployment trước không cần build lại qua Cloudflare Dashboard / Wrangler API (< 10s, `BR-022`) đã ghi nhận tại Mục 5.3 `docs/RUNBOOK.md`.
-3. **US-034 (2026-11-25):** Action Group và scheduled query alert staging-only đã được apply từ plan mới `2 to add, 0 to change, 0 to destroy`. Canary độc lập tạo `100/100` HTTP 500 trong `17.61s`; Log Analytics đếm đủ 100, alert được thấy `Fired` lúc `08:05:13Z`, Action Group enabled và không bị suppress. Canary đã dừng, traffic ổn định vẫn 100%, `/health` trả 200. Chưa xác minh thư trong mailbox nhóm; cần chủ dự án xác nhận receipt trước khi ghi AC-034-01 PASS cuối cùng.
+3. **US-034 (2026-11-25):** Action Group và scheduled query alert staging-only đã được apply từ plan mới `2 to add, 0 to change, 0 to destroy`. Canary độc lập tạo `100/100` HTTP 500 trong `17.61s`; Log Analytics đếm đủ 100, alert được thấy `Fired` lúc `08:05:13Z`, Action Group enabled và không bị suppress. Chủ dự án xác nhận email tới nhóm trong 10 phút và nghiệm thu AC-034-01 PASS. Canary đã dừng, traffic ổn định vẫn 100%, `/health` trả 200.
 4. **Các hạng mục tiếp theo:**
    - **US-037:** Demo end-to-end và retrospective sau khi hoàn tất các hạng mục MUST của Sprint 2.
    - **US-030:** Cổng phê duyệt thủ công cho môi trường production.
