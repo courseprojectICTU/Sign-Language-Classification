@@ -291,6 +291,50 @@ Không tạo hoặc bật các dịch vụ/cấu hình trong nhóm **Bị cấm*
 3. Không hạ `minReplicas`, scale về 0 hoặc xóa resource đang phục vụ khi chưa đánh giá tác động và có xác nhận của chủ dự án. Không xóa tài nguyên chứa state (`vslstate2026`).
 4. **Khi chạm `$5` (`100%`) hoặc chi phí tăng bất thường:** Coi là sự cố (*incident*), ngừng mọi pipeline deploy, cô lập/tắt tài nguyên ngoài allow-list sau khi chủ dự án duyệt và ghi nhận nguyên nhân + hành động khắc phục vào nhật ký vận hành.
 
+### 7.5. Cảnh báo lỗi HTTP 5xx (US-034)
+
+US-034 áp dụng trên **staging**. Azure Monitor scheduled query alert đếm các
+response HTTP `500–599` của `vsl-api` trong cửa sổ 5 phút; từ `100` lỗi trở lên
+sẽ gọi Action Group gửi email. Kỳ vọng AC-034-01 là email được nhận trong vòng
+10 phút.
+
+- Truyền recipient email của nhóm qua môi trường PowerShell khi chạy Terraform;
+  không ghi địa chỉ thật vào Git hoặc log:
+
+  ```powershell
+  $env:TF_VAR_server_error_alert_emails = '["<group-email>"]'
+  terraform -chdir=infra plan -var-file="environments/staging.tfvars"
+  ```
+
+- Xác nhận subscription đã đăng ký provider `Microsoft.Insights`. Nếu chưa,
+  subscription administrator phải đăng ký provider; đây là thao tác cấp
+  subscription, cần phê duyệt riêng và không nằm trong Terraform plan US-034.
+- Trước khi apply, dùng Log Analytics để xác nhận `ContainerAppConsoleLogs_CL`,
+  tên cột `Log_s` và định dạng Uvicorn access log thực tế. Dừng nếu query không
+  trích được status code hoặc plan đề xuất thay đổi/xóa Container App.
+- Để nghiệm thu, chỉ dùng revision canary tạm trong staging, không gán traffic
+  bình thường. Gửi 100 request tạo response `500` trong 5 phút tới URL riêng
+  của canary; xác minh log, trạng thái fired của alert và email nhận được trong
+  tối đa 10 phút.
+- Không dùng `/khong-ton-tai` làm lỗi giả lập: endpoint không tồn tại trả `404`,
+  không phải `5xx`.
+- Sau nghiệm thu, deactivate/xóa canary, xác nhận traffic weight của `vsl-api`
+  không đổi và `GET /health` trả trạng thái khỏe. Không thử lỗi giả lập trên
+  production.
+- Nếu email không tới, kiểm tra query result, Action Group receiver, alert
+  history và độ trễ ingest trước khi sửa ngưỡng. Không hạ threshold để che lỗi
+  truy vấn hoặc email.
+
+**Bằng chứng staging (2026-11-25):** `Microsoft.Insights` đã Registered; fresh
+Terraform plan chỉ thêm Action Group và scheduled query alert (`2 to add, 0 to
+change, 0 to destroy`). Canary riêng trả `100/100` HTTP 500 trong `17.61s`;
+Log Analytics đếm đủ 100 lỗi 5xx. Alert `vsl-server-error-5xx-staging` được
+quan sát ở trạng thái `Fired` lúc `08:05:13Z`; Action Group và receiver đều
+`Enabled`, alert action `isSuppressed=false`. Canary đã deactivate (0 replica),
+traffic vẫn 100% vào revision ổn định, và `/health` trả 200 sau cold-start retry.
+Chủ dự án xác nhận email tới nhóm trong 10 phút và nghiệm thu AC-034-01 PASS
+ngày 2026-11-25; thời điểm nhận thư chính xác không được ghi lại.
+
 ---
 
 ## 8. Environment variables and credentials
@@ -303,6 +347,7 @@ Không tạo hoặc bật các dịch vụ/cấu hình trong nhóm **Bị cấm*
 | `GIT_SHA` | Identify source revision from `/version` | Docker build metadata; use an immutable commit SHA |
 | `BUILD_TIME` | Build timestamp from `/version` | Docker build metadata; ISO-8601 UTC recommended |
 | `VSL_ALLOWED_ORIGINS` | Exact CORS origin allowlist | Current backend (`US-025`); empty by default (default-deny) |
+| `TF_VAR_server_error_alert_emails` | Staging HTTP 5xx Action Group recipients | Operator-provided Terraform variable for `US-034`; never commit the email list |
 | Azure CLI / OIDC identity | Read/manage ACA and ACR via Terraform/Actions | Operator-managed or GitHub OIDC (`US-019`); never commit secrets |
 
 There are no GitHub cloud secrets needed by the `US-026` pull-request CI because
