@@ -30,9 +30,9 @@ def test_agents_md_exists_and_utf8():
 
 
 def test_agents_md_metadata_freshness(agents_content: str):
-    """Verify AGENTS.md has current date (2026-11-21) and baseline commit (8d3f15e)."""
-    assert "2026-11-21" in agents_content, "AGENTS.md last update date must be 2026-11-21"
-    assert "8d3f15e" in agents_content, "AGENTS.md must reference baseline commit 8d3f15e"
+    """Verify AGENTS.md has current date (2026-11-25) and baseline commit (45aee1a)."""
+    assert "2026-11-25" in agents_content, "AGENTS.md last update date must be 2026-11-25"
+    assert "45aee1a" in agents_content, "AGENTS.md must reference baseline commit 45aee1a"
     assert "v1.0.0" in agents_content, "AGENTS.md must reference release v1.0.0 on main"
 
 

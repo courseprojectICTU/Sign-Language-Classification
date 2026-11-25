@@ -135,4 +135,5 @@ Sau khi `ANALYSIS_READY` và được duyệt → mới sang bước viết test
 | [`US-028.md`](US-028.md) | US-028 | Pipeline frontend với trigger theo đường dẫn và preview deployment | `ANALYSIS_READY` (PASS) |
 | [`US-029.md`](US-029.md) | US-029 | CD ACA staging: smoke-test revision rồi chuyển traffic | PR description / API công khai: N/A |
 | [`US-034.md`](US-034.md) | US-034 | Cảnh báo Azure Log Analytics cho lỗi 5xx | `ANALYSIS_READY` (đã duyệt; staging; chờ nghiệm thu live) |
+
 | [`US-038.md`](US-038.md) | US-038 | Tối ưu và tái lập quá trình build image | `ANALYSIS_READY` (PASS) |

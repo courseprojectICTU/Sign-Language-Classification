@@ -1,6 +1,7 @@
 # AGENTS.md — Sign-Language-Classification-v1.0
 
 Bộ nhớ dự án cho agent. Đọc file này trước khi sửa code.
+
 **Cập nhật lần cuối: 2026-11-25** — US-034 staging đã nghiệm thu PASS: plan
 `2 to add, 0 to change, 0 to destroy`; canary tạo 100 response 500, alert đã
 fire và chủ dự án xác nhận email tới nhóm trong 10 phút. Canary đã deactivate
@@ -8,7 +9,7 @@ fire và chủ dự án xác nhận email tới nhóm trong 10 phút. Canary đ�
 bạn phát hiện file này lệch với thực tế, hãy sửa nó ngay (file có tiếng Việt,
 lưu ý UTF-8).
 Ghi chú lịch sử: bản cập nhật US-036 ngày `2026-11-21` dùng baseline `8d3f15e`;
-baseline hiện hành được đối chiếu lại ở Mục 2.
+
 
 **Quy trình làm việc bắt buộc** (đồng bộ `develop` → tạo nhánh → đọc US → viết test
 trước → làm từng task → nghiệm thu): xem [docs/process/WORKFLOW.md](docs/process/WORKFLOW.md).
@@ -45,9 +46,11 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 |---|---|
 | Remote `origin` | `https://github.com/courseprojectICTU/Sign-Language-Classification.git` (fetch = push) |
 | `origin/HEAD` | → `origin/develop` |
+ feature/US-034
 | `develop` / `origin/develop` | `45aee1a` (đã xác minh trước khi tạo nhánh US-034) |
 | `main` / `origin/main` | `bf6c257` (`Release v1.0.0: Merge develop into main`, tag `v1.0.0`) |
 | Nhánh làm việc hiện tại | `feature/US-034` |
+
 | Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-032` (PR #57, PR #58), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49`, `#56` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
@@ -94,7 +97,7 @@ Dockerfile                                        multi-stage Linux build ghim d
 .github/PULL_REQUEST_TEMPLATE.md                  biểu mẫu PR chuẩn tiếng Việt có dấu
 .github/workflows/ci.yml                          PR/push CI: Ruff, Black, pytest, Docker build no-push (US-026/US-038)
 .github/workflows/azure-oidc-smoke.yml            workflow_dispatch kiểm tra đăng nhập GitHub OIDC (US-019)
-.github/workflows/deploy-backend.yml              CD develop -> staging, main -> production; candidate smoke test rồi chuyển traffic (US-029, nhánh feature)
+.github/workflows/deploy-backend.yml              CD develop -> staging, main -> production; same-SHA staging preflight + Environment gate (US-029/US-030, nhánh feature)
 .github/workflows/acr-publish.yml                 workflow_dispatch build & push image linux/amd64 qua OIDC lên vslacr3795 (US-024/US-038)
 web/index.html                                    giao diện web tĩnh tải/chụp ảnh (US-022)
 web/app.js                                        logic gọi POST /predict, camera capture, hiển thị lỗi (US-022)
@@ -149,9 +152,11 @@ docs/api/US-001.md .. US-038.md                   hợp đồng API/CLI/hạ t�
 docs/api/US-032.md                                hợp đồng API/CLI rollback frontend Cloudflare Pages (US-032)
 docs/api/US-034.md                                hợp đồng Azure Monitor alert lỗi 5xx staging (US-034)
 docs/api/US-036.md                                hợp đồng cập nhật bộ nhớ dự án AGENTS.md (US-036)
+docs/api/US-030.md                                hợp đồng workflow staging cùng SHA và cổng Environment (US-030)
 docs/reports/US-012-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-012
 docs/reports/US-032-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-032
 docs/reports/US-036-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện và nghiệm thu US-036
+docs/reports/US-030-BAO-CAO-THUC-HIEN.md          báo cáo US-030; GitHub required reviewers và live gate chưa xác minh
 docs/reports/US-019_PR_Description_Cap_Nhat.md    báo cáo PR US-019
 docs/reports/US-022-BAO-CAO-API-CORS.md           báo cáo đối chiếu API/CORS US-022
 docs/reports/US-022-BAO-CAO-THUC-HIEN.md          báo cáo thực hiện US-022
@@ -190,6 +195,7 @@ tests/test_us032_frontend_rollback.py             kiểm thử instant rollback 
 tests/test_us033_cost_guardrails.py               kiểm thử Terraform budget Azure, Entra ID MFA & runbook (US-033)
 tests/test_us034_monitoring_alert.py              kiểm thử hợp đồng Azure Monitor 5xx, Action Group và runbook (US-034)
 tests/test_us036_agents_contract.py               kiểm thử hợp đồng bộ nhớ dự án AGENTS.md (US-036)
+tests/test_us030_production_approval.py           test staging cùng SHA và production Environment gate (US-030)
 tests/test_version.py                             test US-008 (/version)
 tests/fixtures/notebook_prediction_reference.json kết quả tham chiếu frozen 23 mẫu (US-016)
 tests/fixtures/heatmap_golden.npz                 golden reference (sinh từ notebook cũ)
@@ -368,6 +374,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-026** | Pipeline CI chạy lint, test và docker build | PR `#30`, PR `#36` | MERGED | `.github/workflows/ci.yml` + `pyproject.toml` + `tests/test_ci_workflow.py` |
 | **US-028** | Pipeline frontend với trigger theo đường dẫn và preview deployment | `feature/US-028` / PR `#50` (`develop`) | MERGED — PASS | `.github/workflows/frontend.yml`, `tests/test_frontend_workflow.py` (`6/6` PASS), `docs/api/US-028.md` (`ANALYSIS_READY`), triggers đường dẫn `web/**` (và workflow), deploy preview kèm bình luận PR không spam (`<!-- vsl-cloudflare-pages-preview -->`), route staging (`develop`) & production (`main`), secrets `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID` đã cấu hình trên GitHub Repo Secrets |
 | **US-029** | CD backend ACA: triển khai revision rồi mới chuyển traffic | `feature/US-029` | IN PROGRESS (đã kiểm thử cục bộ; đang review) | `.github/workflows/deploy-backend.yml` (định tuyến `develop` -> staging, `main` -> production), GitHub OIDC, smoke `/health` + `/version`, traffic rollback; staging dùng OIDC `develop` đã áp dụng, production chờ cấp phát theo US-021 |
+| **US-030** | Cổng phê duyệt thủ công cho production | `feature/US-030-prod-approval` | LOCAL PASS — chờ duyệt hợp đồng API, cấu hình GitHub Environment/live verification | TSK-057; `docs/api/US-030.md`, preflight yêu cầu staging success cùng SHA, `environment: production`; 223 tests pass. Required reviewers và audit approval chưa xác minh; chưa push/deploy |
 | **US-031** | Rollback backend Azure Container Apps bằng traffic split | PR `#27` | MERGED (CLI PASS) | `scripts/rollback.py`; `vsl-api` trên `cae-vsl-staging-std` đã dùng `Multiple` revision mode; chờ diễn tập live + US-029 |
 | **US-032** | Rollback frontend Cloudflare Pages về deployment trước | PR `#57`, PR `#58` (`develop`) | MERGED — PASS | `docs/api/US-032.md` (`ANALYSIS_READY`), `tests/test_us032_frontend_rollback.py` (`2/2` PASS), `docs/RUNBOOK.md` Mục 5.3 (Dashboard/Wrangler CLI zero-build rollback < 10s, `BR-022`) |
 | **US-036** | Cập nhật AGENTS.md theo cấu trúc mới | `feature/US-036` | IN PROGRESS (TSK-067) | Cập nhật AGENTS.md đồng bộ cấu trúc, mốc Git 2026-11-21, bẫy kỹ thuật OIDC/Black/CORS và môi trường Python 3.14; `tests/test_us036_agents_contract.py` |
@@ -385,8 +392,19 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
    - **Staging:** Backend `vsl-api` trên `cae-vsl-staging-std` (`https://vsl-api.happyforest-6510ce4b.eastasia.azurecontainerapps.io`) với `min_replicas = 0` (scale-to-zero khi idle). Frontend preview tại `https://develop.sign-language-classification.pages.dev`.
    - **CD Pipelines:** `.github/workflows/deploy-backend.yml` (backend ACA) và `.github/workflows/frontend.yml` (frontend Cloudflare Pages) đã hỗ trợ tự động hóa theo nhánh `develop` (staging) và `main` (production).
 2. **US-032 (Đã hoàn thành):** Cơ chế Instant Rollback frontend về deployment trước không cần build lại qua Cloudflare Dashboard / Wrangler API (< 10s, `BR-022`) đã ghi nhận tại Mục 5.3 `docs/RUNBOOK.md`.
+
 3. **US-034 (2026-11-25):** Action Group và scheduled query alert staging-only đã được apply từ plan mới `2 to add, 0 to change, 0 to destroy`. Canary độc lập tạo `100/100` HTTP 500 trong `17.61s`; Log Analytics đếm đủ 100, alert được thấy `Fired` lúc `08:05:13Z`, Action Group enabled và không bị suppress. Chủ dự án xác nhận email tới nhóm trong 10 phút và nghiệm thu AC-034-01 PASS. Canary đã dừng, traffic ổn định vẫn 100%, `/health` trả 200.
 4. **Các hạng mục tiếp theo:**
    - **US-037:** Demo end-to-end và retrospective sau khi hoàn tất các hạng mục MUST của Sprint 2.
    - **US-030:** Cổng phê duyệt thủ công cho môi trường production.
+
+3. **US-030 (2026-11-25):** Nhánh local đã thêm preflight staging cùng SHA và GitHub
+   Environment gate cho production. Chủ repo cần cấu hình required reviewers trên
+   Environment `production`; quy trình merge phải giữ đúng SHA staging đã chạy.
+   Chưa push/PR và chưa xác minh live approval. Xem
+   [`docs/reports/US-030-BAO-CAO-THUC-HIEN.md`](docs/reports/US-030-BAO-CAO-THUC-HIEN.md).
+4. **Các hạng mục tiếp theo:**
+   - **US-037:** Demo end-to-end và retrospective sau khi hoàn tất các hạng mục MUST của Sprint 2.
+   - **US-034:** Cảnh báo Azure Log Analytics cho lỗi 5xx trên Container Apps.
+
 5. **Quy tắc an toàn:** Không gửi Client Secret trong chat hoặc repository; không commit Terraform state, plan hay credentials; không tự push/PR nếu chưa có quyết định của chủ dự án.
