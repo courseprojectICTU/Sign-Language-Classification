@@ -43,7 +43,7 @@ Hạ tầng staging đang chạy trên Microsoft Azure Container Apps Standard (
 | `origin/HEAD` | → `origin/develop` |
 | `develop` / `origin/develop` | `45aee1a` (đồng bộ local với `origin/develop`) |
 | `main` / `origin/main` | `bf6c257` (`Release v1.0.0: Merge develop into main`, tag `v1.0.0`) |
-| Nhánh làm việc hiện tại | `feature/US-039` — các commit US-039 chỉ ở local, chưa push |
+| Nhánh làm việc hiện tại | `feature/US-039` — đã push `origin/feature/US-039`; chưa có PR |
 | Đã merge vào `develop` | `US-001`..`US-008`, `US-009` (PR #46), `US-010`, `US-011` (PR #38), `US-012` (PR #32), `US-013` (PR #19), `US-014` (PR #20), `US-015` (PR #11), `US-016` (PR #12), `US-017` (PR #29), `US-018`/`US-019` (PR #22, PR #42), `US-020` (PR #48), `US-021` (PR #43), `US-022` (PR #23, PR #47), `US-024` (PR #33, PR #37, PR #41), `US-025` (PR #28), `US-026` (PR #30), `US-028` (PR #50), `US-031` (PR #27), `US-032` (PR #57, PR #58), `US-033` (PR #35), `US-035` (PR #24), `US-038` (PR #31), cùng PR `#34`, `#36`, `#40`, `#44`, `#49`, `#56` |
 | LFS | `git-lfs/3.7.0`; `.gitattributes` chỉ có `*.h5 filter=lfs` |
 | `train/vsl_cnn_pose_keras.h5` | **file thật 137.042.364 bytes** (LFS đã smudge, không phải pointer) |
@@ -367,7 +367,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
 | **US-033** | Billing Budget và MFA bảo vệ ràng buộc chi phí bằng 0 | PR `#35` (`develop`) | PASS — STAGING VERIFIED | Đã apply `vsl-monthly-cost-guardrail-staging` (`$5`, `20%` `$1` / `100%` `$5`, `Owner`) trên `373b1f03-330f-4302-a9e9-aa1fe793bf2e` và xác minh trên Azure Portal; Entra ID `Security defaults: Enabled`; `docs/RUNBOOK.md` Mục 7, `docs/api/US-033.md`, `tests/test_us033_cost_guardrails.py` |
 | **US-035** | README và Runbook xử lý sự cố | PR `#24` | MERGED + CLEANED | `README.md`, `docs/RUNBOOK.md`, `US-IMPLEMENTATION-STATUS.md` |
 | **US-038** | Tối ưu và tái lập quá trình build image, CI/CD và vận hành | PR `#31` | MERGED + PUBLISHED | Multi-stage digest, `requirements-runtime.txt`; image `9a1c3aa847e19ef4a85d6bec9d36afc3d5c5e76f` đã push lên `vslacr3795` |
-| **US-039** | Quét lỗ hổng bảo mật cho image trong CI | `feature/US-039` (local) | IN PROGRESS — local validation PASS; hosted artifact và Cổng D đang chờ | Trivy `exit-code: 0`, report text artifact và runbook theo BR-026; AC contract tests PASS; `pytest tests -v`: **222 passed, 9 warnings**; Ruff và Black PASS; chưa push/chạy GitHub Actions |
+| **US-039** | Quét lỗ hổng bảo mật cho image trong CI | `feature/US-039` (đã push) | IN PROGRESS — PR/hosted artifact và Cổng D đang chờ | Trivy `exit-code: 0`, report text artifact và runbook theo BR-026; AC contract tests PASS; `pytest tests -v`: **222 passed, 9 warnings**; Ruff và Black PASS; chưa tạo PR/chạy GitHub Actions |
 
 ---
 
@@ -379,7 +379,7 @@ Python `.venv` đã ghi được fixture US-016 trong workspace; không suy rộ
    - **CD Pipelines:** `.github/workflows/deploy-backend.yml` (backend ACA) và `.github/workflows/frontend.yml` (frontend Cloudflare Pages) đã hỗ trợ tự động hóa theo nhánh `develop` (staging) và `main` (production).
 2. **US-032 (Đã hoàn thành):** Cơ chế Instant Rollback frontend về deployment trước không cần build lại qua Cloudflare Dashboard / Wrangler API (< 10s, `BR-022`) đã ghi nhận tại Mục 5.3 `docs/RUNBOOK.md`.
 3. **Các hạng mục tiếp theo:**
-   - **US-039:** Đã triển khai Trivy report-only ở local trên `feature/US-039`; trước khi nghiệm thu cần được chủ dự án cho phép push/chạy GitHub Actions, xác nhận artifact report tải được và nhận xác nhận Cổng D. Không bật blocking khi chưa xử lý CVE Critical và chưa có quyết định bằng văn bản.
+   - **US-039:** Trivy report-only đã được push trên `feature/US-039`; PR chưa được tạo vì cần đăng nhập GitHub. Trước khi nghiệm thu cần mở PR/chạy GitHub Actions, xác nhận artifact report tải được và nhận xác nhận Cổng D. Không bật blocking khi chưa xử lý CVE Critical và chưa có quyết định bằng văn bản.
    - **US-037:** Demo end-to-end và retrospective sau khi hoàn tất các hạng mục MUST của Sprint 2.
    - **US-030:** Cổng phê duyệt thủ công cho môi trường production.
    - **US-034:** Cảnh báo Azure Log Analytics cho lỗi 5xx trên Container Apps.
