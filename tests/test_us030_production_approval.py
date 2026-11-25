@@ -38,7 +38,7 @@ def test_staging_preflight_requires_success_for_the_exact_main_sha() -> None:
     workflow = _read(".github/workflows/deploy-backend.yml")
     staging_job = _job_block(workflow, "verify-staging")
 
-    assert re.search(r"(?m)^    actions:\s*read\s*$", staging_job)
+    assert re.search(r"(?m)^      actions:\s*read\s*$", staging_job)
     assert "GITHUB_SHA" in staging_job
     assert "branch=develop" in staging_job
     assert "head_sha" in staging_job
@@ -51,6 +51,5 @@ def test_staging_deploy_is_not_blocked_by_production_approval_preflight() -> Non
     workflow = _read(".github/workflows/deploy-backend.yml")
     staging_job = _job_block(workflow, "verify-staging")
 
-    assert "GITHUB_REF_NAME" in staging_job
-    assert "main" in staging_job
+    assert re.search(r"(?m)^        if: github\.ref_name == 'main'\s*$", staging_job)
     assert "develop" in workflow
