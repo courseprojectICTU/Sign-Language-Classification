@@ -50,8 +50,7 @@ def _request_json(
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         preview = body.decode("utf-8", errors="replace").strip().replace("\n", " ")[:300]
         raise SmokeTestError(
-            f"{method} {url} returned invalid JSON"
-            + (f": {preview}" if preview else "")
+            f"{method} {url} returned invalid JSON" + (f": {preview}" if preview else "")
         ) from exc
 
     if not isinstance(result, dict):
