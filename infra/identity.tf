@@ -22,6 +22,16 @@ resource "azuread_application_federated_identity_credential" "github_main" {
   subject        = var.github_oidc_main_subject
 }
 
+resource "azuread_application_federated_identity_credential" "github_environment" {
+  count          = var.github_oidc_environment_subject == "" ? 0 : 1
+  application_id = azuread_application.github_deploy.id
+  display_name   = "github-${var.environment}"
+  description    = "GitHub Actions OIDC trust for the configured GitHub Environment."
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = var.github_oidc_environment_subject
+}
+
 resource "azuread_service_principal" "github_deploy" {
   client_id = azuread_application.github_deploy.client_id
 }

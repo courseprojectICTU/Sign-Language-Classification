@@ -238,7 +238,7 @@ def test_request_json_surfaces_http_error(monkeypatch: pytest.MonkeyPatch) -> No
             "https://service.example/predict",
             500,
             "Internal Server Error",
-            None,
+            {},
             None,
         )
 

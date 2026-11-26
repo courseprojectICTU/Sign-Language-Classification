@@ -47,6 +47,10 @@ def test_workflow_builds_smokes_candidate_then_shifts_and_recovers_traffic() -> 
     assert "docker push" in workflow
     assert "GIT_SHA: ${{ github.sha }}" in workflow
     assert "--revision-suffix" in workflow
+    assert "revision show" in workflow
+    assert "--query properties.fqdn" in workflow
+    assert "candidate_url=https://${revision_fqdn}" in workflow
+    assert "az containerapp revision label add" not in workflow
     smoke_position = workflow.index("scripts/smoke_test.py")
     shift_position = workflow.index("az containerapp ingress traffic set")
     assert smoke_position < shift_position
@@ -58,7 +62,6 @@ def test_workflow_builds_smokes_candidate_then_shifts_and_recovers_traffic() -> 
     assert "trap rollback_on_failure EXIT" in workflow
     assert "promotion_attempted=true" in workflow
     assert "promotion_verified=true" in workflow
-    assert "---${label}" in workflow
 
 
 def test_main_branch_oidc_subject_is_provisioned_for_staging_deployer() -> None:

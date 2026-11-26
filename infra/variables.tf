@@ -70,6 +70,20 @@ variable "github_oidc_main_subject" {
   }
 }
 
+variable "github_oidc_environment_subject" {
+  description = "Optional exact GitHub Actions subject trusted for the configured GitHub Environment."
+  type        = string
+  default     = ""
+
+  validation {
+    condition = var.github_oidc_environment_subject == "" || can(regex(
+      "^repo:courseprojectICTU(@[0-9]+)?/Sign-Language-Classification(@[0-9]+)?:environment:(staging|production)$",
+      var.github_oidc_environment_subject
+    ))
+    error_message = "github_oidc_environment_subject must be an environment subject for staging or production."
+  }
+}
+
 variable "enable_billing_budget" {
   description = "Whether to provision the monthly $5 USD subscription consumption budget."
   type        = bool

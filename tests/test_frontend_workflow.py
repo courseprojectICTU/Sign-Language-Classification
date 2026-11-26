@@ -44,6 +44,15 @@ def test_frontend_workflow_file_exists() -> None:
     assert "Frontend" in name or "Pages" in name, f"Unexpected workflow name: {name}"
 
 
+def test_wrangler_pages_config_points_to_static_web_directory() -> None:
+    config_path = ROOT / "wrangler.toml"
+    assert config_path.is_file(), "Missing root Wrangler Pages configuration"
+
+    content = config_path.read_text(encoding="utf-8")
+    assert 'name = "sign-language-classification"' in content
+    assert 'pages_build_output_dir = "./web"' in content
+
+
 def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> None:
     """AC-028-01 & TSK-053: Triggers chỉ kích hoạt khi sửa đổi web/** hoặc workflow frontend."""
     workflow = _read_workflow()
@@ -61,6 +70,7 @@ def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> Non
     assert (
         ".github/workflows/frontend.yml" in pr_paths
     ), "pull_request cần trigger khi chính workflow frontend.yml được cập nhật"
+    assert "wrangler.toml" in pr_paths
 
     # 2. Push Trigger (Staging / Production promotion)
     assert "push" in triggers, "Workflow phải có trigger push"
@@ -70,7 +80,9 @@ def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> Non
     assert "main" in push_branches, "push trigger phải hỗ trợ main (production)"
 
     push_paths = push_config.get("paths", [])
-    assert "web/**" in push_paths, "push trigger chỉ được lọc đường dẫn web/**"
+    assert "web/**" in push_paths
+    assert ".github/workflows/frontend.yml" in push_paths
+    assert "wrangler.toml" in push_paths
 
 
 def test_ac_028_02_path_filtering_excludes_backend_and_infra_paths() -> None:

@@ -108,6 +108,7 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
     identity = _read("identity.tf")
     outputs = _read("outputs.tf")
     staging = _read("environments/staging.tfvars")
+    variables = _read("variables.tf")
     sources = _terraform_sources()
 
     assert re.search(
@@ -132,6 +133,17 @@ def test_tsk_034_creates_github_federation_without_service_principal_password():
         r'Sign-Language-Classification@1421059989:ref:refs/heads/develop"',
         staging,
     )
+    assert re.search(
+        r'github_oidc_environment_subject\s*=\s*"repo:courseprojectICTU@343123217/'
+        r'Sign-Language-Classification@1421059989:environment:staging"',
+        staging,
+    )
+    assert (
+        'resource "azuread_application_federated_identity_credential" "github_environment"'
+        in identity
+    )
+    assert "subject        = var.github_oidc_environment_subject" in identity
+    assert 'variable "github_oidc_environment_subject"' in variables
     for output_name in (
         "github_oidc_client_id",
         "github_oidc_tenant_id",

@@ -218,15 +218,6 @@ jobs:
             exit 1
           fi
 
-          label="candidate"
-          az containerapp revision label add \
-            --name "$AZURE_CONTAINER_APP_NAME" \
-            --resource-group "$AZURE_RESOURCE_GROUP" \
-            --subscription "$AZURE_SUBSCRIPTION_ID" \
-            --revision "$revision" \
-            --label "$label" \
-            --yes
-          echo "label=$label" >> "$GITHUB_OUTPUT"
           fqdn="$(az containerapp show \
             --name "$AZURE_CONTAINER_APP_NAME" \
             --resource-group "$AZURE_RESOURCE_GROUP" \
@@ -238,13 +229,22 @@ jobs:
             exit 1
           fi
 
-          if [[ "$fqdn" == "${AZURE_CONTAINER_APP_NAME}."* ]]; then
-            env_domain="${fqdn#"${AZURE_CONTAINER_APP_NAME}."}"
-            candidate_fqdn="${AZURE_CONTAINER_APP_NAME}---${label}.${env_domain}"
-          else
-            candidate_fqdn="${label}.${fqdn}"
+          revision_fqdn="$(az containerapp revision show \
+            --name "$AZURE_CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --revision "$revision" \
+            --query properties.fqdn \
+            --output tsv)"
+          if [[ -z "$revision_fqdn" ]]; then
+            if [[ "$fqdn" == "${AZURE_CONTAINER_APP_NAME}."* ]]; then
+              env_domain="${fqdn#"${AZURE_CONTAINER_APP_NAME}."}"
+              revision_fqdn="${AZURE_CONTAINER_APP_NAME}---${revision}.${env_domain}"
+            else
+              revision_fqdn="${revision}.${fqdn}"
+            fi
           fi
-          echo "candidate_url=https://${candidate_fqdn}" >> "$GITHUB_OUTPUT"
+          echo "candidate_url=https://${revision_fqdn}" >> "$GITHUB_OUTPUT"
 
       - name: Smoke-test candidate revision
         shell: bash
@@ -335,14 +335,3 @@ jobs:
           promotion_verified=true
           echo "Promoted ${CANDIDATE_REVISION} to 100% traffic."
 
-      - name: Remove temporary candidate label
-        if: always() && steps.candidate.outputs.label != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          az containerapp revision label remove \
-            --name "$AZURE_CONTAINER_APP_NAME" \
-            --resource-group "$AZURE_RESOURCE_GROUP" \
-            --subscription "$AZURE_SUBSCRIPTION_ID" \
-            --label "${{ steps.candidate.outputs.label }}" \
-            --only-show-errors
