@@ -8,12 +8,15 @@ on:
     paths:
       - "web/**"
       - ".github/workflows/frontend.yml"
+      - "wrangler.toml"
   push:
     branches:
       - develop
       - main
     paths:
       - "web/**"
+      - ".github/workflows/frontend.yml"
+      - "wrangler.toml"
 
 permissions:
   contents: read
