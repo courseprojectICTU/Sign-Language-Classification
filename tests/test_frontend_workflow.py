@@ -44,6 +44,15 @@ def test_frontend_workflow_file_exists() -> None:
     assert "Frontend" in name or "Pages" in name, f"Unexpected workflow name: {name}"
 
 
+def test_wrangler_pages_config_points_to_static_web_directory() -> None:
+    config_path = ROOT / "wrangler.toml"
+    assert config_path.is_file(), "Missing root Wrangler Pages configuration"
+
+    content = config_path.read_text(encoding="utf-8")
+    assert 'name = "sign-language-classification"' in content
+    assert 'pages_build_output_dir = "./web"' in content
+
+
 def test_ac_028_01_and_tsk_053_pr_and_push_triggers_with_path_filtering() -> None:
     """AC-028-01 & TSK-053: Triggers chỉ kích hoạt khi sửa đổi web/** hoặc workflow frontend."""
     workflow = _read_workflow()
